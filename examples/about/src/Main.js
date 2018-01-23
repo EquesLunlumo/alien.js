@@ -620,7 +620,6 @@ class Main {
     constructor() {
 
         if (!Device.webgl) window.location = 'fallback.html';
-        //else console.log(Device.webgl);
 
         let loader, beam;
 
