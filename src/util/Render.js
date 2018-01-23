@@ -17,7 +17,7 @@ class Render {
             skipLimit = 200;
         let last = performance.now();
 
-        window.addEventListener('load', () => requestAnimationFrame(step), true);
+        requestAnimationFrame(step);
 
         function step(t) {
             const delta = Math.min(skipLimit, t - last);
