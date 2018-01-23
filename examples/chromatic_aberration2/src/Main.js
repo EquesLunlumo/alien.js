@@ -6,7 +6,7 @@
 
 /* global THREE */
 
-import { Events, Stage, Interface, Component, Canvas, CanvasFont, Device, Mouse, Interaction,
+import { Events, Stage, Interface, Component, Canvas, CanvasFont, Device, Interaction, Mouse,
     Assets, AssetLoader, FontLoader, TweenManager, Shader, Effects } from '../alien.js/src/Alien.js';
 
 import vertBasicShader from './shaders/basic_shader.vert';
