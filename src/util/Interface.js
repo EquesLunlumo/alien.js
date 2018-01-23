@@ -106,7 +106,7 @@ class Interface {
     }
 
     remove(child) {
-        child.element.parentNode.removeChild(child.element);
+        if (child.element.parentNode) child.element.parentNode.removeChild(child.element);
         this.classes.remove(child);
     }
 
