@@ -18,9 +18,8 @@ window.addEventListener('load', () => {
     window.addEventListener('keydown', e => Events.emitter.fire(Events.KEYBOARD_DOWN, e), true);
     window.addEventListener('keyup', e => Events.emitter.fire(Events.KEYBOARD_UP, e), true);
     window.addEventListener('keypress', e => Events.emitter.fire(Events.KEYBOARD_PRESS, e), true);
-    window.addEventListener('resize', () => Events.emitter.fire(Events.RESIZE), true);
-    window.addEventListener('orientationchange', () => Events.emitter.fire(Events.RESIZE), true);
-    Stage.events.add(Events.RESIZE, resize);
+    window.addEventListener('resize', resize, true);
+    window.addEventListener('orientationchange', resize, true);
     resize();
 
     function focus() {
@@ -40,6 +39,7 @@ window.addEventListener('load', () => {
     function resize() {
         Stage.size();
         Stage.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+        Events.emitter.fire(Events.RESIZE);
     }
 }, true);
 
