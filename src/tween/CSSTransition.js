@@ -58,7 +58,7 @@ class CSSTransition {
                     clearCSSTween();
                     if (callback) callback();
                 }, time + delay);
-            }, 50);
+            }, 35);
         }
 
         function buildStrings(time, ease, delay) {
@@ -79,8 +79,8 @@ class CSSTransition {
             if (killed()) return;
             self.kill = true;
             object.element.style[Device.vendor('Transition')] = '';
-            object.cssTween = null;
             object.willChange(null);
+            object.cssTween = null;
             object = props = null;
             Utils.nullObject(self);
         }
