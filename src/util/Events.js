@@ -17,8 +17,8 @@ class Events {
                 this.links = [];
             }
 
-            add(event, callback, object) {
-                this.events.push({ event, callback, object });
+            add(event, callback, object, target) {
+                this.events.push({ event, callback, object, target });
             }
 
             remove(event, callback) {
@@ -34,6 +34,7 @@ class Events {
                 let called = false;
                 for (let i = 0; i < this.events.length; i++) {
                     if (this.events[i].event === event && !this.events[i].removed) {
+                        if (object && typeof object === 'object') object.target = object.target || this.events[i].target;
                         this.events[i].callback(object);
                         called = true;
                     }
@@ -81,7 +82,7 @@ class Events {
                 Events.emitter.add(event, callback, this);
             } else {
                 const emitter = object.events.emitter;
-                emitter.add(event, callback, this);
+                emitter.add(event, callback, this, object);
                 emitter.link(this);
                 linked.push(emitter);
             }
