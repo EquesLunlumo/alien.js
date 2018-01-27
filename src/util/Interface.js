@@ -311,9 +311,9 @@ class Interface {
 
     transformPoint(x, y, z) {
         let origin = '';
-        if (typeof x !== 'undefined') origin += typeof x === 'number' ? x + 'px ' : x + ' ';
-        if (typeof y !== 'undefined') origin += typeof y === 'number' ? y + 'px ' : y + ' ';
-        if (typeof z !== 'undefined') origin += typeof z === 'number' ? z + 'px' : z;
+        if (typeof x !== 'undefined') origin += typeof x === 'number' ? x + 'px' : x;
+        if (typeof y !== 'undefined') origin += typeof y === 'number' ? ' ' + y + 'px' : ' ' + y;
+        if (typeof z !== 'undefined') origin += typeof z === 'number' ? ' ' + z + 'px' : ' ' + z;
         this.element.style[Device.vendor('TransformOrigin')] = origin;
         return this;
     }
