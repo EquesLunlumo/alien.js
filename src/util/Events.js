@@ -34,7 +34,7 @@ class Events {
                 let called = false;
                 for (let i = 0; i < this.events.length; i++) {
                     if (this.events[i].event === event && !this.events[i].removed) {
-                        if (object && typeof object === 'object') object.target = object.target || this.events[i].target;
+                        if (this.events[i].target && object && typeof object === 'object') object.target = object.target || this.events[i].target;
                         this.events[i].callback(object);
                         called = true;
                     }
