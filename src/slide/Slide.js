@@ -45,7 +45,6 @@ class Slide extends Component {
                 x: 0,
                 y: 0
             },
-            ease = Interpolation.convertEase('easeOutSine'),
             event = {};
         let axes = ['x', 'y'],
             slideIndex;
@@ -129,7 +128,7 @@ class Slide extends Component {
                     scrollTarget[axis] += scrollInertia[axis];
                 }
                 const limit = self.max[axis] * 0.035;
-                scrollTarget[axis] += ease(Math.round(self.progress) - self.progress) * limit;
+                scrollTarget[axis] += Interpolation.Sine.Out(Math.round(self.progress) - self.progress) * limit;
                 if (Math.abs(scrollTarget[axis] - self[axis]) > limit) scrollTarget[axis] -= (scrollTarget[axis] - self[axis]) * 0.5;
                 else if (Math.abs(scrollTarget[axis] - self[axis]) < 0.001) scrollTarget[axis] = i * self.max[axis];
                 self.delta[axis] = scrollTarget[axis] - self[axis];
