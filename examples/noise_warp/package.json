@@ -11,14 +11,14 @@
   },
   "devDependencies": {
     "concurrently": "^3.5.1",
-    "eslint": "^4.15.0",
+    "eslint": "^4.16.0",
     "glsl-noise": "0.0.0",
     "replace": "^0.3.0",
-    "rollup": "^0.54.0",
-    "rollup-plugin-bundleutils": "^1.0.4",
+    "rollup": "^0.55.1",
+    "rollup-plugin-bundleutils": "^1.0.5",
     "rollup-plugin-eslint": "^4.0.0",
-    "rollup-plugin-glslify": "^1.0.2",
+    "rollup-plugin-glslify": "^1.0.3",
     "rollup-watch": "^4.3.1",
-    "serve": "^6.4.8"
+    "serve": "^6.4.9"
   }
 }
