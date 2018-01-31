@@ -24,7 +24,7 @@ class AlienKitty extends Interface {
         addListeners();
 
         function initHTML() {
-            self.size(90, 86).center().css({ opacity: 0 });
+            self.size(90, 86).css({ opacity: 0 });
             alienkitty = self.create('.alienkitty').size(90, 86);
             eyelid1 = alienkitty.create('.eyelid1').size(24, 14).css({ left: 35, top: 25 }).transformPoint('50%', 0).transform({ scaleX: 1.5, scaleY: 0.01 });
             eyelid2 = alienkitty.create('.eyelid2').size(24, 14).css({ left: 53, top: 26 }).transformPoint(0, 0).transform({ scaleX: 1, scaleY: 0.01 });
@@ -93,7 +93,7 @@ class Progress extends Interface {
         this.startRender(loop);
 
         function initHTML() {
-            self.size(size, size).center();
+            self.size(size);
             self.progress = 0;
         }
 
@@ -157,6 +157,7 @@ class Loader extends Interface {
 
         function initProgress() {
             progress = self.initClass(Progress);
+            progress.center();
             self.events.add(progress, Events.COMPLETE, loadComplete);
         }
 
@@ -188,6 +189,7 @@ class Main {
             wrapper = Stage.create('.wrapper');
             wrapper.size('100%').transform({ z: -300 }).enable3D();
             alienkitty = wrapper.initClass(AlienKitty);
+            alienkitty.center();
         }
 
         function initLoader() {

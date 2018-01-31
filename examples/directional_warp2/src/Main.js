@@ -169,10 +169,7 @@ class Title extends Component {
             shader.uniforms.progress.value = 0;
             shader.uniforms.direction.value = this.direction < 0 ? new THREE.Vector2(-1.0, 1.0) : new THREE.Vector2(1.0, -1.0);
             TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 250, 'linear');
-            TweenManager.tween(shader.uniforms.progress, { value: 1 }, 1600, 'easeOutCubic', () => {
-                this.visible = true;
-                if (callback) callback();
-            });
+            TweenManager.tween(shader.uniforms.progress, { value: 1 }, 1600, 'easeOutCubic', callback);
         };
 
         this.animateOut = callback => {
@@ -180,10 +177,7 @@ class Title extends Component {
             shader.uniforms.progress.value = 1;
             shader.uniforms.direction.value = this.direction < 0 ? new THREE.Vector2(-1.0, 1.0) : new THREE.Vector2(1.0, -1.0);
             TweenManager.tween(shader.uniforms.opacity, { value: 0 }, 250, 'linear');
-            TweenManager.tween(shader.uniforms.progress, { value: 0 }, 1200, 'easeOutCubic', () => {
-                this.visible = false;
-                if (callback) callback();
-            });
+            TweenManager.tween(shader.uniforms.progress, { value: 0 }, 1200, 'easeOutCubic', callback);
         };
     }
 }
@@ -432,7 +426,7 @@ class Progress extends Interface {
         this.startRender(loop);
 
         function initHTML() {
-            self.size(size, size).center();
+            self.size(size);
             self.progress = 0;
         }
 
@@ -502,6 +496,7 @@ class Loader extends Interface {
 
         function initProgress() {
             progress = self.initClass(Progress);
+            progress.center();
             self.events.add(progress, Events.COMPLETE, loadComplete);
         }
 

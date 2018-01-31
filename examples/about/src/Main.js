@@ -49,7 +49,7 @@ class UIAbout extends Interface {
             wrapper.rotationY = 0;
             wrapper.rotationX = 0;
             alienkitty = wrapper.initClass(AlienKitty);
-            alienkitty.transform({ z: -20 }).css({ marginTop: -88 });
+            alienkitty.center().transform({ z: -20 }).css({ marginTop: -88 });
         }
 
         function initText() {
@@ -453,7 +453,7 @@ class AlienKitty extends Interface {
         initHTML();
 
         function initHTML() {
-            self.size(90, 86).center().css({ opacity: 0 });
+            self.size(90, 86).css({ opacity: 0 });
             alienkitty = self.create('.alienkitty').size(90, 86);
             eyelid1 = alienkitty.create('.eyelid1').size(24, 14).css({ left: 35, top: 25 }).transformPoint('50%', 0).transform({ scaleX: 1.5, scaleY: 0.01 });
             eyelid2 = alienkitty.create('.eyelid2').size(24, 14).css({ left: 53, top: 26 }).transformPoint(0, 0).transform({ scaleX: 1, scaleY: 0.01 });
@@ -534,7 +534,7 @@ class Loader extends Interface {
 
         function initViews() {
             alienkitty = self.initClass(AlienKitty);
-            alienkitty.css({ marginTop: -108 });
+            alienkitty.center().css({ marginTop: -108 });
             alienkitty.ready().then(alienkitty.animateIn);
         }
 

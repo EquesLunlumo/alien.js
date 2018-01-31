@@ -25,7 +25,7 @@ class AlienKittyCanvas extends Interface {
         initImages();
 
         function initHTML() {
-            self.size(90, 86).center().css({ opacity: 0 });
+            self.size(90, 86).css({ opacity: 0 });
         }
 
         function initCanvas() {
@@ -111,7 +111,7 @@ class Progress extends Interface {
         this.startRender(loop);
 
         function initHTML() {
-            self.size(size).center();
+            self.size(size);
             self.progress = 0;
         }
 
@@ -175,6 +175,7 @@ class Loader extends Interface {
 
         function initProgress() {
             progress = self.initClass(Progress);
+            progress.center();
             self.events.add(progress, Events.COMPLETE, loadComplete);
         }
 
@@ -209,6 +210,7 @@ class Main {
             wrapper = Stage.create('.wrapper');
             wrapper.size('100%').transform({ z: -300 }).enable3D();
             alienkitty = wrapper.initClass(AlienKittyCanvas);
+            alienkitty.center();
         }
 
         function initLoader() {

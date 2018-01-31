@@ -288,7 +288,7 @@ class Progress extends Interface {
         this.startRender(loop);
 
         function initHTML() {
-            self.size(size, size).center();
+            self.size(size);
             self.progress = 0;
         }
 
@@ -352,6 +352,7 @@ class Loader extends Interface {
 
         function initProgress() {
             progress = self.initClass(Progress);
+            progress.center();
             self.events.add(progress, Events.COMPLETE, loadComplete);
         }
 
