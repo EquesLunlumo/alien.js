@@ -5,12 +5,13 @@
  */
 
 import { Events } from './Events.js';
+import { Component } from './Component.js';
 
-class StateDispatcher {
+class StateDispatcher extends Component {
 
     constructor(forceHash) {
+        super();
         const self = this;
-        this.events = new Events();
         this.locked = false;
         let storePath, storeState,
             rootPath = '/';

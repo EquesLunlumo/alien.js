@@ -52,7 +52,7 @@ class Data {
         const self = this;
 
         // StateDispatcher @param {boolean} [forceHash = undefined] Force hash navigation
-        this.dispatcher = new StateDispatcher(true);
+        this.dispatcher = Stage.initClass(StateDispatcher, true);
 
         addListeners();
 
