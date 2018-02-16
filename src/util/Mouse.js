@@ -26,7 +26,7 @@ class Mouse {
             y: 0
         };
 
-        this.input = new Interaction();
+        this.input = Stage.initClass(Interaction);
         Stage.events.add(this.input, Interaction.START, update);
         Stage.events.add(this.input, Interaction.MOVE, update);
         update({

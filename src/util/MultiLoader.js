@@ -12,7 +12,6 @@ class MultiLoader extends Component {
     constructor() {
         super();
         const self = this;
-        this.events = new Events();
         const loaders = [];
         let loaded = 0;
 

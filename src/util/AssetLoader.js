@@ -25,7 +25,6 @@ class AssetLoader extends Component {
             })();
         }
         const self = this;
-        this.events = new Events();
         const total = Object.keys(assets).length;
         let loaded = 0;
 

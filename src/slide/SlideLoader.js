@@ -13,7 +13,6 @@ class SlideLoader extends Component {
     constructor(slides, callback) {
         super();
         const self = this;
-        this.events = new Events();
         this.list = [];
         this.pathList = [];
         let loaded = 0;

@@ -4,17 +4,17 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Events } from '../util/Events.js';
 import { Render } from '../util/Render.js';
-import { Utils } from '../util/Utils.js';
+import { Component } from '../util/Component.js';
 import { Mouse } from '../util/Mouse.js';
 import { Interaction } from '../util/Interaction.js';
 import { Stage } from '../view/Stage.js';
 import { Raycaster } from './Raycaster.js';
 
-class Interaction3D {
+class Interaction3D extends Component {
 
     constructor(camera) {
+        super();
         if (!Interaction3D.initialized) {
             Interaction3D.HOVER = 'interaction3d_hover';
             Interaction3D.CLICK = 'interaction3d_click';
@@ -22,7 +22,6 @@ class Interaction3D {
             Interaction3D.initialized = true;
         }
         const self = this;
-        this.events = new Events();
         this.ray = new Raycaster(camera);
         this.meshes = [];
         this.meshCallbacks = [];
@@ -34,9 +33,9 @@ class Interaction3D {
         addListeners();
 
         function addListeners() {
-            Mouse.input.events.add(Interaction.START, start);
-            Mouse.input.events.add(Interaction.MOVE, move);
-            Mouse.input.events.add(Interaction.CLICK, click);
+            self.events.add(Mouse.input, Interaction.START, start);
+            self.events.add(Mouse.input, Interaction.MOVE, move);
+            self.events.add(Mouse.input, Interaction.CLICK, click);
         }
 
         function start() {
@@ -132,10 +131,6 @@ class Interaction3D {
                     }
                 }
             });
-        };
-
-        this.destroy = () => {
-            return Utils.nullObject(this);
         };
     }
 

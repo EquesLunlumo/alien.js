@@ -4,15 +4,15 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Events } from './Events.js';
 import { Render } from './Render.js';
-import { Utils } from './Utils.js';
+import { Component } from './Component.js';
 import { Stage } from '../view/Stage.js';
 import { Vector2 } from './Vector2.js';
 
-class Interaction {
+class Interaction extends Component {
 
     constructor(object = Stage) {
+        super();
         if (!Interaction.initialized) {
             Interaction.CLICK = 'interaction_click';
             Interaction.START = 'interaction_start';
@@ -40,7 +40,6 @@ class Interaction {
             Interaction.initialized = true;
         }
         const self = this;
-        this.events = new Events();
         this.x = 0;
         this.y = 0;
         this.hold = new Vector2();
@@ -112,8 +111,7 @@ class Interaction {
             Interaction.unbind('touchmove', move);
             Interaction.unbind('touchend', up);
             if (object !== Stage && object.unbind) object.unbind('touchstart', down);
-            this.events.destroy();
-            return Utils.nullObject(this);
+            return super.destroy();
         };
     }
 }

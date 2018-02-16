@@ -55,7 +55,7 @@ class Scroll extends Component {
         function addListeners() {
             Stage.bind('wheel', scroll);
             if (self.hitObject) self.hitObject.bind('touchstart', e => e.preventDefault());
-            const input = self.hitObject ? new Interaction(self.hitObject) : Mouse.input;
+            const input = self.hitObject ? self.hitObject.initClass(Interaction) : Mouse.input;
             self.events.add(input, Interaction.START, down);
             self.events.add(input, Interaction.DRAG, drag);
             self.events.add(input, Interaction.END, up);

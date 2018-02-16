@@ -13,7 +13,6 @@ class FontLoader extends Component {
     constructor(fonts, callback) {
         super();
         const self = this;
-        this.events = new Events();
         let element;
 
         initFonts();
