@@ -28,7 +28,7 @@ class AssetLoader extends Component {
         const total = Object.keys(assets).length;
         let loaded = 0;
 
-        for (let key in assets) loadAsset(key, Assets.CDN + assets[key]);
+        for (let key in assets) loadAsset(key, assets[key]);
 
         function loadAsset(key, asset) {
             const ext = Utils.extension(asset);
@@ -41,7 +41,7 @@ class AssetLoader extends Component {
                 window.WebAudio.createSound(key, asset, assetLoaded);
                 return;
             }
-            window.get(asset).then(data => {
+            window.get(Assets.getPath(asset)).then(data => {
                 if (ext === 'js') window.eval(data.replace('use strict', ''));
                 assetLoaded();
             }).catch(() => {

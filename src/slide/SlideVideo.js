@@ -19,34 +19,34 @@ class SlideVideo extends Component {
             SlideVideo.initialized = true;
         }
         const self = this;
-        this.events = new Events();
-        this.img = params.img;
-        if (this.img) this.img = Assets.CDN + this.img;
-        this.src = params.src;
-        if (this.src) this.src = Assets.CDN + this.src;
 
-        if (this.src && SlideVideo.test) {
-            window.fetch(this.src).then(response => {
-                if (!response.ok) return error();
-                response.blob().then(data => {
-                    this.element = document.createElement('video');
-                    this.element.src = URL.createObjectURL(data);
-                    this.element.muted = true;
-                    this.element.loop = true;
-                    ready();
+        createElement();
+
+        function createElement() {
+            const src = params.src;
+            if (src && SlideVideo.test) {
+                window.fetch(Assets.getPath(src)).then(response => {
+                    if (!response.ok) return error();
+                    response.blob().then(data => {
+                        self.element = document.createElement('video');
+                        self.element.src = URL.createObjectURL(data);
+                        self.element.muted = true;
+                        self.element.loop = true;
+                        ready();
+                        if (callback) callback();
+                    });
+                }).catch(() => {
+                    error();
                     if (callback) callback();
                 });
-            }).catch(() => {
-                error();
-                if (callback) callback();
-            });
-        } else {
-            const img = Assets.createImage(this.img);
-            img.onload = () => {
-                this.element = img;
-                if (callback) callback();
-            };
-            img.onerror = error;
+            } else {
+                const img = Assets.createImage(params.img);
+                img.onload = () => {
+                    self.element = img;
+                    if (callback) callback();
+                };
+                img.onerror = error;
+            }
         }
 
         function error() {

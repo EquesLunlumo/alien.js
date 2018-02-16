@@ -196,6 +196,7 @@ class Interface {
     }
 
     bg(src, x, y, repeat) {
+        if (~src.indexOf('.')) src = Assets.getPath(src);
         if (src.includes(['data:', '.'])) this.element.style.backgroundImage = 'url(' + src + ')';
         else this.element.style.backgroundColor = src;
         if (typeof x !== 'undefined') {

@@ -5,6 +5,7 @@
  */
 
 import { Device } from './Device.js';
+import { Assets } from './Assets.js';
 import { TweenManager } from '../tween/TweenManager.js';
 
 if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
@@ -53,7 +54,7 @@ class WebAudio {
 
         this.createSound = (id, asset, callback) => {
             const sound = {};
-            sound.asset = asset;
+            sound.asset = Assets.getPath(asset);
             sound.audioGain = context.createGain();
             sound.audioGain.connect(this.globalGain);
             sound.audioGain.value = sound.audioGain.gain.defaultValue;

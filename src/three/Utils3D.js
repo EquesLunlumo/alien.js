@@ -33,7 +33,7 @@ class Utils3D {
     static getTexture(src) {
         if (!this.textures) this.textures = {};
         if (!this.textures[src]) {
-            const img = Assets.createImage(Assets.CDN + src),
+            const img = Assets.createImage(src),
                 texture = new THREE.Texture(img);
             img.onload = () => {
                 texture.needsUpdate = true;
@@ -65,7 +65,7 @@ class Utils3D {
         if (!this.textures[path]) {
             const images = [];
             for (let i = 0; i < 6; i++) {
-                const img = Assets.createImage(Assets.CDN + (Array.isArray(src) ? src[i] : src));
+                const img = Assets.createImage(Array.isArray(src) ? src[i] : src);
                 images.push(img);
                 img.onload = () => this.textures[path].needsUpdate = true;
             }

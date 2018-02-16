@@ -11,6 +11,12 @@ class Assets {
         this.CORS = null;
         const images = {};
 
+        this.getPath = src => {
+            if (~src.indexOf('//')) return src;
+            if (this.CDN && !~src.indexOf(this.CDN)) src = this.CDN + src;
+            return src;
+        };
+
         this.createImage = (src, store, callback) => {
             if (typeof store !== 'boolean') {
                 callback = store;
@@ -18,7 +24,7 @@ class Assets {
             }
             const img = new Image();
             img.crossOrigin = this.CORS;
-            img.src = src;
+            img.src = this.getPath(src);
             img.onload = callback;
             img.onerror = callback;
             if (store) images[src] = img;

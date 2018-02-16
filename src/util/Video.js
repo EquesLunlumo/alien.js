@@ -28,10 +28,9 @@ class Video extends Component {
         if (params.preload !== false) preload();
 
         function createElement() {
-            let src = params.src;
-            if (src) src = Assets.CDN + src;
+            const src = params.src;
             self.element = document.createElement('video');
-            if (src) self.element.src = src;
+            if (src) self.element.src = Assets.getPath(src);
             self.element.controls = params.controls;
             self.element.id = params.id || '';
             self.element.width = params.width;
@@ -200,7 +199,7 @@ class Video extends Component {
     }
 
     set src(src) {
-        this.element.src = Assets.CDN + src;
+        this.element.src = Assets.getPath(src);
     }
 
     get src() {
