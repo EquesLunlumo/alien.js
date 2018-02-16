@@ -51,16 +51,14 @@ class CanvasGraphics extends CanvasObject {
             draw.length = 0;
         };
 
-        this.arc = (x = 0, y = 0, endAngle = 0, radius = this.radius || this.width / 2, startAngle = 0, counterclockwise = false) => {
+        this.arc = (x = 0, y = 0, radius = this.radius || this.width / 2, startAngle = 0, endAngle = Math.PI * 2, anti = false) => {
             if (x && !y) {
+                startAngle = Math.radians(-90),
                 endAngle = x;
                 x = 0;
                 y = 0;
             }
-            endAngle -= 90;
-            startAngle -= 90;
-            draw.push(['beginPath']);
-            draw.push(['arc', x, y, radius, Math.radians(startAngle), Math.radians(endAngle), counterclockwise]);
+            draw.push(['arc', x, y, radius, startAngle, endAngle, anti]);
         };
 
         this.quadraticCurveTo = (cpx, cpy, x, y) => {
@@ -107,11 +105,11 @@ class CanvasGraphics extends CanvasObject {
             draw.push(['closePath']);
         };
 
-        this.fillText = (text, x, y) => {
+        this.fillText = (text, x = 0, y = 0) => {
             draw.push(['fillText', text, x, y]);
         };
 
-        this.strokeText = (text, x, y) => {
+        this.strokeText = (text, x = 0, y = 0) => {
             draw.push(['strokeText', text, x, y]);
         };
 
