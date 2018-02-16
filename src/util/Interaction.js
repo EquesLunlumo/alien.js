@@ -12,7 +12,7 @@ import { Vector2 } from './Vector2.js';
 class Interaction extends Component {
 
     constructor(object = Stage) {
-        super();
+
         if (!Interaction.initialized) {
             Interaction.CLICK = 'interaction_click';
             Interaction.START = 'interaction_start';
@@ -39,6 +39,8 @@ class Interaction extends Component {
 
             Interaction.initialized = true;
         }
+
+        super();
         const self = this;
         this.x = 0;
         this.y = 0;

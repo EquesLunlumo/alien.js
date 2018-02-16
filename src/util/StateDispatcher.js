@@ -20,8 +20,16 @@ class StateDispatcher extends Component {
         storePath = getPath();
 
         function createListener() {
-            if (forceHash) window.addEventListener('hashchange', () => handleStateChange(null, getPath()), true);
-            else window.addEventListener('popstate', e => handleStateChange(e.state, getPath()), true);
+            if (forceHash) window.addEventListener('hashchange', hashChange, true);
+            else window.addEventListener('popstate', popState, true);
+        }
+
+        function hashChange() {
+            handleStateChange(null, getPath());
+        }
+
+        function popState(e) {
+            handleStateChange(e.state, getPath());
         }
 
         function getPath() {
@@ -84,6 +92,12 @@ class StateDispatcher extends Component {
         this.setPathRoot = path => {
             if (path.charAt(0) === '/') rootPath = path;
             else rootPath = '/' + path;
+        };
+
+        this.destroy = () => {
+            window.removeEventListener('hashchange', hashChange, true);
+            window.removeEventListener('popstate', popState, true);
+            return super.destroy();
         };
     }
 }

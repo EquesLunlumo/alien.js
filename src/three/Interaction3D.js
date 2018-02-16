@@ -6,21 +6,23 @@
 
 import { Render } from '../util/Render.js';
 import { Component } from '../util/Component.js';
-import { Mouse } from '../util/Mouse.js';
 import { Interaction } from '../util/Interaction.js';
+import { Mouse } from '../util/Mouse.js';
 import { Stage } from '../view/Stage.js';
 import { Raycaster } from './Raycaster.js';
 
 class Interaction3D extends Component {
 
     constructor(camera) {
-        super();
+
         if (!Interaction3D.initialized) {
             Interaction3D.HOVER = 'interaction3d_hover';
             Interaction3D.CLICK = 'interaction3d_click';
 
             Interaction3D.initialized = true;
         }
+
+        super();
         const self = this;
         this.ray = new Raycaster(camera);
         this.meshes = [];

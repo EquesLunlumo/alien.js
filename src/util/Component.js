@@ -4,10 +4,10 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Events } from './Events.js';
+import { Utils } from './Utils.js';
 import { Render } from './Render.js';
 import { Timer } from './Timer.js';
-import { Utils } from './Utils.js';
+import { Events } from './Events.js';
 
 class Component {
 
@@ -33,6 +33,7 @@ class Component {
     }
 
     delayedCall(callback, time = 0, ...params) {
+        if (!this.timers) return;
         const timer = Timer.create(() => {
             if (callback) callback(...params);
         }, time);

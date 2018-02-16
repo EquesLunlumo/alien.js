@@ -5,22 +5,23 @@
  */
 
 import { Events } from './Events.js';
-import { Component } from './Component.js';
 import { Device } from './Device.js';
-import { Mouse } from './Mouse.js';
+import { Component } from './Component.js';
 import { Interaction } from './Interaction.js';
+import { Mouse } from './Mouse.js';
 import { TweenManager } from '../tween/TweenManager.js';
-import { Stage } from '../view/Stage.js';
 
 class Scroll extends Component {
 
     constructor(object, params) {
-        super();
+
         if (!object || !object.element) {
             params = object;
             object = null;
         }
         if (!params) params = {};
+
+        super();
         const self = this;
         this.x = 0;
         this.y = 0;
@@ -53,7 +54,7 @@ class Scroll extends Component {
         }
 
         function addListeners() {
-            Stage.bind('wheel', scroll);
+            window.addEventListener('wheel', scroll, true);
             if (self.hitObject) self.hitObject.bind('touchstart', e => e.preventDefault());
             const input = self.hitObject ? self.hitObject.initClass(Interaction) : Mouse.input;
             self.events.add(input, Interaction.START, down);
@@ -129,7 +130,7 @@ class Scroll extends Component {
         }
 
         this.destroy = () => {
-            Stage.unbind('wheel', scroll);
+            window.removeEventListener('wheel', scroll, true);
             return super.destroy();
         };
     }

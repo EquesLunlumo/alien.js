@@ -6,11 +6,10 @@
 
 import { Events } from '../util/Events.js';
 import { Component } from '../util/Component.js';
-import { Mouse } from '../util/Mouse.js';
 import { Interaction } from '../util/Interaction.js';
+import { Mouse } from '../util/Mouse.js';
 import { TweenManager } from '../tween/TweenManager.js';
 import { Interpolation } from '../tween/Interpolation.js';
-import { Stage } from '../view/Stage.js';
 
 class Slide extends Component {
 
@@ -65,7 +64,7 @@ class Slide extends Component {
         }
 
         function addListeners() {
-            Stage.bind('wheel', scroll);
+            window.addEventListener('wheel', scroll, true);
             self.events.add(Mouse.input, Interaction.START, down);
             self.events.add(Mouse.input, Interaction.DRAG, drag);
             self.events.add(Events.KEYBOARD_DOWN, keyPress);
@@ -170,7 +169,7 @@ class Slide extends Component {
         };
 
         this.destroy = () => {
-            Stage.unbind('wheel', scroll);
+            window.removeEventListener('wheel', scroll, true);
             return super.destroy();
         };
     }

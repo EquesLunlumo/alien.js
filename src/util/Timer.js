@@ -4,8 +4,8 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Render } from './Render.js';
 import { Utils } from './Utils.js';
+import { Render } from './Render.js';
 
 class Timer {
 

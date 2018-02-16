@@ -4,8 +4,8 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Timer } from '../util/Timer.js';
 import { Utils } from '../util/Utils.js';
+import { Timer } from '../util/Timer.js';
 import { Device } from '../util/Device.js';
 import { TweenManager } from './TweenManager.js';
 

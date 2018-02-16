@@ -5,19 +5,21 @@
  */
 
 import { Events } from '../util/Events.js';
-import { Component } from '../util/Component.js';
 import { Device } from '../util/Device.js';
+import { Component } from '../util/Component.js';
 import { Assets } from '../util/Assets.js';
 
 class SlideVideo extends Component {
 
     constructor(params, callback) {
-        super();
+
         if (!SlideVideo.initialized) {
             SlideVideo.test = SlideVideo.test || !Device.mobile && Device.browser !== 'safari' && !Device.detect('trident');
 
             SlideVideo.initialized = true;
         }
+
+        super();
         const self = this;
 
         createElement();
@@ -90,6 +92,8 @@ class SlideVideo extends Component {
         };
 
         this.destroy = () => {
+            this.element.removeEventListener('playing', playing, true);
+            this.element.removeEventListener('pause', pause, true);
             this.pause();
             this.element.src = '';
             return super.destroy();

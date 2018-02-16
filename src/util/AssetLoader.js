@@ -4,15 +4,15 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+import { Utils } from './Utils.js';
 import { Events } from './Events.js';
 import { Component } from './Component.js';
-import { Utils } from './Utils.js';
 import { Assets } from './Assets.js';
 
 class AssetLoader extends Component {
 
     constructor(assets, callback) {
-        super();
+
         if (Array.isArray(assets)) {
             assets = (() => {
                 const keys = assets.map(path => {
@@ -24,6 +24,8 @@ class AssetLoader extends Component {
                 }, {});
             })();
         }
+
+        super();
         const self = this;
         const total = Object.keys(assets).length;
         let loaded = 0;

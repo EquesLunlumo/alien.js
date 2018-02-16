@@ -69,6 +69,7 @@ class Events {
 
             Events.initialized = true;
         }
+
         this.emitter = new Emitter();
         const linked = [];
 
@@ -107,7 +108,9 @@ class Events {
         this.destroy = () => {
             Events.emitter.destroy(this);
             linked.forEach(emitter => emitter.destroy(this));
-            this.emitter.links.forEach(object => object.unlink(this.emitter));
+            this.emitter.links.forEach(object => {
+                if (object.unlink) object.unlink(this.emitter);
+            });
             return Utils.nullObject(this);
         };
 

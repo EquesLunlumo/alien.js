@@ -5,9 +5,9 @@
  */
 
 import { Events } from './Events.js';
+import { Device } from './Device.js';
 import { Component } from './Component.js';
 import { Interface } from './Interface.js';
-import { Device } from './Device.js';
 import { Assets } from './Assets.js';
 
 class Video extends Component {
@@ -183,6 +183,7 @@ class Video extends Component {
         };
 
         this.destroy = () => {
+            this.element.removeEventListener('progress', handleProgress, true);
             this.stop();
             this.element.src = '';
             this.object.destroy();

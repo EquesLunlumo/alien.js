@@ -4,11 +4,12 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Events } from './Events.js';
+import { Utils } from './Utils.js';
 import { Render } from './Render.js';
 import { Timer } from './Timer.js';
-import { Utils } from './Utils.js';
+import { Events } from './Events.js';
 import { Device } from './Device.js';
+import { Assets } from './Assets.js';
 import { TweenManager } from '../tween/TweenManager.js';
 import { CSSTransition } from '../tween/CSSTransition.js';
 
@@ -49,18 +50,17 @@ class Interface {
     }
 
     add(child) {
-        const element = this.element;
-        if (child.element) {
-            element.appendChild(child.element);
+        if (child.destroy) {
             this.classes.push(child);
             child.parent = this;
-        } else if (child.nodeName) {
-            element.appendChild(child);
         }
+        if (child.element) this.element.appendChild(child.element);
+        else if (child.nodeName) this.element.appendChild(child);
         return this;
     }
 
     delayedCall(callback, time = 0, ...params) {
+        if (!this.timers) return;
         const timer = Timer.create(() => {
             if (callback) callback(...params);
         }, time);
@@ -106,7 +106,8 @@ class Interface {
     }
 
     remove(child) {
-        if (child.element.parentNode) child.element.parentNode.removeChild(child.element);
+        if (child.element) child.element.parentNode.removeChild(child.element);
+        else if (child.nodeName) child.parentNode.removeChild(child);
         this.classes.remove(child);
     }
 

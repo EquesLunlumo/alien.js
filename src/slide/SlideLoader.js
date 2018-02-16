@@ -18,7 +18,7 @@ class SlideLoader extends Component {
         let loaded = 0;
 
         slides.forEach(params => {
-            this.list.push(this.initClass(SlideVideo, params, slideLoaded));
+            this.list.push(new SlideVideo(params, slideLoaded));
             this.pathList.push(params.path);
         });
 
