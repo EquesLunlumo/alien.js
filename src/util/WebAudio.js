@@ -93,9 +93,10 @@ class WebAudio {
                         sound.source = context.createBufferSource();
                         sound.source.buffer = sound.buffer;
                         sound.source.connect(sound.audioGain);
-                        sound.audioGain.gain.setValueAtTime(sound.audioGain.value, context.currentTime);
+                        sound.audioGain.gain.setValueAtTime(0, context.currentTime);
                         sound.source.loop = !!sound.loop;
                         sound.source.start();
+                        sound.audioGain.gain.setTargetAtTime(sound.audioGain.value, context.currentTime, 0.01);
                     }
                 });
             };
