@@ -5,7 +5,7 @@
 [![Dependencies](https://img.shields.io/david/pschroen/alien.js.svg)]()
 [![Dev Dependencies](https://img.shields.io/david/dev/pschroen/alien.js.svg)]()
 
-A lightweight web framework for the future.
+Future web framework.
 
 ### Features
 
