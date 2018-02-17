@@ -5,12 +5,12 @@ uniform vec2 resolution;
 uniform sampler2D texture;
 uniform float opacity;
 uniform float progress;
+uniform float amplitude;
+uniform float speed;
 uniform vec2 direction;
 
 varying vec2 vUv;
 
-const float amplitude = 100.0;
-const float speed = 10.0;
 const vec2 center = vec2(0.5, 0.5);
 
 void main() {

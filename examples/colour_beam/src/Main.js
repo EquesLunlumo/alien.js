@@ -6,7 +6,7 @@
 
 /* global THREE */
 
-import { Events, Stage, Interface, Component, Canvas, CanvasFont, Device, Interaction, Mouse, AssetLoader, FontLoader, TweenManager, Shader } from '../alien.js/src/Alien.js';
+import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Interaction, Mouse, Utils, AssetLoader, FontLoader, TweenManager, Shader } from '../alien.js/src/Alien.js';
 
 import vertBasicShader from './shaders/basic_shader.vert';
 import fragBasicShader from './shaders/basic_shader.frag';
@@ -31,7 +31,6 @@ class TitleTexture extends Component {
 
         function initCanvas() {
             canvas = self.initClass(Canvas, Stage.width, Stage.height, true, true);
-            self.canvas = canvas;
             texture = new THREE.Texture(canvas.element);
             texture.minFilter = THREE.LinearFilter;
             self.texture = texture;
@@ -43,13 +42,17 @@ class TitleTexture extends Component {
                 canvas.remove(text);
                 text = text.destroy();
             }
-            text = CanvasFont.createText(canvas, Stage.width, Stage.height, 'Colour Beam'.toUpperCase(), '200 66px Oswald', Config.UI_COLOR, {
-                lineHeight: 80,
+            text = CanvasFont.createText(canvas, Stage.width, Stage.height, 'Colour Beam'.toUpperCase(), `200 ${Device.phone ? 28 : 66}px Oswald`, Config.UI_COLOR, {
+                lineHeight: Device.phone ? 35 : 80,
                 letterSpacing: 0,
-                textAlign: 'center'
+                textAlign: Device.phone ? 'left' : 'center'
             });
-            const baseline = (Stage.height - text.totalHeight + 124) / 2;
-            text.y = baseline;
+            if (Device.phone) {
+                text.x = 20;
+                text.y = 55;
+            } else {
+                text.y = (Stage.height - text.totalHeight + 124) / 2;
+            }
             canvas.add(text);
             canvas.render();
             texture.needsUpdate = true;
@@ -179,8 +182,13 @@ class World extends Component {
         return this.singleton;
     }
 
+    static destroy() {
+        return this.singleton ? this.singleton.destroy() : null;
+    }
+
     constructor() {
         super();
+        const self = this;
         let renderer, scene, camera;
 
         World.dpr = Math.min(1.5, Device.pixelRatio);
@@ -188,7 +196,6 @@ class World extends Component {
         initWorld();
         addListeners();
         this.startRender(loop);
-        Stage.add(World.element);
 
         function initWorld() {
             renderer = new THREE.WebGLRenderer({ powerPreference: 'high-performance' });
@@ -204,7 +211,7 @@ class World extends Component {
         }
 
         function addListeners() {
-            Stage.events.add(Events.RESIZE, resize);
+            self.events.add(Events.RESIZE, resize);
             resize();
         }
 
@@ -220,6 +227,25 @@ class World extends Component {
             World.time.value += delta * 0.001;
             renderer.render(scene, camera);
         }
+
+        this.destroy = () => {
+            for (let i = scene.children.length - 1; i >= 0; i--) {
+                const object = scene.children[i];
+                scene.remove(object);
+                if (object.geometry) object.geometry.dispose();
+                if (object.material) object.material.dispose();
+            }
+            renderer.dispose();
+            renderer.forceContextLoss();
+            renderer.context = null;
+            renderer.domElement = null;
+            camera = null;
+            scene = null;
+            renderer = null;
+            Stage.remove(World.element);
+            Utils.nullObject(World);
+            return super.destroy();
+        };
     }
 }
 
@@ -229,10 +255,11 @@ class Progress extends Interface {
         super('Progress');
         const self = this;
         const size = 90;
-        let canvas, context;
+        let canvas, circle;
 
         initHTML();
         initCanvas();
+        initCircle();
         this.startRender(loop);
 
         function initHTML() {
@@ -242,23 +269,30 @@ class Progress extends Interface {
 
         function initCanvas() {
             canvas = self.initClass(Canvas, size, size, true);
-            context = canvas.context;
-            context.lineWidth = 5;
+        }
+
+        function initCircle() {
+            circle = new CanvasGraphics();
+            circle.x = size / 2;
+            circle.y = size / 2;
+            circle.radius = size * 0.4;
+            circle.lineWidth = 1.5;
+            circle.strokeStyle = Config.UI_COLOR;
+            canvas.add(circle);
+        }
+
+        function drawCircle() {
+            circle.clear();
+            const endAngle = Math.radians(-90) + Math.radians(self.progress * 360);
+            circle.beginPath();
+            circle.arc(endAngle);
+            circle.stroke();
         }
 
         function loop() {
             if (self.progress >= 1 && !self.complete) complete();
-            context.clearRect(0, 0, size, size);
-            const progress = self.progress || 0,
-                x = size / 2,
-                y = size / 2,
-                radius = size * 0.4,
-                startAngle = Math.radians(-90),
-                endAngle = Math.radians(-90) + Math.radians(progress * 360);
-            context.beginPath();
-            context.arc(x, y, radius, startAngle, endAngle, false);
-            context.strokeStyle = Config.UI_COLOR;
-            context.stroke();
+            drawCircle();
+            canvas.render();
         }
 
         function complete() {
@@ -353,6 +387,7 @@ class Main {
 
         function complete() {
             World.instance();
+            Stage.add(World);
 
             beam = Stage.initClass(ColourBeam);
             beam.animateIn();

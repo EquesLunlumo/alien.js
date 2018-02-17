@@ -138,6 +138,7 @@ class World extends Component {
 
     constructor() {
         super();
+        const self = this;
         let renderer, scene, camera;
 
         World.dpr = Math.min(1.5, Device.pixelRatio);
@@ -145,7 +146,6 @@ class World extends Component {
         initWorld();
         addListeners();
         this.startRender(loop);
-        Stage.add(World.element);
 
         function initWorld() {
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -164,7 +164,7 @@ class World extends Component {
         }
 
         function addListeners() {
-            Stage.events.add(Events.RESIZE, resize);
+            self.events.add(Events.RESIZE, resize);
             resize();
         }
 
@@ -196,6 +196,7 @@ class Main {
 
         function initWorld() {
             World.instance();
+            Stage.add(World);
 
             Stage.initClass(Scene);
         }
