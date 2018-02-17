@@ -71,6 +71,9 @@ class WebAudio {
                         return sound.audioGain.value;
                     }
                 };
+                sound.stop = () => {
+                    if (sound.source) sound.source.stop();
+                };
                 sounds[id] = sound;
                 if (Device.os === 'ios') callback();
                 else this.loadSound(id, callback);
@@ -87,12 +90,12 @@ class WebAudio {
                 if (!sound.ready) this.loadSound(id);
                 sound.ready().then(() => {
                     if (sound.complete) {
-                        const source = context.createBufferSource();
-                        source.buffer = sound.buffer;
-                        source.connect(sound.audioGain);
+                        sound.source = context.createBufferSource();
+                        sound.source.buffer = sound.buffer;
+                        sound.source.connect(sound.audioGain);
                         sound.audioGain.gain.setValueAtTime(sound.audioGain.value, context.currentTime);
-                        source.loop = !!sound.loop;
-                        source.start(0);
+                        sound.source.loop = !!sound.loop;
+                        sound.source.start();
                     }
                 });
             };
