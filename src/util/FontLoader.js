@@ -6,27 +6,30 @@
 
 import { Events } from './Events.js';
 import { Component } from './Component.js';
-import { Stage } from '../view/Stage.js';
 
 class FontLoader extends Component {
 
     constructor(fonts, callback) {
         super();
         const self = this;
-        let element;
+        let context;
 
         initFonts();
-        finish();
 
         function initFonts() {
             if (!Array.isArray(fonts)) fonts = [fonts];
-            element = Stage.create('FontLoader');
-            for (let i = 0; i < fonts.length; i++) element.create('font').fontStyle(fonts[i], 12, '#000').text('LOAD').css({ top: -999 });
+            context = document.createElement('canvas').getContext('2d');
+            fonts.forEach(font => renderText(font.replace(/"/g, '\'')));
+            finish();
+        }
+
+        function renderText(font) {
+            context.font = `12px "${font}"`;
+            context.fillText('LOAD', 0, 0);
         }
 
         function finish() {
             const ready = () => {
-                element.destroy();
                 self.percent = 1;
                 self.events.fire(Events.PROGRESS, { percent: self.percent }, true);
                 self.events.fire(Events.COMPLETE, null, true);
