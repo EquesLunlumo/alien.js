@@ -186,11 +186,11 @@ new Main();
 To build a project, make sure you have [Node.js](https://nodejs.org/) installed (at least version 4).
 
 ```
-mkdir about
-cd about
+mkdir loader
+cd loader
 git init
 git submodule add -b master https://github.com/pschroen/alien.js
-cp -r alien.js/examples/about/* .
+cp -r alien.js/examples/loader/* .
 cp alien.js/.eslintrc.json alien.js/.gitignore .
 npm install
 npm start
@@ -202,7 +202,7 @@ Then open [http://localhost:8080/](http://localhost:8080/) to see the alien.js.o
 
 ```
 git submodule update --remote --merge
-cp alien.js/examples/about/package.json alien.js/examples/about/rollup.config.js .
+cp alien.js/examples/loader/package.json alien.js/examples/loader/rollup.config.js .
 cp alien.js/.eslintrc.json alien.js/.gitignore .
 rm -rf node_modules package-lock.json
 npm install
