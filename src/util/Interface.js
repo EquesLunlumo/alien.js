@@ -533,6 +533,38 @@ class Interface {
         return this;
     }
 
+    overflowScroll(direction) {
+        if (!Device.mobile) return;
+        const x = !!direction.x,
+            y = !!direction.y,
+            overflow = {
+                '-webkit-overflow-scrolling': 'touch'
+            };
+        if (!x && !y || x && y) overflow.overflow = 'scroll';
+        if (!x && y) {
+            overflow.overflowY = 'scroll';
+            overflow.overflowX = 'hidden';
+        }
+        if (x && !y) {
+            overflow.overflowX = 'scroll';
+            overflow.overflowY = 'hidden';
+        }
+        this.css(overflow);
+        this.element.preventEvent = e => e.stopPropagation();
+        this.bind('touchmove', this.element.preventEvent);
+    }
+
+    removeOverflowScroll() {
+        if (!Device.mobile) return;
+        this.css({
+            overflow: 'hidden',
+            overflowX: '',
+            overflowY: '',
+            '-webkit-overflow-scrolling': ''
+        });
+        this.unbind('touchmove', this.element.preventEvent);
+    }
+
     split(by = '') {
         const style = {
                 position: 'relative',
