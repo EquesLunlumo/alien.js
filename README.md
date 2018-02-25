@@ -58,7 +58,8 @@ class UILogo extends Interface {
         initHTML();
 
         function initHTML() {
-            self.size(size).css({
+            self.size(size);
+            self.css({
                 left: Config.UI_OFFSET,
                 top: Config.UI_OFFSET,
                 opacity: 0

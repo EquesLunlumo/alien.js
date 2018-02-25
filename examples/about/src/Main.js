@@ -255,10 +255,10 @@ class Info extends Interface {
 
         function addListeners() {
             self.initClass(Scroll, self);
-            self.events.add(Events.KEYBOARD_UP, keyPress);
+            self.events.add(Events.KEYBOARD_UP, keyUp);
         }
 
-        function keyPress(e) {
+        function keyUp(e) {
             // Escape
             if (e.keyCode === 27) closeNav();
         }
@@ -692,7 +692,7 @@ class UI extends Interface {
             littleCircleScale: 0,
             lineWidth: 0,
             object: null,
-            needRender: true,
+            needsUpdate: true,
             multiTween: true
         }, {
             name: '.button',
@@ -706,7 +706,7 @@ class UI extends Interface {
             littleCircleScale: 0,
             lineWidth: 0,
             object: null,
-            needRender: true,
+            needsUpdate: true,
             multiTween: true
         }];
         let prevent, bg, nav, info;
@@ -773,7 +773,7 @@ class UI extends Interface {
         function over(button) {
             if (prevent) return;
             Timer.clearTimeout(button.timeout);
-            button.needRender = true;
+            button.needsUpdate = true;
             button.object.animateIn();
             button.object.tween({ opacity: 1 }, 400, 'easeOutCubic');
             button.background.enabled = true;
@@ -784,7 +784,7 @@ class UI extends Interface {
 
         function out(button) {
             Timer.clearTimeout(button.timeout);
-            button.timeout = self.delayedCall(() => button.needRender = false, 2000);
+            button.timeout = self.delayedCall(() => button.needsUpdate = false, 2000);
             button.object.animateOut();
             button.object.tween({ opacity: 0.5 }, 400, 'easeOutCubic');
             button.background.animateOut();
@@ -794,8 +794,8 @@ class UI extends Interface {
             buttons.forEach(button => {
                 Timer.clearTimeout(button.delay);
                 Timer.clearTimeout(button.timeout);
-                button.needRender = true;
-                button.timeout = self.delayedCall(() => button.needRender = false, 2000);
+                button.needsUpdate = true;
+                button.timeout = self.delayedCall(() => button.needsUpdate = false, 2000);
                 button.object.hideButton();
             });
         }
@@ -805,8 +805,8 @@ class UI extends Interface {
                 Timer.clearTimeout(button.delay);
                 Timer.clearTimeout(button.timeout);
                 button.delay = self.delayedCall(() => {
-                    button.needRender = true;
-                    button.timeout = self.delayedCall(() => button.needRender = false, 2000);
+                    button.needsUpdate = true;
+                    button.timeout = self.delayedCall(() => button.needsUpdate = false, 2000);
                     button.object.showButton();
                 }, 400);
             });
@@ -814,7 +814,7 @@ class UI extends Interface {
 
         function loop() {
             buttons.forEach(button => {
-                if (button.needRender) button.object.update();
+                if (button.needsUpdate) button.object.update();
             });
         }
 
@@ -1329,11 +1329,11 @@ class Main {
         }
 
         function addListeners() {
-            Stage.events.add(Events.VISIBILITY, visibility);
             Stage.events.add(Events.START, start);
             Stage.events.add(Events.OPEN_NAV, openNav);
             Stage.events.add(Events.CLOSE_NAV, closeNav);
             Stage.events.add(Events.RESIZE, resize);
+            Stage.events.add(Events.VISIBILITY, visibility);
         }
 
         function start(e) {
@@ -1343,11 +1343,10 @@ class Main {
                     space.ready().then(() => {
                         space.animateIn();
 
-                        UI.instance();
-
                         World.instance().initAudio();
                     });
 
+                    UI.instance();
                     Stage.delayedCall(() => {
                         Stage.events.fire(Events.UI_SHOW);
                         Data.dispatcher.unlock();
@@ -1363,6 +1362,8 @@ class Main {
 
         function openNav(e) {
             if (e.direction < 0) {
+                Stage.loaded = false;
+                Stage.destroyed = false;
                 Data.dispatcher.lock();
 
                 let item = e.item;
@@ -1370,13 +1371,15 @@ class Main {
                 if (item.path !== '') {
                     example = Stage.initClass(ExampleLoader, item);
                     Stage.events.add(example, Events.COMPLETE, loadComplete);
+                } else {
+                    Global.EXAMPLE = null;
+                    Stage.loaded = true;
                 }
 
                 UI.instance().nav.right.animateIn(() => {
                     if (space) space = space.destroy();
                     if (World.singleton) World.instance().destroy();
                     if (Global.LAST_EXAMPLE) Global.LAST_EXAMPLE.destroy();
-                    Global.LAST_EXAMPLE = Global.EXAMPLE;
 
                     if (item.path === '') {
                         WebAudio.unmute();
@@ -1386,15 +1389,10 @@ class Main {
 
                             World.instance().initAudio();
                         });
-                        Global.LAST_EXAMPLE = null;
                     }
 
-                    UI.instance().reset();
-                    Stage.delayedCall(() => {
-                        Stage.element.appendChild(UI.instance().element);
-                        Stage.events.fire(Events.UI_SHOW);
-                        Data.dispatcher.unlock();
-                    }, 1000);
+                    Stage.destroyed = true;
+                    complete();
                 });
 
                 Data.dispatcher.setState(item.path);
@@ -1404,21 +1402,37 @@ class Main {
             }
         }
 
-        function loadComplete() {
-            example = example.destroy();
-        }
-
         function closeNav() {
             WebAudio.unmute();
+        }
+
+        function loadComplete() {
+            example = example.destroy();
+
+            Stage.loaded = true;
+            complete();
+        }
+
+        function complete() {
+            if (Stage.destroyed && Stage.loaded) {
+                Global.LAST_EXAMPLE = Global.EXAMPLE;
+
+                UI.instance().reset();
+                Stage.delayedCall(() => {
+                    Stage.element.appendChild(UI.instance().element);
+                    Stage.events.fire(Events.UI_SHOW);
+                    Data.dispatcher.unlock();
+                }, 1000);
+            }
+        }
+
+        function resize() {
+            if (orientation !== Stage.orientation) location.reload();
         }
 
         function visibility(e) {
             if (e.type === 'blur') WebAudio.mute();
             else WebAudio.unmute();
-        }
-
-        function resize() {
-            if (orientation !== Stage.orientation) location.reload();
         }
     }
 }
