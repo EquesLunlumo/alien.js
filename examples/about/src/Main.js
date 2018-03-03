@@ -15,12 +15,12 @@ import fragSpace from './shaders/space.frag';
 Config.UI_COLOR = 'white';
 Config.NAV_WIDTH = 320;
 
-Config.ASSETS = [
-    'assets/js/lib/three.min.js',
-    'assets/sounds/BassDrum.mp3',
-    'assets/sounds/DeepSpacy.mp3',
-    'assets/sounds/DeepWarp.mp3'
-];
+Config.ASSETS = {
+    'three': 'assets/js/lib/three.min.js',
+    'BassDrum': 'assets/sounds/BassDrum.mp3',
+    'DeepSpacy': 'assets/sounds/DeepSpacy.mp3',
+    'DeepWarp': 'assets/sounds/DeepWarp.mp3'
+};
 
 class Example {
 
@@ -873,7 +873,7 @@ class VideoTexture extends Component {
 
         function initVideo() {
             video = self.initClass(Video, {
-                src: 'assets/video/galaxy.mp4',
+                src: Config.ASSETS['galaxy'],
                 width: 1920,
                 height: 1080,
                 preload: true,
@@ -926,7 +926,7 @@ class Space extends Component {
         World.scene.add(this.object3D);
 
         function initTexture() {
-            img = Assets.createImage('assets/images/shot/galaxy.jpg');
+            img = Assets.createImage(Config.ASSETS['galaxy']);
             return Assets.loadImage(img).then(finishSetup);
         }
 
@@ -1235,6 +1235,7 @@ class Loader extends Interface {
         }
 
         function initLoader() {
+            Config.ASSETS['galaxy'] = Tests.shaderVideo() ? 'assets/video/galaxy.mp4' : 'assets/images/shot/galaxy.jpg';
             loader = self.initClass(AssetLoader, Config.ASSETS);
             self.events.add(loader, Events.PROGRESS, loadUpdate);
         }
