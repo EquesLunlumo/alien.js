@@ -4,11 +4,6 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-if (!window.requestAnimationFrame) window.requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || (() => {
-    const start = Date.now();
-    return callback => setTimeout(() => callback(Date.now() - start), 1000 / 60);
-})();
-
 class Render {
 
     static init() {
