@@ -12,28 +12,28 @@ class Assets {
         const images = {},
             json = {};
 
-        this.getPath = src => {
-            if (~src.indexOf('//')) return src;
-            if (this.CDN && !~src.indexOf(this.CDN)) src = this.CDN + src;
-            return src;
+        this.getPath = path => {
+            if (~path.indexOf('//')) return path;
+            if (this.CDN && !~path.indexOf(this.CDN)) path = this.CDN + path;
+            return path;
         };
 
-        this.createImage = (src, store, callback) => {
+        this.createImage = (path, store, callback) => {
             if (typeof store !== 'boolean') {
                 callback = store;
                 store = undefined;
             }
             const img = new Image();
             img.crossOrigin = this.CORS;
-            img.src = this.getPath(src);
+            img.src = this.getPath(path);
             img.onload = callback;
             img.onerror = callback;
-            if (store) images[src] = img;
+            if (store) images[path] = img;
             return img;
         };
 
-        this.getImage = src => {
-            return images[src];
+        this.getImage = path => {
+            return images[path];
         };
 
         this.storeData = (name, data) => {
@@ -49,8 +49,8 @@ class Assets {
     static loadImage(img) {
         if (typeof img === 'string') img = this.createImage(img);
         const promise = Promise.create();
-        img.onload = promise.resolve;
-        img.onerror = promise.resolve;
+        img.onload = () => promise.resolve(img);
+        img.onerror = () => promise.resolve(img);
         return promise;
     }
 }
