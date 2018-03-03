@@ -1,5 +1,5 @@
 /**
- * Image helper class with promise method.
+ * Assets helper class with image promise method.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
@@ -9,7 +9,8 @@ class Assets {
     static init() {
         this.CDN = '';
         this.CORS = null;
-        const images = {};
+        const images = {},
+            json = {};
 
         this.getPath = src => {
             if (~src.indexOf('//')) return src;
@@ -33,6 +34,15 @@ class Assets {
 
         this.getImage = src => {
             return images[src];
+        };
+
+        this.storeData = (name, data) => {
+            json[name] = data;
+            return json[name];
+        };
+
+        this.getData = name => {
+            return json[name];
         };
     }
 
