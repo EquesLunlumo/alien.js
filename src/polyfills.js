@@ -85,6 +85,12 @@ String.prototype.replaceAll = function (find, replace) {
     return this.split(find).join(replace);
 };
 
+Date.prototype.addDays = function (days) {
+    const date = new Date(this.valueOf());
+    date.setDate(date.getDate() + days);
+    return date;
+};
+
 if (!window.fetch) window.fetch = function (url, options = {}) {
     const promise = Promise.create(),
         request = new XMLHttpRequest();
