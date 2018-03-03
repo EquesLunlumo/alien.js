@@ -281,7 +281,7 @@ class NavBackground extends Interface {
         }
 
         function initFill() {
-            fill = new CanvasGraphics();
+            fill = self.initClass(CanvasGraphics);
             fill.fillStyle = '#000';
             canvas.add(fill);
         }
@@ -508,12 +508,12 @@ class Button extends Interface {
         }
 
         function initLine() {
-            mask = new CanvasGraphics();
+            mask = self.initClass(CanvasGraphics);
             mask.x = data.posX;
             mask.y = 30;
             mask.radius = 9;
             mask.fillStyle = '#f00';
-            line = new CanvasGraphics();
+            line = self.initClass(CanvasGraphics);
             line.blendMode = 'source-out';
             line.lineWidth = 1.5;
             line.strokeStyle = Config.UI_COLOR;
@@ -522,7 +522,7 @@ class Button extends Interface {
         }
 
         function initCircle() {
-            circle = new CanvasGraphics();
+            circle = self.initClass(CanvasGraphics);
             circle.x = 52;
             circle.y = 30;
             circle.radius = data.radius;
@@ -532,7 +532,7 @@ class Button extends Interface {
         }
 
         function initLittleCircle() {
-            littleCircle = new CanvasGraphics();
+            littleCircle = self.initClass(CanvasGraphics);
             littleCircle.x = data.posX;
             littleCircle.y = 30;
             littleCircle.radius = 5 * data.littleCircleScale;

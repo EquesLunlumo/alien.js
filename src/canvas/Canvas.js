@@ -71,7 +71,7 @@ class Canvas {
         };
 
         this.destroy = () => {
-            for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
+            if (this.children) for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
             this.object.destroy();
             return Utils.nullObject(this);
         };

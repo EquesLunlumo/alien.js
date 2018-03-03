@@ -41,12 +41,12 @@ class AlienKittyTexture extends Component {
         }
 
         function finishSetup() {
-            alienkitty = new CanvasGraphics(90, 86);
+            alienkitty = self.initClass(CanvasGraphics, 90, 86);
             alienkitty.drawImage(alienkittyimg);
-            eyelid1 = new CanvasGraphics(24, 14);
+            eyelid1 = self.initClass(CanvasGraphics, 24, 14);
             eyelid1.transformPoint('50%', 0).transform({ x: 35, y: 25, scaleX: 1.5, scaleY: 0.01 });
             eyelid1.drawImage(eyelidimg);
-            eyelid2 = new CanvasGraphics(24, 14);
+            eyelid2 = self.initClass(CanvasGraphics, 24, 14);
             eyelid2.transformPoint(0, 0).transform({ x: 53, y: 26, scaleX: 1, scaleY: 0.01 });
             eyelid2.drawImage(eyelidimg);
             alienkitty.add(eyelid1);

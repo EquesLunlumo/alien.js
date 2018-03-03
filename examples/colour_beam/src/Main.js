@@ -268,7 +268,7 @@ class Progress extends Interface {
         }
 
         function initCircle() {
-            circle = new CanvasGraphics();
+            circle = self.initClass(CanvasGraphics);
             circle.x = size / 2;
             circle.y = size / 2;
             circle.radius = size * 0.4;

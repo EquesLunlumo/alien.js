@@ -43,11 +43,11 @@ class CanvasObject {
         for (let i = 0; i < this.children.length; i++) this.children[i].render(override);
     }
 
-    startDraw(ox, oy, override) {
+    startDraw(ox = 0, oy = 0, override) {
         const context = this.canvas.context,
             v = this.values.data,
-            x = v[0] + (ox || 0),
-            y = v[1] + (oy || 0);
+            x = v[0] + ox,
+            y = v[1] + oy;
         context.save();
         if (!override) context.globalCompositeOperation = this.blendMode;
         context.translate(x, y);
@@ -151,7 +151,7 @@ class CanvasObject {
     }
 
     destroy() {
-        for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
+        if (this.children) for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
         return Utils.nullObject(this);
     }
 }
