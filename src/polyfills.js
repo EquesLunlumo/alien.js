@@ -3,12 +3,11 @@
  */
 
 if (typeof Promise !== 'undefined') Promise.create = function () {
-    let resolve,
-        reject,
-        promise = new Promise(function (res, rej) {
-            resolve = res;
-            reject = rej;
-        });
+    let resolve, reject;
+    const promise = new Promise(function (res, rej) {
+        resolve = res;
+        reject = rej;
+    });
     promise.resolve = resolve;
     promise.reject = reject;
     return promise;
@@ -60,7 +59,7 @@ Math.mod = function (value, n) {
 };
 
 Array.prototype.remove = function (element) {
-    let index = this.indexOf(element);
+    const index = this.indexOf(element);
     if (~index) return this.splice(index, 1);
 };
 
@@ -87,7 +86,7 @@ String.prototype.replaceAll = function (find, replace) {
 };
 
 if (!window.fetch) window.fetch = function (url, options = {}) {
-    let promise = Promise.create(),
+    const promise = Promise.create(),
         request = new XMLHttpRequest();
     request.open(options.method || 'GET', url);
     for (let i in options.headers) request.setRequestHeader(i, options.headers[i]);
@@ -96,10 +95,10 @@ if (!window.fetch) window.fetch = function (url, options = {}) {
     request.send(options.body);
 
     function response() {
-        let keys = [],
+        const keys = [],
             all = [],
-            headers = {},
-            header;
+            headers = {};
+        let header;
         request.getAllResponseHeaders().replace(/^(.*?):\s*([\s\S]*?)$/gm, function (m, key, value) {
             keys.push(key = key.toLowerCase());
             all.push([key, value]);
@@ -129,7 +128,7 @@ if (!window.fetch) window.fetch = function (url, options = {}) {
 };
 
 window.get = function (url, options = {}) {
-    let promise = Promise.create();
+    const promise = Promise.create();
     options.method = 'GET';
     window.fetch(url, options).then(handleResponse).catch(promise.reject);
 
@@ -151,7 +150,7 @@ window.get = function (url, options = {}) {
 };
 
 window.post = function (url, body, options = {}) {
-    let promise = Promise.create();
+    const promise = Promise.create();
     options.method = 'POST';
     options.body = JSON.stringify(body);
     window.fetch(url, options).then(handleResponse).catch(promise.reject);
