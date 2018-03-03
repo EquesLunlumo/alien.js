@@ -34,6 +34,7 @@ glslify [shader](https://rawgit.com/pschroen/alien.js/master/examples/shader/dis
 [colorize](https://rawgit.com/pschroen/alien.js/master/examples/colorize/dist/) (fade transition)  
 [chromatic aberration](https://rawgit.com/pschroen/alien.js/master/examples/chromatic_aberration/dist/) (simple)  
 [chromatic aberration 2](https://rawgit.com/pschroen/alien.js/master/examples/chromatic_aberration2/dist/) (barrel distortion)  
+[rotate](https://rawgit.com/pschroen/alien.js/master/examples/rotate/dist/)  
 [noise warp](https://rawgit.com/pschroen/alien.js/master/examples/noise_warp/dist/)  
 [noise dizzy](https://rawgit.com/pschroen/alien.js/master/examples/noise_dizzy/dist/)  
 [directional warp](https://rawgit.com/pschroen/alien.js/master/examples/directional_warp/dist/)  

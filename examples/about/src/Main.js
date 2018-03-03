@@ -45,6 +45,7 @@ Config.EXAMPLES = [
     new Example({ slug: 'colorize', title: 'colorize', description: 'fade transition' }),
     new Example({ slug: 'chromatic_aberration', title: 'chromatic aberration', description: 'simple' }),
     new Example({ slug: 'chromatic_aberration2', title: 'chromatic aberration 2', description: 'barrel distortion' }),
+    new Example({ slug: 'rotate', title: 'rotate', description: '' }),
     new Example({ slug: 'noise_warp', title: 'noise warp', description: '' }),
     new Example({ slug: 'noise_dizzy', title: 'noise dizzy', description: '' }),
     new Example({ slug: 'directional_warp', title: 'directional warp', description: '' }),
