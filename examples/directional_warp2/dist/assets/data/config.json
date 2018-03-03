@@ -1,0 +1,14 @@
+{
+  "work": [
+    {
+      "slug": "galaxy",
+      "title": "Video 1",
+      "description": "Directional Warp 2"
+    },
+    {
+      "slug": "particles",
+      "title": "Video 2",
+      "description": "Directional Warp 2"
+    }
+  ]
+}

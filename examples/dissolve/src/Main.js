@@ -203,10 +203,6 @@ class World extends Component {
         return this.singleton;
     }
 
-    static destroy() {
-        return this.singleton ? this.singleton.destroy() : null;
-    }
-
     constructor() {
         super();
         const self = this;

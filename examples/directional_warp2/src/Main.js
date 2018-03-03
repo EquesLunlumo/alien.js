@@ -15,27 +15,9 @@ import vertDirectionalWarp from './shaders/directional_warp.vert';
 import fragDirectionalWarp from './shaders/directional_warp.frag';
 
 Config.UI_COLOR = 'white';
-
+Config.LIST = [];
 Config.ASSETS = [
     'assets/js/lib/three.min.js'
-];
-
-class Work {
-
-    constructor(item) {
-        this.slug = item.slug;
-        this.path = `work/${this.slug}/`;
-        this.title = item.title;
-        this.pageTitle = `${this.title} / Alien.js Example Project`;
-        this.description = item.description;
-        this.src = `assets/video/${this.slug}.mp4`;
-        this.img = `assets/images/shot/${this.slug}.jpg`;
-    }
-}
-
-Config.LIST = [
-    new Work({ slug: 'galaxy', title: 'Video 1', description: 'Directional Warp 2' }),
-    new Work({ slug: 'particles', title: 'Video 2', description: 'Directional Warp 2' })
 ];
 
 Global.SLIDE_INDEX = 0;
@@ -382,10 +364,6 @@ class World extends Component {
         return this.singleton;
     }
 
-    static destroy() {
-        return this.singleton ? this.singleton.destroy() : null;
-    }
-
     constructor() {
         super();
         const self = this;
@@ -530,10 +508,10 @@ class Loader extends Interface {
         function initLoader() {
             slide = self.initClass(SlideLoader, Config.LIST);
             loader = self.initClass(MultiLoader);
-            loader.push(self.initClass(FontLoader, ['Oswald', 'Karla']));
             loader.push(self.initClass(AssetLoader, Config.ASSETS));
             loader.push(slide);
             self.events.add(loader, Events.PROGRESS, loadUpdate);
+
             Stage.list = slide.list;
             Stage.pathList = slide.pathList;
         }
@@ -558,19 +536,27 @@ class Loader extends Interface {
     }
 }
 
+class Work {
+
+    constructor(item) {
+        this.slug = item.slug;
+        this.path = `work/${this.slug}/`;
+        this.title = item.title;
+        this.pageTitle = `${this.title} / Alien.js Example Project`;
+        this.description = item.description;
+        this.src = `assets/video/${this.slug}.mp4`;
+        this.img = `assets/images/shot/${this.slug}.jpg`;
+    }
+}
+
 class Main {
 
     constructor() {
         let loader, space;
 
-        initData();
         initStage();
         initLoader();
         addListeners();
-
-        function initData() {
-            Data.init();
-        }
 
         function initStage() {
             Stage.size('100%');
@@ -579,8 +565,18 @@ class Main {
         }
 
         function initLoader() {
-            loader = Stage.initClass(Loader);
-            Stage.events.add(loader, Events.COMPLETE, loadComplete);
+            Promise.all([
+                FontLoader.loadFonts(['Oswald', 'Karla']),
+                AssetLoader.loadAssets(['assets/data/config.json?' + Utils.timestamp()])
+            ]).then(() => {
+                const work = Assets.getData('config').work;
+                work.forEach(item => Config.LIST.push(new Work(item)));
+
+                Data.init();
+
+                loader = Stage.initClass(Loader);
+                Stage.events.add(loader, Events.COMPLETE, loadComplete);
+            });
         }
 
         function loadComplete() {

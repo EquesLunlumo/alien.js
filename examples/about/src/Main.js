@@ -14,38 +14,7 @@ import fragSpace from './shaders/space.frag';
 
 Config.UI_COLOR = 'white';
 Config.NAV_WIDTH = 320;
-
-class Example {
-
-    constructor(item) {
-        this.slug = item.slug;
-        if (item.slug) this.path = `examples/${this.slug}/`;
-        else this.path = item.path;
-        this.title = item.title;
-        this.pageTitle = `${this.title} / Alien.js Example Project`;
-        this.description = item.description;
-    }
-}
-
-Config.EXAMPLES = [
-    new Example({ path: 'https://github.com/pschroen/alien.js', title: 'source code', description: '' }),
-    new Example({ path: 'https://medium.com/@activetheory/mira-exploring-the-potential-of-the-future-web-e1f7f326d58e', title: 'inspiration', description: '' }),
-    new Example({ title: 'ui' }),
-    new Example({ path: '', title: 'about', description: '' }),
-    new Example({ title: 'shader' }),
-    new Example({ slug: 'colour_beam', title: 'colour beam', description: '' }),
-    new Example({ slug: 'dissolve', title: 'dissolve', description: 'fade transition' }),
-    new Example({ slug: 'colorize', title: 'colorize', description: 'fade transition' }),
-    new Example({ slug: 'chromatic_aberration', title: 'chromatic aberration', description: 'simple' }),
-    new Example({ slug: 'chromatic_aberration2', title: 'chromatic aberration 2', description: 'barrel distortion' }),
-    new Example({ slug: 'rotate', title: 'rotate', description: '' }),
-    new Example({ slug: 'noise_warp', title: 'noise warp', description: '' }),
-    new Example({ slug: 'noise_dizzy', title: 'noise dizzy', description: '' }),
-    new Example({ slug: 'directional_warp', title: 'directional warp', description: '' }),
-    new Example({ slug: 'directional_warp2', title: 'directional warp 2', description: 'scroll transition' }),
-    new Example({ slug: 'ripple', title: 'ripple', description: '' }),
-    new Example({ slug: 'glitch_displace', title: 'glitch displace', description: '' })
-];
+Config.EXAMPLES = [];
 
 Events.START = 'start';
 Events.UI_HIDE = 'ui_hide';
@@ -1012,7 +981,9 @@ class World extends Component {
     }
 
     static destroy() {
-        return this.singleton ? this.singleton.destroy() : null;
+        if (this.singleton) this.singleton.destroy();
+        this.singleton = null;
+        return this.singleton;
     }
 
     constructor() {
@@ -1123,8 +1094,8 @@ class AlienKitty extends Interface {
         function initImages() {
             return Promise.all([
                 Assets.loadImage('assets/images/alienkitty.svg'),
-                Assets.loadImage('assets/images/alienkitty_eyelid.svg')]
-            ).then(finishSetup);
+                Assets.loadImage('assets/images/alienkitty_eyelid.svg')
+            ]).then(finishSetup);
         }
 
         function finishSetup() {
@@ -1279,6 +1250,18 @@ class Loader extends Interface {
     }
 }
 
+class Example {
+
+    constructor(item) {
+        this.slug = item.slug;
+        if (item.slug) this.path = `examples/${this.slug}/`;
+        else this.path = item.path;
+        this.title = item.title;
+        this.pageTitle = `${this.title} / Alien.js Example Project`;
+        this.description = item.description;
+    }
+}
+
 class Main {
 
     constructor() {
@@ -1291,7 +1274,6 @@ class Main {
         WebAudio.init();
 
         setConfig();
-        initData();
         initStage();
         initLoader();
         addListeners();
@@ -1306,11 +1288,6 @@ class Main {
             };
         }
 
-        function initData() {
-            Data.init();
-            Data.dispatcher.lock();
-        }
-
         function initStage() {
             Stage.size('100%');
 
@@ -1320,7 +1297,16 @@ class Main {
         }
 
         function initLoader() {
-            FontLoader.loadFonts(['Consolas, "Lucida Console", Monaco, monospace', 'Oswald', 'Karla']).then(() => {
+            Promise.all([
+                FontLoader.loadFonts(['Consolas, "Lucida Console", Monaco, monospace', 'Oswald', 'Karla']),
+                AssetLoader.loadAssets(['assets/data/config.json?' + Utils.timestamp()])
+            ]).then(() => {
+                const examples = Assets.getData('config').examples;
+                examples.forEach(item => Config.EXAMPLES.push(new Example(item)));
+
+                Data.init();
+                Data.dispatcher.lock();
+
                 loader = Stage.initClass(Loader);
                 Stage.events.add(loader, Events.COMPLETE, initWorld);
             });
@@ -1384,7 +1370,7 @@ class Main {
 
                 UI.instance().nav.right.animateIn(() => {
                     if (space) space = space.destroy();
-                    if (World.singleton) World.instance().destroy();
+                    if (World.singleton) World.destroy();
                     if (Global.LAST_EXAMPLE) Global.LAST_EXAMPLE.destroy();
 
                     if (item.path === '') {
