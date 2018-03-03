@@ -4,6 +4,7 @@
     "es6": true
   },
   "globals": {
+    "defer": true,
     "getURL": true,
     "Config": true,
     "Global": true
