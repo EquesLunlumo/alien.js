@@ -15,13 +15,6 @@ import fragSpace from './shaders/space.frag';
 Config.UI_COLOR = 'white';
 Config.NAV_WIDTH = 320;
 
-Config.ASSETS = {
-    'three': 'assets/js/lib/three.min.js',
-    'BassDrum': 'assets/sounds/BassDrum.mp3',
-    'DeepSpacy': 'assets/sounds/DeepSpacy.mp3',
-    'DeepWarp': 'assets/sounds/DeepWarp.mp3'
-};
-
 class Example {
 
     constructor(item) {
@@ -1235,7 +1228,6 @@ class Loader extends Interface {
         }
 
         function initLoader() {
-            Config.ASSETS['galaxy'] = Tests.shaderVideo() ? 'assets/video/galaxy.mp4' : 'assets/images/shot/galaxy.jpg';
             loader = self.initClass(AssetLoader, Config.ASSETS);
             self.events.add(loader, Events.PROGRESS, loadUpdate);
         }
@@ -1298,10 +1290,21 @@ class Main {
 
         WebAudio.init();
 
+        setConfig();
         initData();
         initStage();
         initLoader();
         addListeners();
+
+        function setConfig() {
+            Config.ASSETS = {
+                'three': 'assets/js/lib/three.min.js',
+                'BassDrum': 'assets/sounds/BassDrum.mp3',
+                'DeepSpacy': 'assets/sounds/DeepSpacy.mp3',
+                'DeepWarp': 'assets/sounds/DeepWarp.mp3',
+                'galaxy': Tests.shaderVideo() ? 'assets/video/galaxy.mp4' : 'assets/images/shot/galaxy.jpg'
+            };
+        }
 
         function initData() {
             Data.init();
@@ -1374,6 +1377,7 @@ class Main {
                     example = Stage.initClass(ExampleLoader, item);
                     Stage.events.add(example, Events.COMPLETE, loadComplete);
                 } else {
+                    setConfig();
                     Global.EXAMPLE = null;
                     Stage.loaded = true;
                 }
