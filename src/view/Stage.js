@@ -4,11 +4,11 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Events } from '../util/Events';
-import { Interface } from '../util/Interface';
-import { Accelerometer } from '../mobile/Accelerometer';
-import { Mouse } from '../util/Mouse';
-import { WebAudio } from '../util/WebAudio';
+import { Events } from '../util/Events.js';
+import { Interface } from '../util/Interface.js';
+import { Accelerometer } from '../mobile/Accelerometer.js';
+import { Mouse } from '../util/Mouse.js';
+import { WebAudio } from '../util/WebAudio.js';
 
 const Stage = new (class extends Interface {
 
