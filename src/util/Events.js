@@ -32,10 +32,11 @@ class Events {
 
             fire(event, object = {}) {
                 let called = false;
-                for (let i = 0; i < this.events.length; i++) {
-                    if (this.events[i].event === event && !this.events[i].removed) {
-                        if (this.events[i].target && object && typeof object === 'object') object.target = object.target || this.events[i].target;
-                        this.events[i].callback(object);
+                const clone = Utils.cloneArray(this.events);
+                for (let i = 0; i < clone.length; i++) {
+                    if (clone[i].event === event && !clone[i].removed) {
+                        if (clone[i].target && object && typeof object === 'object') object.target = object.target || clone[i].target;
+                        clone[i].callback(object);
                         called = true;
                     }
                 }
