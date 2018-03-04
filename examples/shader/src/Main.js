@@ -27,7 +27,7 @@ class AlienKittyTexture extends Component {
         initCanvas();
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, 90, 86, true);
+            canvas = self.initClass(Canvas, 90, 86);
             self.canvas = canvas;
             texture = new THREE.Texture(canvas.element);
             texture.minFilter = THREE.LinearFilter;

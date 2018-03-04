@@ -277,7 +277,7 @@ class NavBackground extends Interface {
         }
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, size, Stage.height, true);
+            canvas = self.initClass(Canvas, size, Stage.height);
         }
 
         function initFill() {
@@ -388,7 +388,7 @@ class NavBackground extends Interface {
             width = end - start;
             direction = width < 0 ? -1 : 1;
             this.size(size, '100%');
-            canvas.size(size, Stage.height, true);
+            canvas.size(size, Stage.height);
             const inc = Stage.height / (points.length - 1);
             for (let i = 0; i < points.length; i++) {
                 points[i].y = inc * i;
@@ -504,7 +504,7 @@ class Button extends Interface {
         }
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, data.width, data.height, true);
+            canvas = self.initClass(Canvas, data.width, data.height);
         }
 
         function initLine() {

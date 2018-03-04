@@ -117,7 +117,7 @@ class CanvasLayer extends Interface {
         }
 
         function initCanvas() {
-            self.canvas = self.initClass(Canvas, Stage.width, Stage.height, true);
+            self.canvas = self.initClass(Canvas, Stage.width, Stage.height);
         }
 
         function addListeners() {
@@ -126,7 +126,7 @@ class CanvasLayer extends Interface {
         }
 
         function resize() {
-            self.canvas.size(Stage.width, Stage.height, true);
+            self.canvas.size(Stage.width, Stage.height);
         }
     }
 }

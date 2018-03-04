@@ -98,7 +98,7 @@ class Progress extends Interface {
         }
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, size, size, true);
+            canvas = self.initClass(Canvas, size);
             context = canvas.context;
             context.lineWidth = 5;
         }

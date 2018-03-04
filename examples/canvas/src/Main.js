@@ -29,7 +29,7 @@ class AlienKittyCanvas extends Interface {
         }
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, 90, 86, true);
+            canvas = self.initClass(Canvas, 90, 86);
         }
 
         function initImages() {
@@ -113,7 +113,7 @@ class Progress extends Interface {
         }
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, size, size, true);
+            canvas = self.initClass(Canvas, size);
             context = canvas.context;
             context.lineWidth = 5;
         }

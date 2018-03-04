@@ -62,7 +62,7 @@ class TitleTexture extends Component {
 
         function initCanvas() {
             Config.LIST.forEach(data => {
-                const canvas = self.initClass(Canvas, Stage.width, Stage.height, true, true);
+                const canvas = self.initClass(Canvas, Stage.width, Stage.height, true);
                 data.graphics = {};
                 data.graphics.canvas = canvas;
             });
@@ -73,7 +73,7 @@ class TitleTexture extends Component {
                 const canvas = data.graphics.canvas;
                 let text = data.graphics.text,
                     text2 = data.graphics.text2;
-                canvas.size(Stage.width, Stage.height, true);
+                canvas.size(Stage.width, Stage.height);
                 if (text) {
                     canvas.remove(text);
                     text = text2 = text.destroy();
@@ -446,7 +446,7 @@ class Progress extends Interface {
         }
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, size, size, true);
+            canvas = self.initClass(Canvas, size);
         }
 
         function initCircle() {

@@ -34,14 +34,14 @@ class TitleTexture extends Component {
         initCanvas();
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, Stage.width, Stage.height, true, true);
+            canvas = self.initClass(Canvas, Stage.width, Stage.height, true);
             texture = new THREE.Texture(canvas.element);
             texture.minFilter = THREE.LinearFilter;
             self.texture = texture;
         }
 
         this.update = () => {
-            canvas.size(Stage.width, Stage.height, true);
+            canvas.size(Stage.width, Stage.height);
             if (text) {
                 canvas.remove(text);
                 text = text.destroy();
@@ -292,7 +292,7 @@ class Progress extends Interface {
         }
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, size, size, true);
+            canvas = self.initClass(Canvas, size);
         }
 
         function initCircle() {
