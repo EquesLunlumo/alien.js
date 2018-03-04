@@ -27,6 +27,7 @@ export { TweenManager } from './tween/TweenManager.js';
 export { Interpolation } from './tween/Interpolation.js';
 export { Canvas } from './canvas/Canvas.js';
 export { CanvasGraphics } from './canvas/CanvasGraphics.js';
+export { CanvasTexture } from './canvas/CanvasTexture.js';
 export { CanvasFont } from './canvas/CanvasFont.js';
 export { Color } from './util/Color.js';
 export { Video } from './util/Video.js';

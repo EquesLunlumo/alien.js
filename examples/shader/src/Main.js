@@ -6,7 +6,7 @@
 
 /* global THREE */
 
-import { Events, Stage, Component, Canvas, CanvasGraphics, Device, Utils, Assets, AssetLoader, TweenManager, Shader } from '../alien.js/src/Alien.js';
+import { Events, Stage, Component, Canvas, CanvasTexture, Device, Utils, Assets, AssetLoader, TweenManager, Shader } from '../alien.js/src/Alien.js';
 
 import vert from './shaders/vert.glsl';
 import frag from './shaders/frag.glsl';
@@ -41,14 +41,11 @@ class AlienKittyTexture extends Component {
         }
 
         function finishSetup() {
-            alienkitty = self.initClass(CanvasGraphics, 90, 86);
-            alienkitty.drawImage(alienkittyimg);
-            eyelid1 = self.initClass(CanvasGraphics, 24, 14);
+            alienkitty = self.initClass(CanvasTexture, alienkittyimg, 90, 86);
+            eyelid1 = self.initClass(CanvasTexture, eyelidimg, 24, 14);
             eyelid1.transformPoint('50%', 0).transform({ x: 35, y: 25, scaleX: 1.5, scaleY: 0.01 });
-            eyelid1.drawImage(eyelidimg);
-            eyelid2 = self.initClass(CanvasGraphics, 24, 14);
+            eyelid2 = self.initClass(CanvasTexture, eyelidimg, 24, 14);
             eyelid2.transformPoint(0, 0).transform({ x: 53, y: 26, scaleX: 1, scaleY: 0.01 });
-            eyelid2.drawImage(eyelidimg);
             alienkitty.add(eyelid1);
             alienkitty.add(eyelid2);
             canvas.add(alienkitty);
