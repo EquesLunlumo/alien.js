@@ -4,9 +4,43 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+import { TweenManager } from './TweenManager.js';
+
 class Interpolation {
 
     static init() {
+
+        function calculateBezier(aT, aA1, aA2) {
+            return ((A(aA1, aA2) * aT + B(aA1, aA2)) * aT + C(aA1)) * aT;
+        }
+
+        function getTForX(aX, mX1, mX2) {
+            let aGuessT = aX;
+            for (let i = 0; i < 4; i++) {
+                const currentSlope = getSlope(aGuessT, mX1, mX2);
+                if (currentSlope === 0) return aGuessT;
+                const currentX = calculateBezier(aGuessT, mX1, mX2) - aX;
+                aGuessT -= currentX / currentSlope;
+            }
+            return aGuessT;
+        }
+
+        function getSlope(aT, aA1, aA2) {
+            return 3 * A(aA1, aA2) * aT * aT + 2 * B(aA1, aA2) * aT + C(aA1);
+        }
+
+        function A(aA1, aA2) {
+            return 1 - 3 * aA2 + 3 * aA1;
+        }
+
+        function B(aA1, aA2) {
+            return 3 * aA2 - 6 * aA1;
+        }
+
+        function C(aA1) {
+            return 3 * aA1;
+        }
+
         this.convertEase = ease => {
             return (() => {
                 let fn;
@@ -105,8 +139,23 @@ class Interpolation {
                         fn = this.Linear.None;
                         break;
                 }
+                if (!fn) {
+                    const curve = TweenManager.getEase(ease);
+                    if (curve) {
+                        const values = curve.split('(')[1].slice(0, -1).split(',');
+                        for (let i = 0; i < values.length; i++) values[i] = parseFloat(values[i]);
+                        fn = values;
+                    } else {
+                        fn = this.Cubic.Out;
+                    }
+                }
                 return fn;
-            })() || this.Cubic.Out;
+            })();
+        };
+
+        this.solve = (values, elapsed) => {
+            if (values[0] === values[1] && values[2] === values[3]) return elapsed;
+            return calculateBezier(getTForX(elapsed, values[0], values[2]), values[1], values[3]);
         };
 
         this.Linear = {

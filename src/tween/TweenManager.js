@@ -6,6 +6,7 @@
 
 import { Render } from '../util/Render.js';
 import { MathTween } from './MathTween.js';
+import { Interpolation } from './Interpolation.js';
 
 class TweenManager {
 
@@ -88,6 +89,24 @@ class TweenManager {
         }
     }
 
+    static isTransform(key) {
+        return ~this.TRANSFORMS.indexOf(key);
+    }
+
+    static getEase(name) {
+        return this.CSS_EASES[name] || this.CSS_EASES.easeOutCubic;
+    }
+
+    static getAllTransforms(object) {
+        const obj = {};
+        for (let i = 0; i < this.TRANSFORMS.length; i++) {
+            const key = this.TRANSFORMS[i],
+                val = object[key];
+            if (val !== 0 && typeof val === 'number') obj[key] = val;
+        }
+        return obj;
+    }
+
     static parseTransform(props) {
         let transforms = '';
         if (typeof props.x !== 'undefined' || typeof props.y !== 'undefined' || typeof props.z !== 'undefined') {
@@ -116,22 +135,14 @@ class TweenManager {
         return transforms;
     }
 
-    static isTransform(key) {
-        return ~this.TRANSFORMS.indexOf(key);
+    static interpolate(num, alpha, ease) {
+        const fn = Interpolation.convertEase(ease);
+        return num * (typeof fn === 'function' ? fn(alpha) : Interpolation.solve(fn, alpha));
     }
 
-    static getAllTransforms(object) {
-        const obj = {};
-        for (let i = 0; i < this.TRANSFORMS.length; i++) {
-            const key = this.TRANSFORMS[i],
-                val = object[key];
-            if (val !== 0 && typeof val === 'number') obj[key] = val;
-        }
-        return obj;
-    }
-
-    static getEase(name) {
-        return this.CSS_EASES[name] || this.CSS_EASES.easeOutCubic;
+    static interpolateValues(start, end, alpha, ease) {
+        const fn = Interpolation.convertEase(ease);
+        return start + (end - start) * (typeof fn === 'function' ? fn(alpha) : Interpolation.solve(fn, alpha));
     }
 }
 

@@ -12,7 +12,7 @@ class MathTween {
 
     constructor(object, props, time, ease, delay, update, callback) {
         const self = this;
-        let startTime, startValues, endValues, paused, spring, damping, elapsed;
+        let startTime, startValues, endValues, easeFunction, paused, spring, damping, elapsed;
 
         initMathTween();
 
@@ -25,6 +25,7 @@ class MathTween {
                 object.mathTweens.push(self);
             }
             ease = Interpolation.convertEase(ease);
+            easeFunction = typeof ease === 'function';
             startTime = performance.now();
             startTime += delay;
             endValues = props;
@@ -68,7 +69,7 @@ class MathTween {
         };
 
         this.interpolate = elapsed => {
-            const delta = ease(elapsed, spring, damping);
+            const delta = easeFunction ? ease(elapsed, spring, damping) : Interpolation.solve(ease, elapsed);
             for (let prop in startValues) {
                 if (typeof startValues[prop] === 'number' && typeof endValues[prop] === 'number') {
                     const start = startValues[prop],
