@@ -9,12 +9,11 @@
  */
 
 if (typeof Promise !== 'undefined') Promise.create = function () {
-    let resolve,
-        reject,
-        promise = new Promise(function (res, rej) {
-            resolve = res;
-            reject = rej;
-        });
+    let resolve, reject;
+    const promise = new Promise(function (res, rej) {
+        resolve = res;
+        reject = rej;
+    });
     promise.resolve = resolve;
     promise.reject = reject;
     return promise;
@@ -66,7 +65,7 @@ Math.mod = function (value, n) {
 };
 
 Array.prototype.remove = function (element) {
-    let index = this.indexOf(element);
+    const index = this.indexOf(element);
     if (~index) return this.splice(index, 1);
 };
 
@@ -92,8 +91,14 @@ String.prototype.replaceAll = function (find, replace) {
     return this.split(find).join(replace);
 };
 
+Date.prototype.addDays = function (days) {
+    const date = new Date(this.valueOf());
+    date.setDate(date.getDate() + days);
+    return date;
+};
+
 if (!window.fetch) window.fetch = function (url, options = {}) {
-    let promise = Promise.create(),
+    const promise = Promise.create(),
         request = new XMLHttpRequest();
     request.open(options.method || 'GET', url);
     for (let i in options.headers) request.setRequestHeader(i, options.headers[i]);
@@ -102,10 +107,10 @@ if (!window.fetch) window.fetch = function (url, options = {}) {
     request.send(options.body);
 
     function response() {
-        let keys = [],
+        const keys = [],
             all = [],
-            headers = {},
-            header;
+            headers = {};
+        let header;
         request.getAllResponseHeaders().replace(/^(.*?):\s*([\s\S]*?)$/gm, function (m, key, value) {
             keys.push(key = key.toLowerCase());
             all.push([key, value]);
@@ -135,7 +140,7 @@ if (!window.fetch) window.fetch = function (url, options = {}) {
 };
 
 window.get = function (url, options = {}) {
-    let promise = Promise.create();
+    const promise = Promise.create();
     options.method = 'GET';
     window.fetch(url, options).then(handleResponse).catch(promise.reject);
 
@@ -157,7 +162,7 @@ window.get = function (url, options = {}) {
 };
 
 window.post = function (url, body, options = {}) {
-    let promise = Promise.create();
+    const promise = Promise.create();
     options.method = 'POST';
     options.body = JSON.stringify(body);
     window.fetch(url, options).then(handleResponse).catch(promise.reject);
@@ -179,11 +184,11 @@ window.post = function (url, body, options = {}) {
     return promise;
 };
 
+window.defer = window.requestAnimationFrame;
+
 window.getURL = function (url, target = '_blank') {
     window.open(url, target);
 };
-
-if (!window.URL) window.URL = window.webkitURL;
 
 if (!window.Config) window.Config = {};
 if (!window.Global) window.Global = {};
@@ -266,6 +271,10 @@ class Utils {
     static pad(number) {
         return number < 10 ? '0' + number : number;
     }
+
+    static get hash() {
+        return window.location.hash.slice(1);
+    }
 }
 
 /**
@@ -273,11 +282,6 @@ class Utils {
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
-
-if (!window.requestAnimationFrame) window.requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || (() => {
-    const start = Date.now();
-    return callback => setTimeout(() => callback(Date.now() - start), 1000 / 60);
-})();
 
 class Render {
 
@@ -433,10 +437,11 @@ class Events {
 
             fire(event, object = {}) {
                 let called = false;
-                for (let i = 0; i < this.events.length; i++) {
-                    if (this.events[i].event === event && !this.events[i].removed) {
-                        if (this.events[i].target && object && typeof object === 'object') object.target = object.target || this.events[i].target;
-                        this.events[i].callback(object);
+                const clone = Utils.cloneArray(this.events);
+                for (let i = 0; i < clone.length; i++) {
+                    if (clone[i].event === event && !clone[i].removed) {
+                        if (clone[i].target && object && typeof object === 'object') object.target = object.target || clone[i].target;
+                        clone[i].callback(object);
                         called = true;
                     }
                 }
@@ -470,6 +475,7 @@ class Events {
 
             Events.initialized = true;
         }
+
         this.emitter = new Emitter();
         const linked = [];
 
@@ -508,7 +514,9 @@ class Events {
         this.destroy = () => {
             Events.emitter.destroy(this);
             linked.forEach(emitter => emitter.destroy(this));
-            this.emitter.links.forEach(object => object.unlink(this.emitter));
+            this.emitter.links.forEach(object => {
+                if (object.unlink) object.unlink(this.emitter);
+            });
             return Utils.nullObject(this);
         };
 
@@ -642,6 +650,7 @@ class Component {
     }
 
     delayedCall(callback, time = 0, ...params) {
+        if (!this.timers) return;
         const timer = Timer.create(() => {
             if (callback) callback(...params);
         }, time);
@@ -691,6 +700,65 @@ class Component {
 }
 
 /**
+ * Assets helper class with image promise method.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Assets {
+
+    static init() {
+        this.CDN = '';
+        this.CORS = null;
+        const images = {},
+            json = {};
+
+        this.getPath = path => {
+            if (~path.indexOf('//')) return path;
+            if (this.CDN && !~path.indexOf(this.CDN)) path = this.CDN + path;
+            return path;
+        };
+
+        this.createImage = (path, store, callback) => {
+            if (typeof store !== 'boolean') {
+                callback = store;
+                store = undefined;
+            }
+            const img = new Image();
+            img.crossOrigin = this.CORS;
+            img.src = this.getPath(path);
+            img.onload = callback;
+            img.onerror = callback;
+            if (store) images[path] = img;
+            return img;
+        };
+
+        this.getImage = path => {
+            return images[path];
+        };
+
+        this.storeData = (name, data) => {
+            json[name] = data;
+            return json[name];
+        };
+
+        this.getData = name => {
+            return json[name];
+        };
+    }
+
+    static loadImage(img) {
+        if (typeof img === 'string') img = this.createImage(img);
+        const promise = Promise.create();
+        img.onload = () => promise.resolve(img);
+        img.onerror = () => promise.resolve(img);
+        return promise;
+    }
+}
+
+Assets.init();
+
+/**
  * Interpolation helper class.
  *
  * @author Patrick Schroen / https://github.com/pschroen
@@ -699,6 +767,38 @@ class Component {
 class Interpolation {
 
     static init() {
+
+        function calculateBezier(aT, aA1, aA2) {
+            return ((A(aA1, aA2) * aT + B(aA1, aA2)) * aT + C(aA1)) * aT;
+        }
+
+        function getTForX(aX, mX1, mX2) {
+            let aGuessT = aX;
+            for (let i = 0; i < 4; i++) {
+                const currentSlope = getSlope(aGuessT, mX1, mX2);
+                if (currentSlope === 0) return aGuessT;
+                const currentX = calculateBezier(aGuessT, mX1, mX2) - aX;
+                aGuessT -= currentX / currentSlope;
+            }
+            return aGuessT;
+        }
+
+        function getSlope(aT, aA1, aA2) {
+            return 3 * A(aA1, aA2) * aT * aT + 2 * B(aA1, aA2) * aT + C(aA1);
+        }
+
+        function A(aA1, aA2) {
+            return 1 - 3 * aA2 + 3 * aA1;
+        }
+
+        function B(aA1, aA2) {
+            return 3 * aA2 - 6 * aA1;
+        }
+
+        function C(aA1) {
+            return 3 * aA1;
+        }
+
         this.convertEase = ease => {
             return (() => {
                 let fn;
@@ -797,8 +897,23 @@ class Interpolation {
                         fn = this.Linear.None;
                         break;
                 }
+                if (!fn) {
+                    const curve = TweenManager.getEase(ease);
+                    if (curve) {
+                        const values = curve.split('(')[1].slice(0, -1).split(',');
+                        for (let i = 0; i < values.length; i++) values[i] = parseFloat(values[i]);
+                        fn = values;
+                    } else {
+                        fn = this.Cubic.Out;
+                    }
+                }
                 return fn;
-            })() || this.Cubic.Out;
+            })();
+        };
+
+        this.solve = (values, elapsed) => {
+            if (values[0] === values[1] && values[2] === values[3]) return elapsed;
+            return calculateBezier(getTForX(elapsed, values[0], values[2]), values[1], values[3]);
         };
 
         this.Linear = {
@@ -979,7 +1094,7 @@ class MathTween {
 
     constructor(object, props, time, ease, delay, update, callback) {
         const self = this;
-        let startTime, startValues, endValues, paused, spring, damping, elapsed;
+        let startTime, startValues, endValues, easeFunction, paused, spring, damping, elapsed;
 
         initMathTween();
 
@@ -992,6 +1107,7 @@ class MathTween {
                 object.mathTweens.push(self);
             }
             ease = Interpolation.convertEase(ease);
+            easeFunction = typeof ease === 'function';
             startTime = performance.now();
             startTime += delay;
             endValues = props;
@@ -1035,7 +1151,7 @@ class MathTween {
         };
 
         this.interpolate = elapsed => {
-            const delta = ease(elapsed, spring, damping);
+            const delta = easeFunction ? ease(elapsed, spring, damping) : Interpolation.solve(ease, elapsed);
             for (let prop in startValues) {
                 if (typeof startValues[prop] === 'number' && typeof endValues[prop] === 'number') {
                     const start = startValues[prop],
@@ -1135,6 +1251,24 @@ class TweenManager {
         }
     }
 
+    static isTransform(key) {
+        return ~this.TRANSFORMS.indexOf(key);
+    }
+
+    static getEase(name) {
+        return this.CSS_EASES[name] || this.CSS_EASES.easeOutCubic;
+    }
+
+    static getAllTransforms(object) {
+        const obj = {};
+        for (let i = 0; i < this.TRANSFORMS.length; i++) {
+            const key = this.TRANSFORMS[i],
+                val = object[key];
+            if (val !== 0 && typeof val === 'number') obj[key] = val;
+        }
+        return obj;
+    }
+
     static parseTransform(props) {
         let transforms = '';
         if (typeof props.x !== 'undefined' || typeof props.y !== 'undefined' || typeof props.z !== 'undefined') {
@@ -1163,22 +1297,14 @@ class TweenManager {
         return transforms;
     }
 
-    static isTransform(key) {
-        return ~this.TRANSFORMS.indexOf(key);
+    static interpolate(num, alpha, ease) {
+        const fn = Interpolation.convertEase(ease);
+        return num * (typeof fn === 'function' ? fn(alpha) : Interpolation.solve(fn, alpha));
     }
 
-    static getAllTransforms(object) {
-        const obj = {};
-        for (let i = 0; i < this.TRANSFORMS.length; i++) {
-            const key = this.TRANSFORMS[i],
-                val = object[key];
-            if (val !== 0 && typeof val === 'number') obj[key] = val;
-        }
-        return obj;
-    }
-
-    static getEase(name) {
-        return this.CSS_EASES[name] || this.CSS_EASES.easeOutCubic;
+    static interpolateValues(start, end, alpha, ease) {
+        const fn = Interpolation.convertEase(ease);
+        return start + (end - start) * (typeof fn === 'function' ? fn(alpha) : Interpolation.solve(fn, alpha));
     }
 }
 
@@ -1313,18 +1439,17 @@ class Interface {
     }
 
     add(child) {
-        const element = this.element;
-        if (child.element) {
-            element.appendChild(child.element);
+        if (child.destroy) {
             this.classes.push(child);
             child.parent = this;
-        } else if (child.nodeName) {
-            element.appendChild(child);
         }
+        if (child.element) this.element.appendChild(child.element);
+        else if (child.nodeName) this.element.appendChild(child);
         return this;
     }
 
     delayedCall(callback, time = 0, ...params) {
+        if (!this.timers) return;
         const timer = Timer.create(() => {
             if (callback) callback(...params);
         }, time);
@@ -1370,7 +1495,8 @@ class Interface {
     }
 
     remove(child) {
-        if (child.element.parentNode) child.element.parentNode.removeChild(child.element);
+        if (child.element) child.element.parentNode.removeChild(child.element);
+        else if (child.nodeName) child.parentNode.removeChild(child);
         this.classes.remove(child);
     }
 
@@ -1460,6 +1586,7 @@ class Interface {
     }
 
     bg(src, x, y, repeat) {
+        if (~src.indexOf('.')) src = Assets.getPath(src);
         if (src.includes(['data:', '.'])) this.element.style.backgroundImage = 'url(' + src + ')';
         else this.element.style.backgroundColor = src;
         if (typeof x !== 'undefined') {
@@ -1795,6 +1922,38 @@ class Interface {
         return this;
     }
 
+    overflowScroll(direction) {
+        if (!Device.mobile) return;
+        const x = !!direction.x,
+            y = !!direction.y,
+            overflow = {
+                '-webkit-overflow-scrolling': 'touch'
+            };
+        if (!x && !y || x && y) overflow.overflow = 'scroll';
+        if (!x && y) {
+            overflow.overflowY = 'scroll';
+            overflow.overflowX = 'hidden';
+        }
+        if (x && !y) {
+            overflow.overflowX = 'scroll';
+            overflow.overflowY = 'hidden';
+        }
+        this.css(overflow);
+        this.element.preventEvent = e => e.stopPropagation();
+        this.bind('touchmove', this.element.preventEvent);
+    }
+
+    removeOverflowScroll() {
+        if (!Device.mobile) return;
+        this.css({
+            overflow: 'hidden',
+            overflowX: '',
+            overflowY: '',
+            '-webkit-overflow-scrolling': ''
+        });
+        this.unbind('touchmove', this.element.preventEvent);
+    }
+
     split(by = '') {
         const style = {
                 position: 'relative',
@@ -1819,46 +1978,392 @@ class Interface {
 }
 
 /**
+ * Accelerometer helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Accelerometer {
+
+    static init() {
+
+        if (!this.active) {
+            this.active = true;
+            this.x = 0;
+            this.y = 0;
+            this.z = 0;
+            this.alpha = 0;
+            this.beta = 0;
+            this.gamma = 0;
+            this.heading = 0;
+            this.rotationRate = {};
+            this.rotationRate.alpha = 0;
+            this.rotationRate.beta = 0;
+            this.rotationRate.gamma = 0;
+            this.toRadians = Device.os === 'ios' ? Math.PI / 180 : 1;
+
+            const updateAccel = e => {
+                switch (window.orientation) {
+                    case 0:
+                        this.x = -e.accelerationIncludingGravity.x;
+                        this.y = e.accelerationIncludingGravity.y;
+                        this.z = e.accelerationIncludingGravity.z;
+                        if (e.rotationRate) {
+                            this.rotationRate.alpha = e.rotationRate.beta * this.toRadians;
+                            this.rotationRate.beta = -e.rotationRate.alpha * this.toRadians;
+                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
+                        }
+                        break;
+                    case 180:
+                        this.x = e.accelerationIncludingGravity.x;
+                        this.y = -e.accelerationIncludingGravity.y;
+                        this.z = e.accelerationIncludingGravity.z;
+                        if (e.rotationRate) {
+                            this.rotationRate.alpha = -e.rotationRate.beta * this.toRadians;
+                            this.rotationRate.beta = e.rotationRate.alpha * this.toRadians;
+                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
+                        }
+                        break;
+                    case 90:
+                        this.x = e.accelerationIncludingGravity.y;
+                        this.y = e.accelerationIncludingGravity.x;
+                        this.z = e.accelerationIncludingGravity.z;
+                        if (e.rotationRate) {
+                            this.rotationRate.alpha = e.rotationRate.alpha * this.toRadians;
+                            this.rotationRate.beta = e.rotationRate.beta * this.toRadians;
+                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
+                        }
+                        break;
+                    case -90:
+                        this.x = -e.accelerationIncludingGravity.y;
+                        this.y = -e.accelerationIncludingGravity.x;
+                        this.z = e.accelerationIncludingGravity.z;
+                        if (e.rotationRate) {
+                            this.rotationRate.alpha = -e.rotationRate.alpha * this.toRadians;
+                            this.rotationRate.beta = -e.rotationRate.beta * this.toRadians;
+                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
+                        }
+                        break;
+                }
+            };
+
+            const updateOrientation = e => {
+                for (let key in e) if (~key.toLowerCase().indexOf('heading')) this.heading = e[key];
+                switch (window.orientation) {
+                    case 0:
+                        this.alpha = e.beta * this.toRadians;
+                        this.beta = -e.alpha * this.toRadians;
+                        this.gamma = e.gamma * this.toRadians;
+                        break;
+                    case 180:
+                        this.alpha = -e.beta * this.toRadians;
+                        this.beta = e.alpha * this.toRadians;
+                        this.gamma = e.gamma * this.toRadians;
+                        break;
+                    case 90:
+                        this.alpha = e.alpha * this.toRadians;
+                        this.beta = e.beta * this.toRadians;
+                        this.gamma = e.gamma * this.toRadians;
+                        break;
+                    case -90:
+                        this.alpha = -e.alpha * this.toRadians;
+                        this.beta = -e.beta * this.toRadians;
+                        this.gamma = e.gamma * this.toRadians;
+                        break;
+                }
+                this.tilt = e.beta * this.toRadians;
+                this.yaw = e.alpha * this.toRadians;
+                this.roll = -e.gamma * this.toRadians;
+                if (Device.os === 'Android') this.heading = compassHeading(e.alpha, e.beta, e.gamma);
+            };
+
+            const compassHeading = (alpha, beta, gamma) => {
+                const degtorad = Math.PI / 180,
+                    x = beta ? beta * degtorad : 0,
+                    y = gamma ? gamma * degtorad : 0,
+                    z = alpha ? alpha * degtorad : 0,
+                    cY = Math.cos(y),
+                    cZ = Math.cos(z),
+                    sX = Math.sin(x),
+                    sY = Math.sin(y),
+                    sZ = Math.sin(z),
+                    Vx = -cZ * sY - sZ * sX * cY,
+                    Vy = -sZ * sY + cZ * sX * cY;
+                let compassHeading = Math.atan(Vx / Vy);
+                if (Vy < 0) compassHeading += Math.PI;
+                else if (Vx < 0) compassHeading += 2 * Math.PI;
+                return compassHeading * (180 / Math.PI);
+            };
+
+            window.addEventListener('devicemotion', updateAccel, true);
+            window.addEventListener('deviceorientation', updateOrientation, true);
+
+            this.stop = () => {
+                this.active = false;
+                window.removeEventListener('devicemotion', updateAccel, true);
+                window.removeEventListener('deviceorientation', updateOrientation, true);
+            };
+        }
+    }
+}
+
+/**
+ * Mouse interaction.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Mouse {
+
+    static init() {
+
+        if (!this.active) {
+            this.active = true;
+            this.x = 0;
+            this.y = 0;
+            this.normal = {
+                x: 0,
+                y: 0
+            };
+            this.tilt = {
+                x: 0,
+                y: 0
+            };
+            this.inverseNormal = {
+                x: 0,
+                y: 0
+            };
+
+            const update = e => {
+                this.x = e.x;
+                this.y = e.y;
+                this.normal.x = e.x / Stage.width;
+                this.normal.y = e.y / Stage.height;
+                this.tilt.x = this.normal.x * 2 - 1;
+                this.tilt.y = 1 - this.normal.y * 2;
+                this.inverseNormal.x = this.normal.x;
+                this.inverseNormal.y = 1 - this.normal.y;
+            };
+
+            this.input = Stage.initClass(Interaction);
+            Stage.events.add(this.input, Interaction.START, update);
+            Stage.events.add(this.input, Interaction.MOVE, update);
+            update({
+                x: Stage.width / 2,
+                y: Stage.height / 2
+            });
+
+            this.stop = () => {
+                this.active = false;
+                Stage.events.remove(this.input, Interaction.START, update);
+                Stage.events.remove(this.input, Interaction.MOVE, update);
+            };
+        }
+    }
+}
+
+/**
+ * Web audio engine.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
+
+class WebAudio {
+
+    static init() {
+
+        if (!this.active) {
+            this.active = true;
+
+            const self = this;
+            const sounds = {};
+            let context;
+
+            if (window.AudioContext) context = new AudioContext();
+            if (!context) return;
+            this.globalGain = context.createGain();
+            this.globalGain.connect(context.destination);
+            this.globalGain.value = this.globalGain.gain.defaultValue;
+            this.gain = {
+                set value(value) {
+                    self.globalGain.value = value;
+                    self.globalGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
+                },
+                get value() {
+                    return self.globalGain.value;
+                }
+            };
+
+            this.loadSound = (id, callback) => {
+                const promise = Promise.create();
+                if (callback) promise.then(callback);
+                callback = promise.resolve;
+                const sound = this.getSound(id);
+                window.fetch(sound.asset).then(response => {
+                    if (!response.ok) return callback();
+                    response.arrayBuffer().then(data => {
+                        context.decodeAudioData(data, buffer => {
+                            sound.buffer = buffer;
+                            sound.complete = true;
+                            callback();
+                        });
+                    });
+                }).catch(() => {
+                    callback();
+                });
+                sound.ready = () => promise;
+            };
+
+            this.createSound = (id, asset, callback) => {
+                const sound = {};
+                sound.asset = Assets.getPath(asset);
+                sound.audioGain = context.createGain();
+                sound.audioGain.connect(this.globalGain);
+                sound.audioGain.value = sound.audioGain.gain.defaultValue;
+                sound.gain = {
+                    set value(value) {
+                        sound.audioGain.value = value;
+                        sound.audioGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
+                    },
+                    get value() {
+                        return sound.audioGain.value;
+                    }
+                };
+                sound.stop = () => {
+                    if (sound.source) sound.source.stop();
+                };
+                sounds[id] = sound;
+                if (Device.os === 'ios') callback();
+                else this.loadSound(id, callback);
+            };
+
+            this.getSound = id => {
+                return sounds[id];
+            };
+
+            this.trigger = id => {
+                if (!context) return;
+                if (context.state === 'suspended') context.resume();
+                const sound = this.getSound(id);
+                if (!sound.ready) this.loadSound(id);
+                sound.ready().then(() => {
+                    if (sound.complete) {
+                        sound.source = context.createBufferSource();
+                        sound.source.buffer = sound.buffer;
+                        sound.source.connect(sound.audioGain);
+                        sound.audioGain.gain.setValueAtTime(0, context.currentTime);
+                        sound.source.loop = !!sound.loop;
+                        sound.source.start();
+                        sound.audioGain.gain.setTargetAtTime(sound.audioGain.value, context.currentTime, 0.01);
+                    }
+                });
+            };
+
+            this.mute = () => {
+                if (!context) return;
+                TweenManager.tween(this.gain, { value: 0 }, 300, 'easeOutSine');
+            };
+
+            this.unmute = () => {
+                if (!context) return;
+                TweenManager.tween(this.gain, { value: 1 }, 500, 'easeOutSine');
+            };
+
+            this.stop = () => {
+                this.active = false;
+                if (!context) return;
+                for (let id in sounds) {
+                    const sound = sounds[id];
+                    if (sound) sound.stop();
+                }
+                context.close();
+            };
+        }
+
+        window.WebAudio = this;
+    }
+}
+
+/**
  * Stage instance.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-const Stage = new Interface('Stage');
-Stage.css({ overflow: 'hidden' });
+const Stage = new (class extends Interface {
 
-window.addEventListener('load', () => {
-    let last;
+    constructor() {
+        super('Stage');
+        const self = this;
+        let last;
 
-    window.addEventListener('focus', focus, true);
-    window.addEventListener('blur', blur, true);
-    window.addEventListener('keydown', e => Events.emitter.fire(Events.KEYBOARD_DOWN, e), true);
-    window.addEventListener('keyup', e => Events.emitter.fire(Events.KEYBOARD_UP, e), true);
-    window.addEventListener('keypress', e => Events.emitter.fire(Events.KEYBOARD_PRESS, e), true);
-    window.addEventListener('resize', resize, true);
-    window.addEventListener('orientationchange', resize, true);
-    resize();
+        initHTML();
+        addListeners();
 
-    function focus() {
-        if (last !== 'focus') {
-            last = 'focus';
-            Events.emitter.fire(Events.VISIBILITY, { type: 'focus' });
+        function initHTML() {
+            self.css({ overflow: 'hidden' });
         }
-    }
 
-    function blur() {
-        if (last !== 'blur') {
-            last = 'blur';
-            Events.emitter.fire(Events.VISIBILITY, { type: 'blur' });
+        function addListeners() {
+            window.addEventListener('focus', focus, true);
+            window.addEventListener('blur', blur, true);
+            window.addEventListener('keydown', keyDown, true);
+            window.addEventListener('keyup', keyUp, true);
+            window.addEventListener('keypress', keyPress, true);
+            window.addEventListener('resize', resize, true);
+            window.addEventListener('orientationchange', resize, true);
+            resize();
         }
-    }
 
-    function resize() {
-        Stage.size();
-        Stage.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
-        Events.emitter.fire(Events.RESIZE);
+        function focus() {
+            if (last !== 'focus') {
+                last = 'focus';
+                Events.emitter.fire(Events.VISIBILITY, { type: 'focus' });
+            }
+        }
+
+        function blur() {
+            if (last !== 'blur') {
+                last = 'blur';
+                Events.emitter.fire(Events.VISIBILITY, { type: 'blur' });
+            }
+        }
+
+        function keyDown(e) {
+            Events.emitter.fire(Events.KEYBOARD_DOWN, e);
+        }
+
+        function keyUp(e) {
+            Events.emitter.fire(Events.KEYBOARD_UP, e);
+        }
+
+        function keyPress(e) {
+            Events.emitter.fire(Events.KEYBOARD_PRESS, e);
+        }
+
+        function resize() {
+            self.size();
+            self.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+            Events.emitter.fire(Events.RESIZE);
+        }
+
+        this.destroy = () => {
+            if (Accelerometer.active) Accelerometer.stop();
+            if (Mouse.active) Mouse.stop();
+            if (WebAudio.active) WebAudio.stop();
+            window.removeEventListener('focus', focus, true);
+            window.removeEventListener('blur', blur, true);
+            window.removeEventListener('keydown', keyDown, true);
+            window.removeEventListener('keyup', keyUp, true);
+            window.removeEventListener('keypress', keyPress, true);
+            window.removeEventListener('resize', resize, true);
+            window.removeEventListener('orientationchange', resize, true);
+            return super.destroy();
+        };
     }
-}, true);
+})();
 
 /**
  * 2D vector.
@@ -2033,9 +2538,10 @@ class Vector2 {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-class Interaction {
+class Interaction extends Component {
 
     constructor(object = Stage) {
+
         if (!Interaction.initialized) {
             Interaction.CLICK = 'interaction_click';
             Interaction.START = 'interaction_start';
@@ -2062,8 +2568,9 @@ class Interaction {
 
             Interaction.initialized = true;
         }
+
+        super();
         const self = this;
-        this.events = new Events();
         this.x = 0;
         this.y = 0;
         this.hold = new Vector2();
@@ -2135,221 +2642,10 @@ class Interaction {
             Interaction.unbind('touchmove', move);
             Interaction.unbind('touchend', up);
             if (object !== Stage && object.unbind) object.unbind('touchstart', down);
-            this.events.destroy();
-            return Utils.nullObject(this);
+            return super.destroy();
         };
     }
 }
-
-/**
- * Accelerometer helper class.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-class Accelerometer {
-
-    static init() {
-        const self = this;
-        this.x = 0;
-        this.y = 0;
-        this.z = 0;
-        this.alpha = 0;
-        this.beta = 0;
-        this.gamma = 0;
-        this.heading = 0;
-        this.rotationRate = {};
-        this.rotationRate.alpha = 0;
-        this.rotationRate.beta = 0;
-        this.rotationRate.gamma = 0;
-        this.toRadians = Device.os === 'ios' ? Math.PI / 180 : 1;
-
-        window.addEventListener('devicemotion', updateAccel, true);
-        window.addEventListener('deviceorientation', updateOrientation, true);
-
-        function updateAccel(e) {
-            switch (window.orientation) {
-                case 0:
-                    self.x = -e.accelerationIncludingGravity.x;
-                    self.y = e.accelerationIncludingGravity.y;
-                    self.z = e.accelerationIncludingGravity.z;
-                    if (e.rotationRate) {
-                        self.rotationRate.alpha = e.rotationRate.beta * self.toRadians;
-                        self.rotationRate.beta = -e.rotationRate.alpha * self.toRadians;
-                        self.rotationRate.gamma = e.rotationRate.gamma * self.toRadians;
-                    }
-                    break;
-                case 180:
-                    self.x = e.accelerationIncludingGravity.x;
-                    self.y = -e.accelerationIncludingGravity.y;
-                    self.z = e.accelerationIncludingGravity.z;
-                    if (e.rotationRate) {
-                        self.rotationRate.alpha = -e.rotationRate.beta * self.toRadians;
-                        self.rotationRate.beta = e.rotationRate.alpha * self.toRadians;
-                        self.rotationRate.gamma = e.rotationRate.gamma * self.toRadians;
-                    }
-                    break;
-                case 90:
-                    self.x = e.accelerationIncludingGravity.y;
-                    self.y = e.accelerationIncludingGravity.x;
-                    self.z = e.accelerationIncludingGravity.z;
-                    if (e.rotationRate) {
-                        self.rotationRate.alpha = e.rotationRate.alpha * self.toRadians;
-                        self.rotationRate.beta = e.rotationRate.beta * self.toRadians;
-                        self.rotationRate.gamma = e.rotationRate.gamma * self.toRadians;
-                    }
-                    break;
-                case -90:
-                    self.x = -e.accelerationIncludingGravity.y;
-                    self.y = -e.accelerationIncludingGravity.x;
-                    self.z = e.accelerationIncludingGravity.z;
-                    if (e.rotationRate) {
-                        self.rotationRate.alpha = -e.rotationRate.alpha * self.toRadians;
-                        self.rotationRate.beta = -e.rotationRate.beta * self.toRadians;
-                        self.rotationRate.gamma = e.rotationRate.gamma * self.toRadians;
-                    }
-                    break;
-            }
-        }
-
-        function updateOrientation(e) {
-            for (let key in e) if (~key.toLowerCase().indexOf('heading')) self.heading = e[key];
-            switch (window.orientation) {
-                case 0:
-                    self.alpha = e.beta * self.toRadians;
-                    self.beta = -e.alpha * self.toRadians;
-                    self.gamma = e.gamma * self.toRadians;
-                    break;
-                case 180:
-                    self.alpha = -e.beta * self.toRadians;
-                    self.beta = e.alpha * self.toRadians;
-                    self.gamma = e.gamma * self.toRadians;
-                    break;
-                case 90:
-                    self.alpha = e.alpha * self.toRadians;
-                    self.beta = e.beta * self.toRadians;
-                    self.gamma = e.gamma * self.toRadians;
-                    break;
-                case -90:
-                    self.alpha = -e.alpha * self.toRadians;
-                    self.beta = -e.beta * self.toRadians;
-                    self.gamma = e.gamma * self.toRadians;
-                    break;
-            }
-            self.tilt = e.beta * self.toRadians;
-            self.yaw = e.alpha * self.toRadians;
-            self.roll = -e.gamma * self.toRadians;
-            if (Device.os === 'Android') self.heading = compassHeading(e.alpha, e.beta, e.gamma);
-        }
-
-        function compassHeading(alpha, beta, gamma) {
-            const degtorad = Math.PI / 180,
-                x = beta ? beta * degtorad : 0,
-                y = gamma ? gamma * degtorad : 0,
-                z = alpha ? alpha * degtorad : 0,
-                cY = Math.cos(y),
-                cZ = Math.cos(z),
-                sX = Math.sin(x),
-                sY = Math.sin(y),
-                sZ = Math.sin(z),
-                Vx = -cZ * sY - sZ * sX * cY,
-                Vy = -sZ * sY + cZ * sX * cY;
-            let compassHeading = Math.atan(Vx / Vy);
-            if (Vy < 0) compassHeading += Math.PI;
-            else if (Vx < 0) compassHeading += 2 * Math.PI;
-            return compassHeading * (180 / Math.PI);
-        }
-    }
-}
-
-/**
- * Mouse interaction.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-class Mouse {
-
-    static init() {
-        const self = this;
-        this.x = 0;
-        this.y = 0;
-        this.normal = {
-            x: 0,
-            y: 0
-        };
-        this.tilt = {
-            x: 0,
-            y: 0
-        };
-        this.inverseNormal = {
-            x: 0,
-            y: 0
-        };
-
-        this.input = new Interaction();
-        Stage.events.add(this.input, Interaction.START, update);
-        Stage.events.add(this.input, Interaction.MOVE, update);
-        update({
-            x: Stage.width / 2,
-            y: Stage.height / 2
-        });
-
-        function update(e) {
-            self.x = e.x;
-            self.y = e.y;
-            self.normal.x = e.x / Stage.width;
-            self.normal.y = e.y / Stage.height;
-            self.tilt.x = self.normal.x * 2 - 1;
-            self.tilt.y = 1 - self.normal.y * 2;
-            self.inverseNormal.x = self.normal.x;
-            self.inverseNormal.y = 1 - self.normal.y;
-        }
-    }
-}
-
-/**
- * Image helper class with promise method.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-class Assets {
-
-    static init() {
-        this.CDN = '';
-        this.CORS = null;
-        const images = {};
-
-        this.createImage = (src, store, callback) => {
-            if (typeof store !== 'boolean') {
-                callback = store;
-                store = undefined;
-            }
-            const img = new Image();
-            img.crossOrigin = this.CORS;
-            img.src = src;
-            img.onload = callback;
-            img.onerror = callback;
-            if (store) images[src] = img;
-            return img;
-        };
-
-        this.getImage = src => {
-            return images[src];
-        };
-    }
-
-    static loadImage(img) {
-        if (typeof img === 'string') img = this.createImage(img);
-        const promise = Promise.create();
-        img.onload = promise.resolve;
-        img.onerror = promise.resolve;
-        return promise;
-    }
-}
-
-Assets.init();
 
 /**
  * Asset loader with promise method.
@@ -2360,7 +2656,7 @@ Assets.init();
 class AssetLoader extends Component {
 
     constructor(assets, callback) {
-        super();
+
         if (Array.isArray(assets)) {
             assets = (() => {
                 const keys = assets.map(path => {
@@ -2372,12 +2668,13 @@ class AssetLoader extends Component {
                 }, {});
             })();
         }
+
+        super();
         const self = this;
-        this.events = new Events();
         const total = Object.keys(assets).length;
         let loaded = 0;
 
-        for (let key in assets) loadAsset(key, Assets.CDN + assets[key]);
+        for (let key in assets) loadAsset(key, assets[key]);
 
         function loadAsset(key, asset) {
             const ext = Utils.extension(asset);
@@ -2390,7 +2687,8 @@ class AssetLoader extends Component {
                 window.WebAudio.createSound(key, asset, assetLoaded);
                 return;
             }
-            window.get(asset).then(data => {
+            window.get(Assets.getPath(asset)).then(data => {
+                if (ext === 'json') Assets.storeData(key, data);
                 if (ext === 'js') window.eval(data.replace('use strict', ''));
                 assetLoaded();
             }).catch(() => {
@@ -2429,7 +2727,6 @@ class MultiLoader extends Component {
     constructor() {
         super();
         const self = this;
-        this.events = new Events();
         const loaders = [];
         let loaded = 0;
 
@@ -2468,21 +2765,24 @@ class FontLoader extends Component {
     constructor(fonts, callback) {
         super();
         const self = this;
-        this.events = new Events();
-        let element;
+        let context;
 
         initFonts();
-        finish();
 
         function initFonts() {
             if (!Array.isArray(fonts)) fonts = [fonts];
-            element = Stage.create('FontLoader');
-            for (let i = 0; i < fonts.length; i++) element.create('font').fontStyle(fonts[i], 12, '#000').text('LOAD').css({ top: -999 });
+            context = document.createElement('canvas').getContext('2d');
+            fonts.forEach(font => renderText(font.replace(/"/g, '\'')));
+            finish();
+        }
+
+        function renderText(font) {
+            context.font = `12px "${font}"`;
+            context.fillText('LOAD', 0, 0);
         }
 
         function finish() {
             const ready = () => {
-                element.destroy();
                 self.percent = 1;
                 self.events.fire(Events.PROGRESS, { percent: self.percent }, true);
                 self.events.fire(Events.COMPLETE, null, true);
@@ -2507,11 +2807,11 @@ class FontLoader extends Component {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-class StateDispatcher {
+class StateDispatcher extends Component {
 
     constructor(forceHash) {
+        super();
         const self = this;
-        this.events = new Events();
         this.locked = false;
         let storePath, storeState,
             rootPath = '/';
@@ -2520,8 +2820,16 @@ class StateDispatcher {
         storePath = getPath();
 
         function createListener() {
-            if (forceHash) window.addEventListener('hashchange', () => handleStateChange(null, getPath()), true);
-            else window.addEventListener('popstate', e => handleStateChange(e.state, getPath()), true);
+            if (forceHash) window.addEventListener('hashchange', hashChange, true);
+            else window.addEventListener('popstate', popState, true);
+        }
+
+        function hashChange() {
+            handleStateChange(null, getPath());
+        }
+
+        function popState(e) {
+            handleStateChange(e.state, getPath());
         }
 
         function getPath() {
@@ -2585,6 +2893,12 @@ class StateDispatcher {
             if (path.charAt(0) === '/') rootPath = path;
             else rootPath = '/' + path;
         };
+
+        this.destroy = () => {
+            window.removeEventListener('hashchange', hashChange, true);
+            window.removeEventListener('popstate', popState, true);
+            return super.destroy();
+        };
     }
 }
 
@@ -2611,111 +2925,6 @@ class Storage {
             if (value === 'true' || value === 'false') value = value === 'true';
         }
         return value;
-    }
-}
-
-/**
- * Web audio engine.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
-
-class WebAudio {
-
-    static init() {
-        const self = this;
-        const sounds = {};
-        let context;
-
-        if (window.AudioContext) context = new AudioContext();
-        if (!context) return;
-        this.globalGain = context.createGain();
-        this.globalGain.connect(context.destination);
-        this.globalGain.value = this.globalGain.gain.defaultValue;
-        this.gain = {
-            set value(value) {
-                self.globalGain.value = value;
-                self.globalGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
-            },
-            get value() {
-                return self.globalGain.value;
-            }
-        };
-
-        this.loadSound = (id, callback) => {
-            const promise = Promise.create();
-            if (callback) promise.then(callback);
-            callback = promise.resolve;
-            const sound = this.getSound(id);
-            window.fetch(sound.asset).then(response => {
-                if (!response.ok) return callback();
-                response.arrayBuffer().then(data => {
-                    context.decodeAudioData(data, buffer => {
-                        sound.buffer = buffer;
-                        sound.complete = true;
-                        callback();
-                    });
-                });
-            }).catch(() => {
-                callback();
-            });
-            sound.ready = () => promise;
-        };
-
-        this.createSound = (id, asset, callback) => {
-            const sound = {};
-            sound.asset = asset;
-            sound.audioGain = context.createGain();
-            sound.audioGain.connect(this.globalGain);
-            sound.audioGain.value = sound.audioGain.gain.defaultValue;
-            sound.gain = {
-                set value(value) {
-                    sound.audioGain.value = value;
-                    sound.audioGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
-                },
-                get value() {
-                    return sound.audioGain.value;
-                }
-            };
-            sounds[id] = sound;
-            if (Device.os === 'ios') callback();
-            else this.loadSound(id, callback);
-        };
-
-        this.getSound = id => {
-            return sounds[id];
-        };
-
-        this.trigger = id => {
-            if (!context) return;
-            if (context.state === 'suspended') context.resume();
-            const sound = this.getSound(id);
-            if (!sound.ready) this.loadSound(id);
-            sound.ready().then(() => {
-                if (sound.complete) {
-                    const source = context.createBufferSource();
-                    source.buffer = sound.buffer;
-                    source.connect(sound.audioGain);
-                    sound.audioGain.gain.setValueAtTime(sound.audioGain.value, context.currentTime);
-                    source.loop = !!sound.loop;
-                    source.start(0);
-                }
-            });
-        };
-
-        this.mute = () => {
-            if (!context) return;
-            TweenManager.tween(this.gain, { value: 0 }, 300, 'easeOutSine');
-        };
-
-        this.unmute = () => {
-            if (!context) return;
-            TweenManager.tween(this.gain, { value: 1 }, 500, 'easeOutSine');
-        };
-
-        window.WebAudio = this;
     }
 }
 
@@ -2844,11 +3053,11 @@ class CanvasObject {
         for (let i = 0; i < this.children.length; i++) this.children[i].render(override);
     }
 
-    startDraw(ox, oy, override) {
+    startDraw(ox = 0, oy = 0, override) {
         const context = this.canvas.context,
             v = this.values.data,
-            x = v[0] + (ox || 0),
-            y = v[1] + (oy || 0);
+            x = v[0] + ox,
+            y = v[1] + oy;
         context.save();
         if (!override) context.globalCompositeOperation = this.blendMode;
         context.translate(x, y);
@@ -2952,7 +3161,7 @@ class CanvasObject {
     }
 
     destroy() {
-        for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
+        if (this.children) for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
         return Utils.nullObject(this);
     }
 }
@@ -3007,16 +3216,13 @@ class CanvasGraphics extends CanvasObject {
             draw.length = 0;
         };
 
-        this.arc = (x = 0, y = 0, endAngle = 0, radius = this.radius || this.width / 2, startAngle = 0, counterclockwise = false) => {
+        this.arc = (x = 0, y = 0, radius = this.radius || this.width / 2, startAngle = 0, endAngle = Math.PI * 2, anti = false) => {
             if (x && !y) {
-                endAngle = x;
+                startAngle = Math.radians(-90), endAngle = x;
                 x = 0;
                 y = 0;
             }
-            endAngle -= 90;
-            startAngle -= 90;
-            draw.push(['beginPath']);
-            draw.push(['arc', x, y, radius, Math.radians(startAngle), Math.radians(endAngle), counterclockwise]);
+            draw.push(['arc', x, y, radius, startAngle, endAngle, anti]);
         };
 
         this.quadraticCurveTo = (cpx, cpy, x, y) => {
@@ -3063,11 +3269,11 @@ class CanvasGraphics extends CanvasObject {
             draw.push(['closePath']);
         };
 
-        this.fillText = (text, x, y) => {
+        this.fillText = (text, x = 0, y = 0) => {
             draw.push(['fillText', text, x, y]);
         };
 
-        this.strokeText = (text, x, y) => {
+        this.strokeText = (text, x = 0, y = 0) => {
             draw.push(['strokeText', text, x, y]);
         };
 
@@ -3196,25 +3402,23 @@ class CanvasGraphics extends CanvasObject {
 
 class Canvas {
 
-    constructor(w, h = w, retina, whiteAlpha) {
+    constructor(w, h = w, whiteAlpha) {
         const self = this;
         this.element = document.createElement('canvas');
         this.context = this.element.getContext('2d');
         this.object = new Interface(this.element);
         this.children = [];
-        this.retina = retina;
 
-        size(w, h, retina);
+        size(w, h);
 
-        function size(w, h, retina) {
-            const ratio = retina ? 2 : 1;
-            self.element.width = w * ratio;
-            self.element.height = h * ratio;
+        function size(w, h) {
+            self.element.width = w * 2;
+            self.element.height = h * 2;
             self.width = w;
             self.height = h;
-            self.scale = ratio;
+            self.scale = 2;
             self.object.size(self.width, self.height);
-            self.context.scale(ratio, ratio);
+            self.context.scale(2, 2);
             self.element.style.width = w + 'px';
             self.element.style.height = h + 'px';
             if (whiteAlpha) {
@@ -3257,7 +3461,7 @@ class Canvas {
         };
 
         this.destroy = () => {
-            for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
+            if (this.children) for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
             this.object.destroy();
             return Utils.nullObject(this);
         };
@@ -3281,6 +3485,66 @@ class Canvas {
 
         this.putImageData = imageData => {
             this.context.putImageData(imageData, 0, 0);
+        };
+    }
+}
+
+/**
+ * Canvas texture.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class CanvasTexture extends CanvasObject {
+
+    constructor(texture, w = 0, h = w) {
+        super();
+        const self = this;
+        this.width = w;
+        this.height = h;
+        let mask;
+
+        initTexture();
+
+        function initTexture() {
+            if (typeof texture === 'string') {
+                Assets.loadImage(texture).then(image => {
+                    self.texture = image;
+                    setDimensions();
+                });
+            } else {
+                self.texture = texture;
+                setDimensions();
+            }
+        }
+
+        function setDimensions() {
+            if (self.onload) self.onload();
+            if (!self.width && !self.height) {
+                self.width = self.texture.width;
+                self.height = self.texture.height;
+            }
+        }
+
+        this.draw = override => {
+            if (this.isMask() && !override) return false;
+            const context = this.canvas.context;
+            if (this.texture) {
+                this.startDraw(this.px, this.py, override);
+                context.drawImage(this.texture, -this.px, -this.py, this.width, this.height);
+                this.endDraw();
+            }
+            if (mask) {
+                context.globalCompositeOperation = 'source-in';
+                mask.render(true);
+                context.globalCompositeOperation = 'source-over';
+            }
+        };
+
+        this.mask = object => {
+            if (!object) return mask = null;
+            mask = object;
+            object.masked = this;
         };
     }
 }
@@ -3366,6 +3630,189 @@ class CanvasFont {
 }
 
 /**
+ * Color helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Color {
+
+    constructor(value) {
+        const self = this;
+        this.r = 1;
+        this.g = 1;
+        this.b = 1;
+
+        set(value);
+
+        function set(value) {
+            if (value instanceof Color) copy(value);
+            else if (typeof value === 'number') setHex(value);
+            else if (Array.isArray(value)) setRGB(value);
+            else setHex(Number('0x' + value.slice(1)));
+        }
+
+        function copy(color) {
+            self.r = color.r;
+            self.g = color.g;
+            self.b = color.b;
+        }
+
+        function setHex(hex) {
+            hex = Math.floor(hex);
+            self.r = (hex >> 16 & 255) / 255;
+            self.g = (hex >> 8 & 255) / 255;
+            self.b = (hex & 255) / 255;
+        }
+
+        function setRGB(values) {
+            self.r = values[0];
+            self.g = values[1];
+            self.b = values[2];
+        }
+
+        function hue2rgb(p, q, t) {
+            if (t < 0) t += 1;
+            else if (t > 1) t -= 1;
+            if (t < 1 / 6) return p + (q - p) * 6 * t;
+            if (t < 1 / 2) return q;
+            if (t < 2 / 3) return p + (q - p) * 6 * (2 / 3 - t);
+            return p;
+        }
+
+        this.set = value => {
+            set(value);
+            return this;
+        };
+
+        this.setRGB = (r, g, b) => {
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            return this;
+        };
+
+        this.setHSL = (h, s, l) => {
+            if (s === 0) {
+                this.r = this.g = this.b = l;
+            } else {
+                const p = l <= 0.5 ? l * (1 + s) : l + s - l * s,
+                    q = 2 * l - p;
+                this.r = hue2rgb(q, p, h + 1 / 3);
+                this.g = hue2rgb(q, p, h);
+                this.b = hue2rgb(q, p, h - 1 / 3);
+            }
+            return this;
+        };
+
+        this.offsetHSL = (h, s, l) => {
+            const hsl = this.getHSL();
+            hsl.h += h;
+            hsl.s += s;
+            hsl.l += l;
+            this.setHSL(hsl.h, hsl.s, hsl.l);
+            return this;
+        };
+
+        this.getStyle = a => {
+            if (a) return 'rgba(' + (this.r * 255 | 0) + ', ' + (this.g * 255 | 0) + ', ' + (this.b * 255 | 0) + ', ' + a + ')';
+            else return 'rgb(' + (this.r * 255 | 0) + ', ' + (this.g * 255 | 0) + ', ' + (this.b * 255 | 0) + ')';
+        };
+
+        this.getHex = () => {
+            return this.r * 255 << 16 ^ this.g * 255 << 8 ^ this.b * 255 << 0;
+        };
+
+        this.getHexString = () => {
+            return '#' + ('000000' + this.getHex().toString(16)).slice(-6);
+        };
+
+        this.getHSL = () => {
+            if (!this.hsl) this.hsl = { h: 0, s: 0, l: 0 };
+            const hsl = this.hsl,
+                r = this.r,
+                g = this.g,
+                b = this.b,
+                min = Math.min(r, g, b),
+                max = Math.max(r, g, b),
+                lightness = (min + max) / 2;
+            let hue, saturation;
+            if (min === max) {
+                hue = 0;
+                saturation = 0;
+            } else {
+                const delta = max - min;
+                saturation = lightness <= 0.5 ? delta / (max + min) : delta / (2 - max - min);
+                switch (max) {
+                    case r:
+                        hue = (g - b) / delta + (g < b ? 6 : 0);
+                        break;
+                    case g:
+                        hue = (b - r) / delta + 2;
+                        break;
+                    case b:
+                        hue = (r - g) / delta + 4;
+                        break;
+                }
+                hue /= 6;
+            }
+            hsl.h = hue;
+            hsl.s = saturation;
+            hsl.l = lightness;
+            return hsl;
+        };
+
+        this.add = color => {
+            this.r += color.r;
+            this.g += color.g;
+            this.b += color.b;
+        };
+
+        this.mix = (color, percent) => {
+            this.r *= (1 - percent) + color.r * percent;
+            this.g *= (1 - percent) + color.g * percent;
+            this.b *= (1 - percent) + color.b * percent;
+        };
+
+        this.addScalar = s => {
+            this.r += s;
+            this.g += s;
+            this.b += s;
+        };
+
+        this.multiply = color => {
+            this.r *= color.r;
+            this.g *= color.g;
+            this.b *= color.b;
+        };
+
+        this.multiplyScalar = s => {
+            this.r *= s;
+            this.g *= s;
+            this.b *= s;
+        };
+
+        this.clone = () => {
+            return new Color([this.r, this.g, this.b]);
+        };
+
+        this.toArray = () => {
+            if (!this.array) this.array = [];
+            this.array[0] = this.r;
+            this.array[1] = this.g;
+            this.array[2] = this.b;
+            return this.array;
+        };
+
+        this.random = () => {
+            let color = '#' + Math.floor(Math.random() * 16777215).toString(16);
+            if (color.length < 7) color = this.random();
+            return color;
+        };
+    }
+}
+
+/**
  * Video interface.
  *
  * @author Patrick Schroen / https://github.com/pschroen
@@ -3389,10 +3836,9 @@ class Video extends Component {
         if (params.preload !== false) preload();
 
         function createElement() {
-            let src = params.src;
-            if (src) src = Assets.CDN + src;
+            const src = params.src;
             self.element = document.createElement('video');
-            if (src) self.element.src = src;
+            if (src) self.element.src = Assets.getPath(src);
             self.element.controls = params.controls;
             self.element.id = params.id || '';
             self.element.width = params.width;
@@ -3545,6 +3991,7 @@ class Video extends Component {
         };
 
         this.destroy = () => {
+            this.element.removeEventListener('progress', handleProgress, true);
             this.stop();
             this.element.src = '';
             this.object.destroy();
@@ -3561,7 +4008,7 @@ class Video extends Component {
     }
 
     set src(src) {
-        this.element.src = Assets.CDN + src;
+        this.element.src = Assets.getPath(src);
     }
 
     get src() {
@@ -3672,12 +4119,14 @@ class SVG {
 class Scroll extends Component {
 
     constructor(object, params) {
-        super();
+
         if (!object || !object.element) {
             params = object;
             object = null;
         }
         if (!params) params = {};
+
+        super();
         const self = this;
         this.x = 0;
         this.y = 0;
@@ -3710,9 +4159,9 @@ class Scroll extends Component {
         }
 
         function addListeners() {
-            Stage.bind('wheel', scroll);
+            window.addEventListener('wheel', scroll, true);
             if (self.hitObject) self.hitObject.bind('touchstart', e => e.preventDefault());
-            const input = self.hitObject ? new Interaction(self.hitObject) : Mouse.input;
+            const input = self.hitObject ? self.hitObject.initClass(Interaction) : Mouse.input;
             self.events.add(input, Interaction.START, down);
             self.events.add(input, Interaction.DRAG, drag);
             self.events.add(input, Interaction.END, up);
@@ -3786,7 +4235,7 @@ class Scroll extends Component {
         }
 
         this.destroy = () => {
-            Stage.unbind('wheel', scroll);
+            window.removeEventListener('wheel', scroll, true);
             return super.destroy();
         };
     }
@@ -3851,7 +4300,7 @@ class Slide extends Component {
         }
 
         function addListeners() {
-            Stage.bind('wheel', scroll);
+            window.addEventListener('wheel', scroll, true);
             self.events.add(Mouse.input, Interaction.START, down);
             self.events.add(Mouse.input, Interaction.DRAG, drag);
             self.events.add(Events.KEYBOARD_DOWN, keyPress);
@@ -3956,7 +4405,7 @@ class Slide extends Component {
         };
 
         this.destroy = () => {
-            Stage.unbind('wheel', scroll);
+            window.removeEventListener('wheel', scroll, true);
             return super.destroy();
         };
     }
@@ -3971,41 +4420,43 @@ class Slide extends Component {
 class SlideVideo extends Component {
 
     constructor(params, callback) {
-        super();
+
         if (!SlideVideo.initialized) {
             SlideVideo.test = SlideVideo.test || !Device.mobile && Device.browser !== 'safari' && !Device.detect('trident');
 
             SlideVideo.initialized = true;
         }
-        const self = this;
-        this.events = new Events();
-        this.img = params.img;
-        if (this.img) this.img = Assets.CDN + this.img;
-        this.src = params.src;
-        if (this.src) this.src = Assets.CDN + this.src;
 
-        if (this.src && SlideVideo.test) {
-            window.fetch(this.src).then(response => {
-                if (!response.ok) return error();
-                response.blob().then(data => {
-                    this.element = document.createElement('video');
-                    this.element.src = URL.createObjectURL(data);
-                    this.element.muted = true;
-                    this.element.loop = true;
-                    ready();
+        super();
+        const self = this;
+
+        createElement();
+
+        function createElement() {
+            const src = params.src;
+            if (src && SlideVideo.test) {
+                window.fetch(Assets.getPath(src)).then(response => {
+                    if (!response.ok) return error();
+                    response.blob().then(data => {
+                        self.element = document.createElement('video');
+                        self.element.src = URL.createObjectURL(data);
+                        self.element.muted = true;
+                        self.element.loop = true;
+                        ready();
+                        if (callback) callback();
+                    });
+                }).catch(() => {
+                    error();
                     if (callback) callback();
                 });
-            }).catch(() => {
-                error();
-                if (callback) callback();
-            });
-        } else {
-            const img = Assets.createImage(this.img);
-            img.onload = () => {
-                this.element = img;
-                if (callback) callback();
-            };
-            img.onerror = error;
+            } else {
+                const img = Assets.createImage(params.img);
+                img.onload = () => {
+                    self.element = img;
+                    if (callback) callback();
+                };
+                img.onerror = error;
+            }
         }
 
         function error() {
@@ -4049,6 +4500,8 @@ class SlideVideo extends Component {
         };
 
         this.destroy = () => {
+            this.element.removeEventListener('playing', playing, true);
+            this.element.removeEventListener('pause', pause, true);
             this.pause();
             this.element.src = '';
             return super.destroy();
@@ -4067,13 +4520,12 @@ class SlideLoader extends Component {
     constructor(slides, callback) {
         super();
         const self = this;
-        this.events = new Events();
         this.list = [];
         this.pathList = [];
         let loaded = 0;
 
         slides.forEach(params => {
-            this.list.push(this.initClass(SlideVideo, params, slideLoaded));
+            this.list.push(new SlideVideo(params, slideLoaded));
             this.pathList.push(params.path);
         });
 
@@ -4497,7 +4949,7 @@ class Utils3D {
     static getTexture(src) {
         if (!this.textures) this.textures = {};
         if (!this.textures[src]) {
-            const img = Assets.createImage(Assets.CDN + src),
+            const img = Assets.createImage(src),
                 texture = new THREE.Texture(img);
             img.onload = () => {
                 texture.needsUpdate = true;
@@ -4529,7 +4981,7 @@ class Utils3D {
         if (!this.textures[path]) {
             const images = [];
             for (let i = 0; i < 6; i++) {
-                const img = Assets.createImage(Assets.CDN + (Array.isArray(src) ? src[i] : src));
+                const img = Assets.createImage(Array.isArray(src) ? src[i] : src);
                 images.push(img);
                 img.onload = () => this.textures[path].needsUpdate = true;
             }
@@ -4686,17 +5138,19 @@ class Raycaster extends Component {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-class Interaction3D {
+class Interaction3D extends Component {
 
     constructor(camera) {
+
         if (!Interaction3D.initialized) {
             Interaction3D.HOVER = 'interaction3d_hover';
             Interaction3D.CLICK = 'interaction3d_click';
 
             Interaction3D.initialized = true;
         }
+
+        super();
         const self = this;
-        this.events = new Events();
         this.ray = new Raycaster(camera);
         this.meshes = [];
         this.meshCallbacks = [];
@@ -4708,9 +5162,9 @@ class Interaction3D {
         addListeners();
 
         function addListeners() {
-            Mouse.input.events.add(Interaction.START, start);
-            Mouse.input.events.add(Interaction.MOVE, move);
-            Mouse.input.events.add(Interaction.CLICK, click);
+            self.events.add(Mouse.input, Interaction.START, start);
+            self.events.add(Mouse.input, Interaction.MOVE, move);
+            self.events.add(Mouse.input, Interaction.CLICK, click);
         }
 
         function start() {
@@ -4806,10 +5260,6 @@ class Interaction3D {
                     }
                 }
             });
-        };
-
-        this.destroy = () => {
-            return Utils.nullObject(this);
         };
     }
 
@@ -5051,7 +5501,9 @@ exports.TweenManager = TweenManager;
 exports.Interpolation = Interpolation;
 exports.Canvas = Canvas;
 exports.CanvasGraphics = CanvasGraphics;
+exports.CanvasTexture = CanvasTexture;
 exports.CanvasFont = CanvasFont;
+exports.Color = Color;
 exports.Video = Video;
 exports.SVG = SVG;
 exports.Scroll = Scroll;

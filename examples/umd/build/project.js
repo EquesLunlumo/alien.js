@@ -23,8 +23,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
     if (typeof Promise !== 'undefined') Promise.create = function () {
         var resolve = void 0,
-            reject = void 0,
-            promise = new Promise(function (res, rej) {
+            reject = void 0;
+        var promise = new Promise(function (res, rej) {
             resolve = res;
             reject = rej;
         });
@@ -106,6 +106,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         return this.split(find).join(replace);
     };
 
+    Date.prototype.addDays = function (days) {
+        var date = new Date(this.valueOf());
+        date.setDate(date.getDate() + days);
+        return date;
+    };
+
     if (!window.fetch) window.fetch = function (url) {
         var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
@@ -123,8 +129,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         function response() {
             var _keys = [],
                 all = [],
-                headers = {},
-                header = void 0;
+                headers = {};
+            var header = void 0;
             request.getAllResponseHeaders().replace(/^(.*?):\s*([\s\S]*?)$/gm, function (m, key, value) {
                 _keys.push(key = key.toLowerCase());
                 all.push([key, value]);
@@ -221,13 +227,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         return promise;
     };
 
+    window.defer = window.requestAnimationFrame;
+
     window.getURL = function (url) {
         var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '_blank';
 
         window.open(url, target);
     };
-
-    if (!window.URL) window.URL = window.webkitURL;
 
     if (!window.Config) window.Config = {};
     if (!window.Global) window.Global = {};
@@ -361,6 +367,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function pad(number) {
                 return number < 10 ? '0' + number : number;
             }
+        }, {
+            key: 'hash',
+            get: function get() {
+                return window.location.hash.slice(1);
+            }
         }]);
 
         return Utils;
@@ -371,15 +382,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
-
-    if (!window.requestAnimationFrame) window.requestAnimationFrame = window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function () {
-        var start = Date.now();
-        return function (callback) {
-            return setTimeout(function () {
-                return callback(Date.now() - start);
-            }, 1000 / 60);
-        };
-    }();
 
     var Render = function () {
         function Render() {
@@ -566,10 +568,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     var object = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
 
                     var called = false;
-                    for (var i = 0; i < this.events.length; i++) {
-                        if (this.events[i].event === event && !this.events[i].removed) {
-                            if (this.events[i].target && object && (typeof object === 'undefined' ? 'undefined' : _typeof(object)) === 'object') object.target = object.target || this.events[i].target;
-                            this.events[i].callback(object);
+                    var clone = Utils.cloneArray(this.events);
+                    for (var i = 0; i < clone.length; i++) {
+                        if (clone[i].event === event && !clone[i].removed) {
+                            if (clone[i].target && object && (typeof object === 'undefined' ? 'undefined' : _typeof(object)) === 'object') object.target = object.target || clone[i].target;
+                            clone[i].callback(object);
                             called = true;
                         }
                     }
@@ -877,7 +880,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     }();
 
     /**
-     * Image helper class with promise method.
+     * Assets helper class with image promise method.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
@@ -894,30 +897,40 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                 this.CDN = '';
                 this.CORS = null;
-                var images = {};
+                var images = {},
+                    json = {};
 
-                this.getPath = function (src) {
-                    if (~src.indexOf('//')) return src;
-                    if (_this4.CDN && !~src.indexOf(_this4.CDN)) src = _this4.CDN + src;
-                    return src;
+                this.getPath = function (path) {
+                    if (~path.indexOf('//')) return path;
+                    if (_this4.CDN && !~path.indexOf(_this4.CDN)) path = _this4.CDN + path;
+                    return path;
                 };
 
-                this.createImage = function (src, store, callback) {
+                this.createImage = function (path, store, callback) {
                     if (typeof store !== 'boolean') {
                         callback = store;
                         store = undefined;
                     }
                     var img = new Image();
                     img.crossOrigin = _this4.CORS;
-                    img.src = _this4.getPath(src);
+                    img.src = _this4.getPath(path);
                     img.onload = callback;
                     img.onerror = callback;
-                    if (store) images[src] = img;
+                    if (store) images[path] = img;
                     return img;
                 };
 
-                this.getImage = function (src) {
-                    return images[src];
+                this.getImage = function (path) {
+                    return images[path];
+                };
+
+                this.storeData = function (name, data) {
+                    json[name] = data;
+                    return json[name];
+                };
+
+                this.getData = function (name) {
+                    return json[name];
                 };
             }
         }, {
@@ -925,8 +938,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function loadImage(img) {
                 if (typeof img === 'string') img = this.createImage(img);
                 var promise = Promise.create();
-                img.onload = promise.resolve;
-                img.onerror = promise.resolve;
+                img.onload = function () {
+                    return promise.resolve(img);
+                };
+                img.onerror = function () {
+                    return promise.resolve(img);
+                };
                 return promise;
             }
         }]);
@@ -951,6 +968,37 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             key: 'init',
             value: function init() {
                 var _this5 = this;
+
+                function calculateBezier(aT, aA1, aA2) {
+                    return ((A(aA1, aA2) * aT + B(aA1, aA2)) * aT + C(aA1)) * aT;
+                }
+
+                function getTForX(aX, mX1, mX2) {
+                    var aGuessT = aX;
+                    for (var i = 0; i < 4; i++) {
+                        var currentSlope = getSlope(aGuessT, mX1, mX2);
+                        if (currentSlope === 0) return aGuessT;
+                        var currentX = calculateBezier(aGuessT, mX1, mX2) - aX;
+                        aGuessT -= currentX / currentSlope;
+                    }
+                    return aGuessT;
+                }
+
+                function getSlope(aT, aA1, aA2) {
+                    return 3 * A(aA1, aA2) * aT * aT + 2 * B(aA1, aA2) * aT + C(aA1);
+                }
+
+                function A(aA1, aA2) {
+                    return 1 - 3 * aA2 + 3 * aA1;
+                }
+
+                function B(aA1, aA2) {
+                    return 3 * aA2 - 6 * aA1;
+                }
+
+                function C(aA1) {
+                    return 3 * aA1;
+                }
 
                 this.convertEase = function (ease) {
                     return function () {
@@ -1050,8 +1098,24 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                                 fn = _this5.Linear.None;
                                 break;
                         }
+                        if (!fn) {
+                            var curve = TweenManager.getEase(ease);
+                            if (curve) {
+                                var values = curve.split('(')[1].slice(0, -1).split(',');
+                                for (var i = 0; i < values.length; i++) {
+                                    values[i] = parseFloat(values[i]);
+                                }fn = values;
+                            } else {
+                                fn = _this5.Cubic.Out;
+                            }
+                        }
                         return fn;
-                    }() || _this5.Cubic.Out;
+                    }();
+                };
+
+                this.solve = function (values, elapsed) {
+                    if (values[0] === values[1] && values[2] === values[3]) return elapsed;
+                    return calculateBezier(getTForX(elapsed, values[0], values[2]), values[1], values[3]);
                 };
 
                 this.Linear = {
@@ -1249,6 +1313,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         var startTime = void 0,
             startValues = void 0,
             endValues = void 0,
+            easeFunction = void 0,
             paused = void 0,
             spring = void 0,
             damping = void 0,
@@ -1265,6 +1330,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 object.mathTweens.push(self);
             }
             ease = Interpolation.convertEase(ease);
+            easeFunction = typeof ease === 'function';
             startTime = performance.now();
             startTime += delay;
             endValues = props;
@@ -1310,7 +1376,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         };
 
         this.interpolate = function (elapsed) {
-            var delta = ease(elapsed, spring, damping);
+            var delta = easeFunction ? ease(elapsed, spring, damping) : Interpolation.solve(ease, elapsed);
             for (var prop in startValues) {
                 if (typeof startValues[prop] === 'number' && typeof endValues[prop] === 'number') {
                     var start = startValues[prop],
@@ -1415,6 +1481,27 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 }
             }
         }, {
+            key: 'isTransform',
+            value: function isTransform(key) {
+                return ~this.TRANSFORMS.indexOf(key);
+            }
+        }, {
+            key: 'getEase',
+            value: function getEase(name) {
+                return this.CSS_EASES[name] || this.CSS_EASES.easeOutCubic;
+            }
+        }, {
+            key: 'getAllTransforms',
+            value: function getAllTransforms(object) {
+                var obj = {};
+                for (var i = 0; i < this.TRANSFORMS.length; i++) {
+                    var key = this.TRANSFORMS[i],
+                        val = object[key];
+                    if (val !== 0 && typeof val === 'number') obj[key] = val;
+                }
+                return obj;
+            }
+        }, {
             key: 'parseTransform',
             value: function parseTransform(props) {
                 var transforms = '';
@@ -1444,25 +1531,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 return transforms;
             }
         }, {
-            key: 'isTransform',
-            value: function isTransform(key) {
-                return ~this.TRANSFORMS.indexOf(key);
+            key: 'interpolate',
+            value: function interpolate(num, alpha, ease) {
+                var fn = Interpolation.convertEase(ease);
+                return num * (typeof fn === 'function' ? fn(alpha) : Interpolation.solve(fn, alpha));
             }
         }, {
-            key: 'getAllTransforms',
-            value: function getAllTransforms(object) {
-                var obj = {};
-                for (var i = 0; i < this.TRANSFORMS.length; i++) {
-                    var key = this.TRANSFORMS[i],
-                        val = object[key];
-                    if (val !== 0 && typeof val === 'number') obj[key] = val;
-                }
-                return obj;
-            }
-        }, {
-            key: 'getEase',
-            value: function getEase(name) {
-                return this.CSS_EASES[name] || this.CSS_EASES.easeOutCubic;
+            key: 'interpolateValues',
+            value: function interpolateValues(start, end, alpha, ease) {
+                var fn = Interpolation.convertEase(ease);
+                return start + (end - start) * (typeof fn === 'function' ? fn(alpha) : Interpolation.solve(fn, alpha));
             }
         }]);
 
@@ -3028,6 +3106,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     return;
                 }
                 window.get(Assets.getPath(asset)).then(function (data) {
+                    if (ext === 'json') Assets.storeData(key, data);
                     if (ext === 'js') window.eval(data.replace('use strict', ''));
                     assetLoaded();
                 }).catch(function () {
@@ -3227,11 +3306,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
         }, {
             key: 'startDraw',
-            value: function startDraw(ox, oy, override) {
+            value: function startDraw() {
+                var ox = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+                var oy = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+                var override = arguments[2];
+
                 var context = this.canvas.context,
                     v = this.values.data,
-                    x = v[0] + (ox || 0),
-                    y = v[1] + (oy || 0);
+                    x = v[0] + ox,
+                    y = v[1] + oy;
                 context.save();
                 if (!override) context.globalCompositeOperation = this.blendMode;
                 context.translate(x, y);
@@ -3354,7 +3437,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'destroy',
             value: function destroy() {
-                for (var i = this.children.length - 1; i >= 0; i--) {
+                if (this.children) for (var i = this.children.length - 1; i >= 0; i--) {
                     this.children[i].destroy();
                 }return Utils.nullObject(this);
             }
@@ -3635,12 +3718,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      */
 
     var Canvas = function Canvas(w) {
-        var h = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : w;
-
         var _this19 = this;
 
-        var retina = arguments[2];
-        var whiteAlpha = arguments[3];
+        var h = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : w;
+        var whiteAlpha = arguments[2];
 
         _classCallCheck(this, Canvas);
 
@@ -3649,19 +3730,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         this.context = this.element.getContext('2d');
         this.object = new Interface(this.element);
         this.children = [];
-        this.retina = retina;
 
-        size(w, h, retina);
+        size(w, h);
 
-        function size(w, h, retina) {
-            var ratio = retina ? 2 : 1;
-            self.element.width = w * ratio;
-            self.element.height = h * ratio;
+        function size(w, h) {
+            self.element.width = w * 2;
+            self.element.height = h * 2;
             self.width = w;
             self.height = h;
-            self.scale = ratio;
+            self.scale = 2;
             self.object.size(self.width, self.height);
-            self.context.scale(ratio, ratio);
+            self.context.scale(2, 2);
             self.element.style.width = w + 'px';
             self.element.style.height = h + 'px';
             if (whiteAlpha) {
@@ -3706,7 +3785,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         };
 
         this.destroy = function () {
-            for (var i = _this19.children.length - 1; i >= 0; i--) {
+            if (_this19.children) for (var i = _this19.children.length - 1; i >= 0; i--) {
                 _this19.children[i].destroy();
             }_this19.object.destroy();
             return Utils.nullObject(_this19);
@@ -3740,7 +3819,83 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     };
 
     /**
+     * Canvas texture.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    var CanvasTexture = function (_CanvasObject2) {
+        _inherits(CanvasTexture, _CanvasObject2);
+
+        function CanvasTexture(texture) {
+            var w = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+            var h = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : w;
+
+            _classCallCheck(this, CanvasTexture);
+
+            var _this20 = _possibleConstructorReturn(this, (CanvasTexture.__proto__ || Object.getPrototypeOf(CanvasTexture)).call(this));
+
+            var self = _this20;
+            _this20.width = w;
+            _this20.height = h;
+            var mask = void 0;
+
+            initTexture();
+
+            function initTexture() {
+                if (typeof texture === 'string') {
+                    Assets.loadImage(texture).then(function (image) {
+                        self.texture = image;
+                        setDimensions();
+                    });
+                } else {
+                    self.texture = texture;
+                    setDimensions();
+                }
+            }
+
+            function setDimensions() {
+                if (self.onload) self.onload();
+                if (!self.width && !self.height) {
+                    self.width = self.texture.width;
+                    self.height = self.texture.height;
+                }
+            }
+
+            _this20.draw = function (override) {
+                if (_this20.isMask() && !override) return false;
+                var context = _this20.canvas.context;
+                if (_this20.texture) {
+                    _this20.startDraw(_this20.px, _this20.py, override);
+                    context.drawImage(_this20.texture, -_this20.px, -_this20.py, _this20.width, _this20.height);
+                    _this20.endDraw();
+                }
+                if (mask) {
+                    context.globalCompositeOperation = 'source-in';
+                    mask.render(true);
+                    context.globalCompositeOperation = 'source-over';
+                }
+            };
+
+            _this20.mask = function (object) {
+                if (!object) return mask = null;
+                mask = object;
+                object.masked = _this20;
+            };
+            return _this20;
+        }
+
+        return CanvasTexture;
+    }(CanvasObject);
+
+    /**
      * Canvas font utilities.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * Color helper class.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
@@ -3867,9 +4022,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         function AlienKittyCanvas() {
             _classCallCheck(this, AlienKittyCanvas);
 
-            var _this20 = _possibleConstructorReturn(this, (AlienKittyCanvas.__proto__ || Object.getPrototypeOf(AlienKittyCanvas)).call(this, 'AlienKittyCanvas'));
+            var _this21 = _possibleConstructorReturn(this, (AlienKittyCanvas.__proto__ || Object.getPrototypeOf(AlienKittyCanvas)).call(this, 'AlienKittyCanvas'));
 
-            var self = _this20;
+            var self = _this21;
             var canvas = void 0,
                 alienkittyimg = void 0,
                 eyelidimg = void 0,
@@ -3886,7 +4041,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function initCanvas() {
-                canvas = self.initClass(Canvas, 90, 86, true);
+                canvas = self.initClass(Canvas, 90, 86);
             }
 
             function initImages() {
@@ -3896,14 +4051,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function finishSetup() {
-                alienkitty = new CanvasGraphics(90, 86);
-                alienkitty.drawImage(alienkittyimg);
-                eyelid1 = new CanvasGraphics(24, 14);
+                alienkitty = self.initClass(CanvasTexture, alienkittyimg, 90, 86);
+                eyelid1 = self.initClass(CanvasTexture, eyelidimg, 24, 14);
                 eyelid1.transformPoint('50%', 0).transform({ x: 35, y: 25, scaleX: 1.5, scaleY: 0.01 });
-                eyelid1.drawImage(eyelidimg);
-                eyelid2 = new CanvasGraphics(24, 14);
+                eyelid2 = self.initClass(CanvasTexture, eyelidimg, 24, 14);
                 eyelid2.transformPoint(0, 0).transform({ x: 53, y: 26, scaleX: 1, scaleY: 0.01 });
-                eyelid2.drawImage(eyelidimg);
                 alienkitty.add(eyelid1);
                 alienkitty.add(eyelid2);
                 canvas.add(alienkitty);
@@ -3939,20 +4091,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 canvas.render();
             }
 
-            _this20.animateIn = function () {
+            _this21.animateIn = function () {
                 blink();
-                _this20.tween({ opacity: 1 }, 500, 'easeOutQuart');
-                _this20.startRender(loop);
+                _this21.tween({ opacity: 1 }, 500, 'easeOutQuart');
+                _this21.startRender(loop);
             };
 
-            _this20.animateOut = function (callback) {
-                _this20.tween({ opacity: 0 }, 500, 'easeInOutQuad', function () {
-                    _this20.stopRender(loop);
-                    _this20.clearTimers();
+            _this21.animateOut = function (callback) {
+                _this21.tween({ opacity: 0 }, 500, 'easeInOutQuad', function () {
+                    _this21.stopRender(loop);
+                    _this21.clearTimers();
                     if (callback) callback();
                 });
             };
-            return _this20;
+            return _this21;
         }
 
         return AlienKittyCanvas;
@@ -3964,16 +4116,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         function Progress() {
             _classCallCheck(this, Progress);
 
-            var _this21 = _possibleConstructorReturn(this, (Progress.__proto__ || Object.getPrototypeOf(Progress)).call(this, 'Progress'));
+            var _this22 = _possibleConstructorReturn(this, (Progress.__proto__ || Object.getPrototypeOf(Progress)).call(this, 'Progress'));
 
-            var self = _this21;
+            var self = _this22;
             var size = 90;
             var canvas = void 0,
                 context = void 0;
 
             initHTML();
             initCanvas();
-            _this21.startRender(loop);
+            _this22.startRender(loop);
 
             function initHTML() {
                 self.size(size);
@@ -3981,7 +4133,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function initCanvas() {
-                canvas = self.initClass(Canvas, size, size, true);
+                canvas = self.initClass(Canvas, size);
                 context = canvas.context;
                 context.lineWidth = 5;
             }
@@ -4007,15 +4159,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 self.stopRender(loop);
             }
 
-            _this21.update = function (e) {
-                if (_this21.complete) return;
-                TweenManager.tween(_this21, { progress: e.percent }, 500, 'easeOutCubic');
+            _this22.update = function (e) {
+                if (_this22.complete) return;
+                TweenManager.tween(_this22, { progress: e.percent }, 500, 'easeOutCubic');
             };
 
-            _this21.animateOut = function (callback) {
-                _this21.tween({ scale: 0.9, opacity: 0 }, 400, 'easeInCubic', callback);
+            _this22.animateOut = function (callback) {
+                _this22.tween({ scale: 0.9, opacity: 0 }, 400, 'easeInCubic', callback);
             };
-            return _this21;
+            return _this22;
         }
 
         return Progress;
@@ -4027,9 +4179,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         function Loader() {
             _classCallCheck(this, Loader);
 
-            var _this22 = _possibleConstructorReturn(this, (Loader.__proto__ || Object.getPrototypeOf(Loader)).call(this, 'Loader'));
+            var _this23 = _possibleConstructorReturn(this, (Loader.__proto__ || Object.getPrototypeOf(Loader)).call(this, 'Loader'));
 
-            var self = _this22;
+            var self = _this23;
             var loader = void 0,
                 progress = void 0;
 
@@ -4060,10 +4212,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 self.events.fire(Events.COMPLETE);
             }
 
-            _this22.animateOut = function (callback) {
+            _this23.animateOut = function (callback) {
                 progress.animateOut(callback);
             };
-            return _this22;
+            return _this23;
         }
 
         return Loader;
