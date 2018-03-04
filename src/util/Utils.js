@@ -76,6 +76,10 @@ class Utils {
     static pad(number) {
         return number < 10 ? '0' + number : number;
     }
+
+    static get hash() {
+        return window.location.hash.slice(1);
+    }
 }
 
 export { Utils };
