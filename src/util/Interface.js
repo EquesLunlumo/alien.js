@@ -168,7 +168,11 @@ class Interface {
         return this;
     }
 
-    size(w, h = w) {
+    size(w, h = w, noScale) {
+        if (typeof h === 'boolean') {
+            noScale = h;
+            h = w;
+        }
         if (typeof w !== 'undefined') {
             if (typeof w === 'string' || typeof h === 'string') {
                 if (typeof w !== 'string') w = w + 'px';
@@ -178,7 +182,7 @@ class Interface {
             } else {
                 this.element.style.width = w + 'px';
                 this.element.style.height = h + 'px';
-                this.element.style.backgroundSize = w + 'px ' + h + 'px';
+                if (!noScale) this.element.style.backgroundSize = w + 'px ' + h + 'px';
             }
         }
         this.width = this.element.offsetWidth;
