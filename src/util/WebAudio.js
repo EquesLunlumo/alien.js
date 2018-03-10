@@ -93,12 +93,42 @@ class WebAudio {
                         sound.source = context.createBufferSource();
                         sound.source.buffer = sound.buffer;
                         sound.source.connect(sound.audioGain);
-                        sound.audioGain.gain.setValueAtTime(0, context.currentTime);
+                        sound.audioGain.gain.setValueAtTime(sound.audioGain.value, context.currentTime);
                         sound.source.loop = !!sound.loop;
                         sound.source.start();
-                        sound.audioGain.gain.setTargetAtTime(sound.audioGain.value, context.currentTime, 0.01);
                     }
                 });
+            };
+
+            this.play = (id, volume = 1, loop) => {
+                if (!context) return;
+                if (typeof volume === 'boolean') {
+                    loop = volume;
+                    volume = 1;
+                }
+                const sound = this.getSound(id);
+                if (sound) {
+                    sound.gain.value = volume;
+                    sound.loop = !!loop;
+                    this.trigger(id);
+                }
+            };
+
+            this.fadeInAndPlay = (id, volume, loop, time, ease, delay = 0) => {
+                if (!context) return;
+                const sound = this.getSound(id);
+                if (sound) {
+                    sound.gain.value = 0;
+                    sound.loop = !!loop;
+                    this.trigger(id);
+                    TweenManager.tween(sound.gain, { value: volume }, time, ease, delay);
+                }
+            };
+
+            this.fadeOutAndStop = (id, time, ease, delay = 0) => {
+                if (!context) return;
+                const sound = this.getSound(id);
+                if (sound) TweenManager.tween(sound.gain, { value: 0 }, time, ease, delay, () => sound.stop());
             };
 
             this.mute = () => {
