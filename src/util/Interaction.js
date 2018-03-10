@@ -61,7 +61,6 @@ class Interaction extends Component {
         }
 
         function down(e) {
-            e.preventDefault();
             self.isTouching = true;
             self.x = e.x;
             self.y = e.y;
