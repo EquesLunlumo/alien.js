@@ -210,6 +210,7 @@ class Interface {
             this.element.style.backgroundRepeat = repeat;
         }
         if (x === 'cover' || x === 'contain') {
+            repeat = typeof repeat === 'number' ? repeat + 'px' : repeat;
             this.element.style.backgroundSize = x;
             this.element.style.backgroundRepeat = 'no-repeat';
             this.element.style.backgroundPosition = typeof y !== 'undefined' ? y + ' ' + repeat : 'center';
