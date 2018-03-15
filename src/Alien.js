@@ -36,6 +36,8 @@ export { Scroll } from './util/Scroll.js';
 export { Slide } from './slide/Slide.js';
 export { SlideLoader } from './slide/SlideLoader.js';
 export { SlideVideo } from './slide/SlideVideo.js';
+export { Webcam } from './webcam/Webcam.js';
+export { WebcamMotion } from './webcam/WebcamMotion.js';
 export { LinkedList } from './util/LinkedList.js';
 export { ObjectPool } from './util/ObjectPool.js';
 export { Vector2 } from './util/Vector2.js';
