@@ -29,7 +29,9 @@ class WebAudio {
                 this.gain = {
                     set value(value) {
                         self.globalGain.value = value;
-                        self.globalGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
+                        self.globalGain.gain.cancelScheduledValues(context.currentTime);
+                        self.globalGain.gain.setValueAtTime(self.globalGain.gain.value, context.currentTime);
+                        self.globalGain.gain.setTargetAtTime(value, context.currentTime, 0.1);
                     },
                     get value() {
                         return self.globalGain.value;
@@ -67,7 +69,9 @@ class WebAudio {
                 sound.gain = {
                     set value(value) {
                         sound.audioGain.value = value;
-                        sound.audioGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
+                        sound.audioGain.gain.cancelScheduledValues(context.currentTime);
+                        sound.audioGain.gain.setValueAtTime(sound.audioGain.gain.value, context.currentTime);
+                        sound.audioGain.gain.setTargetAtTime(value, context.currentTime, 0.1);
                     },
                     get value() {
                         return sound.audioGain.value;
@@ -92,12 +96,14 @@ class WebAudio {
                 if (!sound.ready) this.loadSound(id);
                 sound.ready().then(() => {
                     if (sound.complete) {
+                        sound.audioGain.gain.cancelScheduledValues(context.currentTime);
+                        sound.audioGain.gain.setValueAtTime(0, context.currentTime);
                         sound.source = context.createBufferSource();
                         sound.source.buffer = sound.buffer;
-                        sound.source.connect(sound.audioGain);
-                        sound.audioGain.gain.setValueAtTime(sound.audioGain.value, context.currentTime);
                         sound.source.loop = !!sound.loop;
+                        sound.source.connect(sound.audioGain);
                         sound.source.start();
+                        sound.audioGain.gain.setTargetAtTime(sound.audioGain.value, context.currentTime, 0.1);
                     }
                 });
             };
