@@ -41,7 +41,7 @@ class Vector3 {
         return p;
     }
 
-    copyFrom(p) {
+    copy(p) {
         this.x = p.x || 0;
         this.y = p.y || 0;
         this.z = p.z || 0;
@@ -211,8 +211,8 @@ class Vector3 {
     solveAngle2D(a, b = this) {
         const calc = new Vector2(),
             calc2 = new Vector2();
-        calc.copyFrom(a);
-        calc2.copyFrom(b);
+        calc.copy(a);
+        calc2.copy(b);
         return calc.solveAngle(calc2);
     }
 

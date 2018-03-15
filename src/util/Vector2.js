@@ -32,7 +32,7 @@ class Vector2 {
         return this;
     }
 
-    copyFrom(v) {
+    copy(v) {
         this.x = v.x || 0;
         this.y = v.y || 0;
         return this;
