@@ -96,6 +96,10 @@ class WebAudio {
                 if (!sound.ready) this.loadSound(id);
                 sound.ready().then(() => {
                     if (sound.complete) {
+                        if (sound.stopping && sound.loop) {
+                            sound.stopping = false;
+                            return;
+                        }
                         sound.audioGain.gain.cancelScheduledValues(context.currentTime);
                         sound.audioGain.gain.setValueAtTime(0, context.currentTime);
                         sound.source = context.createBufferSource();
@@ -136,7 +140,14 @@ class WebAudio {
             this.fadeOutAndStop = (id, time, ease, delay = 0) => {
                 if (!context) return;
                 const sound = this.getSound(id);
-                if (sound) TweenManager.tween(sound.gain, { value: 0 }, time, ease, delay, () => sound.stop());
+                if (sound) {
+                    TweenManager.tween(sound.gain, { value: 0 }, time, ease, delay, () => {
+                        if (!sound.stopping) return;
+                        sound.stopping = false;
+                        sound.stop();
+                    });
+                    sound.stopping = true;
+                }
             };
 
             this.mute = () => {
