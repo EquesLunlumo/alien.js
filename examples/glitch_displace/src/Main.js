@@ -34,7 +34,7 @@ class TitleTexture extends Component {
         initCanvas();
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, Stage.width, Stage.height, true);
+            canvas = self.initClass(Canvas, Stage.width, Stage.height, true, true);
             texture = new THREE.Texture(canvas.element);
             texture.minFilter = THREE.LinearFilter;
             self.texture = texture;
@@ -284,7 +284,7 @@ class Progress extends Interface {
         }
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, size);
+            canvas = self.initClass(Canvas, size, true);
         }
 
         function initCircle() {

@@ -117,7 +117,7 @@ class CanvasLayer extends Interface {
         }
 
         function initCanvas() {
-            self.canvas = self.initClass(Canvas, Stage.width, Stage.height);
+            self.canvas = self.initClass(Canvas, Stage.width, Stage.height, true);
         }
 
         function addListeners() {

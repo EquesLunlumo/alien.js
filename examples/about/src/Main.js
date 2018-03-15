@@ -277,7 +277,7 @@ class NavBackground extends Interface {
         }
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, size, Stage.height);
+            canvas = self.initClass(Canvas, size, Stage.height, true);
         }
 
         function initFill() {
@@ -504,7 +504,7 @@ class Button extends Interface {
         }
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, data.width, data.height);
+            canvas = self.initClass(Canvas, data.width, data.height, true);
         }
 
         function initLine() {

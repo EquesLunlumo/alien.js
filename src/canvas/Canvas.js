@@ -10,23 +10,31 @@ import { CanvasGraphics } from './CanvasGraphics.js';
 
 class Canvas {
 
-    constructor(w, h = w, whiteAlpha) {
+    constructor(w, h = w, retina, whiteAlpha) {
+
+        if (typeof h === 'boolean') {
+            retina = h;
+            h = w;
+        }
+
         const self = this;
         this.element = document.createElement('canvas');
         this.context = this.element.getContext('2d');
         this.object = new Interface(this.element);
         this.children = [];
+        this.retina = retina;
 
         size(w, h);
 
         function size(w, h) {
-            self.element.width = w * 2;
-            self.element.height = h * 2;
+            const ratio = retina ? 2 : 1;
+            self.element.width = w * ratio;
+            self.element.height = h * ratio;
             self.width = w;
             self.height = h;
-            self.scale = 2;
+            self.scale = ratio;
             self.object.size(self.width, self.height);
-            self.context.scale(2, 2);
+            self.context.scale(ratio, ratio);
             self.element.style.width = w + 'px';
             self.element.style.height = h + 'px';
             if (whiteAlpha) {

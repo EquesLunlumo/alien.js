@@ -4041,7 +4041,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function initCanvas() {
-                canvas = self.initClass(Canvas, 90, 86);
+                canvas = self.initClass(Canvas, 90, 86, true);
             }
 
             function initImages() {
@@ -4133,7 +4133,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function initCanvas() {
-                canvas = self.initClass(Canvas, size);
+                canvas = self.initClass(Canvas, size, true);
                 context = canvas.context;
                 context.lineWidth = 5;
             }
