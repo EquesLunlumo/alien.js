@@ -23,18 +23,16 @@ class WebAudio {
 
             if (window.AudioContext) {
                 context = new AudioContext();
-                this.globalGain = context.createGain();
-                this.globalGain.connect(context.destination);
-                this.globalGain.value = this.globalGain.gain.defaultValue;
+                this.output = context.createGain();
+                this.volume = this.output.gain.defaultValue;
+                this.output.connect(context.destination);
                 this.gain = {
                     set value(value) {
-                        self.globalGain.value = value;
-                        self.globalGain.gain.cancelScheduledValues(context.currentTime);
-                        self.globalGain.gain.setValueAtTime(self.globalGain.gain.value, context.currentTime);
-                        self.globalGain.gain.setTargetAtTime(value, context.currentTime, 0.1);
+                        self.volume = value;
+                        self.output.gain.setTargetAtTime(value, context.currentTime, 0.01);
                     },
                     get value() {
-                        return self.globalGain.value;
+                        return self.volume;
                     }
                 };
                 this.context = context;
@@ -63,18 +61,17 @@ class WebAudio {
             this.createSound = (id, asset, callback) => {
                 const sound = {};
                 sound.asset = Assets.getPath(asset);
-                sound.audioGain = context.createGain();
-                sound.audioGain.connect(this.globalGain);
-                sound.audioGain.value = sound.audioGain.gain.defaultValue;
+                sound.output = context.createGain();
+                sound.volume = sound.output.gain.defaultValue;
+                sound.output.gain.setValueAtTime(0, context.currentTime);
+                sound.output.connect(this.output);
                 sound.gain = {
                     set value(value) {
-                        sound.audioGain.value = value;
-                        sound.audioGain.gain.cancelScheduledValues(context.currentTime);
-                        sound.audioGain.gain.setValueAtTime(sound.audioGain.gain.value, context.currentTime);
-                        sound.audioGain.gain.setTargetAtTime(value, context.currentTime, 0.1);
+                        sound.volume = value;
+                        sound.output.gain.setTargetAtTime(value, context.currentTime, 0.01);
                     },
                     get value() {
-                        return sound.audioGain.value;
+                        return sound.volume;
                     }
                 };
                 sound.stop = () => {
@@ -100,14 +97,12 @@ class WebAudio {
                             sound.stopping = false;
                             return;
                         }
-                        sound.audioGain.gain.cancelScheduledValues(context.currentTime);
-                        sound.audioGain.gain.setValueAtTime(0, context.currentTime);
                         sound.source = context.createBufferSource();
                         sound.source.buffer = sound.buffer;
                         sound.source.loop = !!sound.loop;
-                        sound.source.connect(sound.audioGain);
+                        sound.source.connect(sound.output);
                         sound.source.start();
-                        sound.audioGain.gain.setTargetAtTime(sound.audioGain.value, context.currentTime, 0.1);
+                        sound.output.gain.setTargetAtTime(sound.volume, context.currentTime, 0.01);
                     }
                 });
             };
@@ -120,7 +115,7 @@ class WebAudio {
                 }
                 const sound = this.getSound(id);
                 if (sound) {
-                    sound.gain.value = volume;
+                    sound.volume = volume;
                     sound.loop = !!loop;
                     this.trigger(id);
                 }
@@ -130,7 +125,7 @@ class WebAudio {
                 if (!context) return;
                 const sound = this.getSound(id);
                 if (sound) {
-                    sound.gain.value = 0;
+                    sound.volume = 0;
                     sound.loop = !!loop;
                     this.trigger(id);
                     TweenManager.tween(sound.gain, { value: volume }, time, ease, delay);
