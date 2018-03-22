@@ -50,6 +50,8 @@ class WebAudio {
                             sound.buffer = buffer;
                             sound.complete = true;
                             callback();
+                        }, () => {
+                            callback();
                         });
                     });
                 }).catch(() => {
