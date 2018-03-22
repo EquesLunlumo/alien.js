@@ -24,7 +24,7 @@ class WebAudio {
             if (window.AudioContext) {
                 context = new AudioContext();
                 this.output = context.createGain();
-                this.volume = this.output.gain.defaultValue;
+                this.volume = 1;
                 this.output.connect(context.destination);
                 this.gain = {
                     set value(value) {
@@ -64,7 +64,8 @@ class WebAudio {
                 const sound = {};
                 sound.asset = Assets.getPath(asset);
                 sound.output = context.createGain();
-                sound.volume = sound.output.gain.defaultValue;
+                sound.volume = 1;
+                sound.rate = 1;
                 sound.output.gain.setValueAtTime(0, context.currentTime);
                 sound.output.connect(this.output);
                 sound.gain = {
@@ -74,6 +75,15 @@ class WebAudio {
                     },
                     get value() {
                         return sound.volume;
+                    }
+                };
+                sound.playbackRate = {
+                    set value(value) {
+                        sound.rate = value;
+                        if (sound.source) sound.source.playbackRate.setTargetAtTime(value, context.currentTime, 0.01);
+                    },
+                    get value() {
+                        return sound.rate;
                     }
                 };
                 sound.stop = () => {
@@ -102,6 +112,7 @@ class WebAudio {
                         sound.source = context.createBufferSource();
                         sound.source.buffer = sound.buffer;
                         sound.source.loop = !!sound.loop;
+                        sound.source.playbackRate.setValueAtTime(sound.rate, context.currentTime);
                         sound.source.connect(sound.output);
                         sound.source.start();
                         sound.output.gain.setTargetAtTime(sound.volume, context.currentTime, 0.01);
