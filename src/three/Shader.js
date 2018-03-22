@@ -18,7 +18,7 @@ class Shader extends Component {
         this.properties = {};
 
         initProperties();
-        initShaders();
+        initShader();
 
         function initProperties() {
             for (let key in props) {
@@ -27,7 +27,7 @@ class Shader extends Component {
             }
         }
 
-        function initShaders() {
+        function initShader() {
             const params = {};
             params.vertexShader = process(vertexShader, 'vs');
             params.fragmentShader = process(fragmentShader, 'fs');

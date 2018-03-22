@@ -23,10 +23,10 @@ class Effects extends Component {
         this.dpr = params.dpr || 1;
         let renderTarget, camera, scene, mesh;
 
-        initEffects();
+        initRT();
         addListeners();
 
-        function initEffects() {
+        function initRT() {
             renderTarget = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
             self.texture = renderTarget.texture;
             self.texture.minFilter = THREE.LinearFilter;
@@ -54,6 +54,11 @@ class Effects extends Component {
             this.renderer.render(this.scene, this.camera, renderTarget, true);
             mesh.material.uniforms.texture.value = renderTarget.texture;
             this.renderer.render(scene, camera);
+        };
+
+        this.destroy = () => {
+            renderTarget.dispose();
+            return super.destroy();
         };
     }
 }
