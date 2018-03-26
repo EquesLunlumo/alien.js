@@ -14,6 +14,50 @@ class WebAudio {
 
     static init() {
 
+        class Sound {
+
+            constructor(asset) {
+                const self = this;
+                this.asset = Assets.getPath(asset);
+                this.stereo = WebAudio.context.createStereoPanner();
+                this.output = WebAudio.context.createGain();
+                this.volume = 1;
+                this.rate = 1;
+                this.output.gain.setValueAtTime(0, WebAudio.context.currentTime);
+                this.stereo.connect(this.output);
+                this.output.connect(WebAudio.output);
+                this.gain = {
+                    set value(value) {
+                        self.volume = value;
+                        self.output.gain.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                    },
+                    get value() {
+                        return self.volume;
+                    }
+                };
+                this.playbackRate = {
+                    set value(value) {
+                        self.rate = value;
+                        if (self.source) self.source.playbackRate.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                    },
+                    get value() {
+                        return self.rate;
+                    }
+                };
+            }
+
+            setPanTo(value) {
+                this.stereo.pan.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+            }
+
+            stop() {
+                if (this.source) {
+                    this.source.stop();
+                    this.playing = false;
+                }
+            }
+        }
+
         if (!this.active) {
             this.active = true;
 
@@ -61,43 +105,7 @@ class WebAudio {
             };
 
             this.createSound = (id, asset, callback) => {
-                const sound = {};
-                sound.asset = Assets.getPath(asset);
-                sound.stereo = context.createStereoPanner();
-                sound.output = context.createGain();
-                sound.volume = 1;
-                sound.rate = 1;
-                sound.output.gain.setValueAtTime(0, context.currentTime);
-                sound.stereo.connect(sound.output);
-                sound.output.connect(this.output);
-                sound.gain = {
-                    set value(value) {
-                        sound.volume = value;
-                        sound.output.gain.setTargetAtTime(value, context.currentTime, 0.01);
-                    },
-                    get value() {
-                        return sound.volume;
-                    }
-                };
-                sound.playbackRate = {
-                    set value(value) {
-                        sound.rate = value;
-                        if (sound.source) sound.source.playbackRate.setTargetAtTime(value, context.currentTime, 0.01);
-                    },
-                    get value() {
-                        return sound.rate;
-                    }
-                };
-                sound.setPanTo = value => {
-                    sound.stereo.pan.setTargetAtTime(value, context.currentTime, 0.01);
-                };
-                sound.stop = () => {
-                    if (sound.source) {
-                        sound.source.stop();
-                        sound.playing = false;
-                    }
-                };
-                sounds[id] = sound;
+                sounds[id] = new Sound(asset);
                 if (Device.os === 'ios') callback();
                 else this.loadSound(id, callback);
             };
