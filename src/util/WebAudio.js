@@ -92,7 +92,10 @@ class WebAudio {
                     sound.stereo.pan.setTargetAtTime(value, context.currentTime, 0.01);
                 };
                 sound.stop = () => {
-                    if (sound.source) sound.source.stop();
+                    if (sound.source) {
+                        sound.source.stop();
+                        sound.playing = false;
+                    }
                 };
                 sounds[id] = sound;
                 if (Device.os === 'ios') callback();
@@ -114,9 +117,10 @@ class WebAudio {
                             sound.stopping = false;
                             return;
                         }
+                        sound.playing = true;
                         sound.source = context.createBufferSource();
                         sound.source.buffer = sound.buffer;
-                        sound.source.loop = !!sound.loop;
+                        sound.source.loop = sound.loop;
                         sound.source.playbackRate.setValueAtTime(sound.rate, context.currentTime);
                         sound.source.connect(sound.stereo);
                         sound.source.start();
@@ -153,7 +157,7 @@ class WebAudio {
             this.fadeOutAndStop = (id, time, ease, delay = 0) => {
                 if (!context) return;
                 const sound = this.getSound(id);
-                if (sound) {
+                if (sound && sound.playing) {
                     TweenManager.tween(sound.gain, { value: 0 }, time, ease, delay, () => {
                         if (!sound.stopping) return;
                         sound.stopping = false;
