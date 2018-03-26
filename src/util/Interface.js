@@ -163,7 +163,7 @@ class Interface {
         return this;
     }
 
-    clearAlpha() {
+    clearOpacity() {
         this.element.style.opacity = '';
         return this;
     }
