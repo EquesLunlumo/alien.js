@@ -306,7 +306,7 @@ class Space extends Component {
                     play1();
                 } else {
                     self.events.add(video1, Events.READY, play1);
-                    video1.resume();
+                    video1.play();
                 }
             } else {
                 texture1.needsUpdate = true;
@@ -321,7 +321,7 @@ class Space extends Component {
                     play2();
                 } else {
                     self.events.add(video2, Events.READY, play2);
-                    video2.resume();
+                    video2.play();
                 }
             } else {
                 texture2.needsUpdate = true;

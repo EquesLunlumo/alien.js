@@ -58,7 +58,7 @@ class SlideVideo extends Component {
         function ready() {
             self.element.addEventListener('playing', playing, true);
             self.element.addEventListener('pause', pause, true);
-            if (self.willPlay) self.play();
+            self.element.play();
         }
 
         function playing() {
@@ -70,21 +70,12 @@ class SlideVideo extends Component {
             self.playing = false;
         }
 
-        this.resume = () => {
-            this.play(true);
-        };
-
-        this.play = (resume = false) => {
-            this.willPlay = true;
-            if (this.element && this.element.paused && !this.playing) {
-                if (!resume) this.element.currentTime = 0;
-                this.element.play();
-            }
+        this.play = () => {
+            this.element.play();
         };
 
         this.pause = () => {
-            this.willPlay = false;
-            if (this.element && !this.element.paused && this.playing) this.element.pause();
+            this.element.pause();
         };
 
         this.ready = () => {
