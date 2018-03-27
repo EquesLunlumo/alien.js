@@ -1,5 +1,5 @@
 /**
- * 3D utilities.
+ * 3D utilities with texture promise method.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
@@ -133,6 +133,13 @@ class Utils3D {
         const texture = this.getTexture(src);
         texture.onload = () => texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
         return texture;
+    }
+
+    static loadTexture(src) {
+        const texture = this.getTexture(src),
+            promise = Promise.create();
+        texture.onload = () => promise.resolve(texture);
+        return promise;
     }
 }
 
