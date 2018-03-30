@@ -49,10 +49,10 @@ import { Stage, Interface, Device } from '../alien.js/src/Alien.js';
 
 Config.UI_OFFSET = Device.phone ? 20 : 35;
 
-class UILogo extends Interface {
+class Logo extends Interface {
 
     constructor() {
-        super('UILogo');
+        super('Logo');
         const self = this;
         const size = Device.phone ? 40 : 64;
 
@@ -84,7 +84,7 @@ class UILogo extends Interface {
 class Main {
 
     constructor() {
-        Stage.initClass(UILogo);
+        Stage.initClass(Logo);
     }
 }
 
@@ -179,6 +179,11 @@ class Main {
 
     constructor() {
         Data.init();
+
+        const state = Data.dispatcher.getState();
+        if (state.path !== '') {
+            // ...
+        }
     }
 }
 
