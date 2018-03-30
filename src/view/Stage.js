@@ -22,6 +22,7 @@ const Stage = new (class extends Interface {
 
         function initHTML() {
             self.css({ overflow: 'hidden' });
+            self.preventScroll();
         }
 
         function addListeners() {

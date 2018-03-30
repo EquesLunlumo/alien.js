@@ -538,6 +538,21 @@ class Interface {
         return this;
     }
 
+    preventScroll() {
+        if (!Device.mobile) return;
+        const preventScroll = e => {
+            let target = e.target;
+            if (target.nodeName === 'INPUT' || target.nodeName === 'TEXTAREA' || target.nodeName === 'SELECT' || target.nodeName === 'A') return;
+            let prevent = true;
+            while (target.parentNode && prevent) {
+                if (target.scrollParent) prevent = false;
+                target = target.parentNode;
+            }
+            if (prevent) e.preventDefault();
+        };
+        this.element.addEventListener('touchstart', preventScroll, { passive: false });
+    }
+
     overflowScroll(direction) {
         if (!Device.mobile) return;
         const x = !!direction.x,
@@ -555,6 +570,7 @@ class Interface {
             overflow.overflowY = 'hidden';
         }
         this.css(overflow);
+        this.element.scrollParent = true;
         this.element.preventEvent = e => e.stopPropagation();
         this.bind('touchmove', this.element.preventEvent);
     }
