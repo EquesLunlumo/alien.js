@@ -132,7 +132,9 @@ class WebAudio {
                         sound.source.playbackRate.setValueAtTime(sound.rate, context.currentTime);
                         sound.source.connect(sound.stereo ? sound.stereo : sound.output);
                         sound.source.start();
-                        sound.output.gain.setTargetAtTime(sound.volume, context.currentTime, 0.01);
+                        sound.output.gain.cancelScheduledValues(context.currentTime);
+                        sound.output.gain.setValueAtTime(0, context.currentTime);
+                        defer(() => sound.output.gain.setTargetAtTime(sound.volume, context.currentTime, 0.01));
                     }
                 });
             };
