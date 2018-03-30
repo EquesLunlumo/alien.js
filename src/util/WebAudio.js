@@ -19,12 +19,11 @@ class WebAudio {
             constructor(asset) {
                 const self = this;
                 this.asset = Assets.getPath(asset);
-                this.stereo = WebAudio.context.createStereoPanner();
+                if (WebAudio.context.createStereoPanner) this.stereo = WebAudio.context.createStereoPanner();
                 this.output = WebAudio.context.createGain();
                 this.volume = 1;
                 this.rate = 1;
-                this.output.gain.setValueAtTime(0, WebAudio.context.currentTime);
-                this.stereo.connect(this.output);
+                if (this.stereo) this.stereo.connect(this.output);
                 this.output.connect(WebAudio.output);
                 this.gain = {
                     set value(value) {
@@ -47,7 +46,7 @@ class WebAudio {
             }
 
             setPanTo(value) {
-                this.stereo.pan.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                if (this.stereo) this.stereo.pan.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
             }
 
             stop() {
@@ -131,7 +130,7 @@ class WebAudio {
                         sound.source.buffer = sound.buffer;
                         sound.source.loop = sound.loop;
                         sound.source.playbackRate.setValueAtTime(sound.rate, context.currentTime);
-                        sound.source.connect(sound.stereo);
+                        sound.source.connect(sound.stereo ? sound.stereo : sound.output);
                         sound.source.start();
                         sound.output.gain.setTargetAtTime(sound.volume, context.currentTime, 0.01);
                     }
