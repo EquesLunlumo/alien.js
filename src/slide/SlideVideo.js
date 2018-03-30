@@ -83,10 +83,14 @@ class SlideVideo extends Component {
         };
 
         this.destroy = () => {
-            this.element.removeEventListener('playing', playing, true);
-            this.element.removeEventListener('pause', pause, true);
-            this.pause();
-            this.element.src = '';
+            if (this.element) {
+                if (this.element.pause) {
+                    this.element.removeEventListener('playing', playing, true);
+                    this.element.removeEventListener('pause', pause, true);
+                    this.pause();
+                }
+                this.element.src = '';
+            }
             return super.destroy();
         };
     }
