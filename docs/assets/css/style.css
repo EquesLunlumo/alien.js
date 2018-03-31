@@ -7,20 +7,31 @@ body, html {
     background: black;
     color: white;
     touch-action: none;
+    text-rendering: optimizeLegibility;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-font-smoothing: antialiased;
+    font-smoothing: antialiased;
 }
 * {
     outline: none;
     border: none;
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
     user-select: none;
-    -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+    -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: none;
+    text-size-adjust: none;
 }
 
-.button .hit, .grabbable {
+#Button .hit, .grabbable {
     cursor: -webkit-grab;
+    cursor: -moz-grab;
     cursor: grab;
 }
-.button .hit:active, .grabbing {
+#Button .hit:active, .grabbing {
     cursor: -webkit-grabbing;
+    cursor: -moz-grabbing;
     cursor: grabbing;
 }

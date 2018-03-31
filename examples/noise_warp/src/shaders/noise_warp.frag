@@ -20,7 +20,7 @@ void main() {
     float t0 = time / 10.0;
     float t = snoise(vec2(t0, t0 + 1000.0));
     float m = snoise(uv + t);
-    vec4 rgba = mix(c0, c1, m);
-    rgba.a *= opacity;
-    gl_FragColor = rgba;
+    vec4 color = mix(c0, c1, m);
+    color.a *= opacity;
+    gl_FragColor = color;
 }

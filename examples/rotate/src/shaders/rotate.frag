@@ -16,7 +16,7 @@ void main() {
     mat2 m = mat2(cos(rotate), -sin(rotate), sin(rotate), cos(rotate));
     uv = m * uv;
     uv += 0.5;
-    vec4 rgba = texture2D(texture, uv);
-    rgba.a *= opacity;
-    gl_FragColor = rgba;
+    vec4 color = texture2D(texture, uv);
+    color.a *= opacity;
+    gl_FragColor = color;
 }

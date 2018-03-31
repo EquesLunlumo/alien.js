@@ -6,7 +6,7 @@
 
 /* global THREE */
 
-import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Interaction, Mouse, Utils, Assets, AssetLoader, FontLoader, TweenManager, Shader } from '../alien.js/src/Alien.js';
+import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Mouse, Utils, Assets, AssetLoader, FontLoader, TweenManager, Shader } from '../alien.js/src/Alien.js';
 
 import vertBasicShader from './shaders/basic_shader.vert';
 import fragBasicShader from './shaders/basic_shader.frag';
@@ -48,14 +48,10 @@ class TitleTexture extends Component {
             text = CanvasFont.createText(canvas, Stage.width, Stage.height, 'Rotate'.toUpperCase(), `200 ${Device.phone ? 28 : 66}px Oswald`, Config.UI_COLOR, {
                 lineHeight: Device.phone ? 35 : 80,
                 letterSpacing: 0,
-                textAlign: Device.phone ? 'left' : 'center'
+                textAlign: 'center'
             });
-            if (Device.phone) {
-                text.x = 20;
-                text.y = 55;
-            } else {
-                text.y = (Stage.height - text.totalHeight + 124) / 2;
-            }
+            const offset = Device.phone ? 55 : 124;
+            text.y = (Stage.height - text.totalHeight + offset) / 2;
             canvas.add(text);
             canvas.render();
             texture.needsUpdate = true;
@@ -78,6 +74,7 @@ class Title extends Component {
 
         function initCanvasTexture() {
             title = self.initClass(TitleTexture);
+            self.texture = title.texture;
         }
 
         function initMesh() {
@@ -113,8 +110,7 @@ class Space extends Component {
         const self = this;
         this.object3D = new THREE.Object3D();
         const ratio = 1920 / 1080;
-        let texture, img, shader, mesh, title,
-            progress = 0;
+        let texture, img, shader, mesh, title;
 
         World.scene.add(this.object3D);
 
@@ -132,12 +128,9 @@ class Space extends Component {
             initMesh();
             initTitle();
             addListeners();
-            self.startRender(loop);
             self.object3D.visible = true;
             shader.uniforms.opacity.value = 0;
-            shader.uniforms.progress.value = 0;
             TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutCubic');
-            TweenManager.tween(shader.uniforms.progress, { value: 1 }, 7000, 'easeOutSine');
             title.animateIn();
         }
 
@@ -148,7 +141,6 @@ class Space extends Component {
                 resolution: World.resolution,
                 texture: { value: texture },
                 opacity: { value: 0 },
-                progress: { value: progress },
                 depthWrite: false,
                 depthTest: false
             });
@@ -163,29 +155,13 @@ class Space extends Component {
 
         function addListeners() {
             self.events.add(Events.RESIZE, resize);
-            self.events.add(Mouse.input, Interaction.START, down);
-            self.events.add(Mouse.input, Interaction.END, up);
-            up();
             resize();
-        }
-
-        function down() {
-            progress = 0;
-        }
-
-        function up() {
-            progress = 1;
         }
 
         function resize() {
             if (Stage.width / Stage.height > ratio) mesh.scale.set(Stage.width, Stage.width / ratio, 1);
             else mesh.scale.set(Stage.height * ratio, Stage.height, 1);
             title.update();
-        }
-
-        function loop() {
-            if (!self.object3D.visible) return;
-            shader.uniforms.progress.value += (progress - shader.uniforms.progress.value) * 0.3;
         }
     }
 }
@@ -195,6 +171,11 @@ class World extends Component {
     static instance() {
         if (!this.singleton) this.singleton = new World();
         return this.singleton;
+    }
+
+    static destroy() {
+        if (this.singleton) this.singleton.destroy();
+        return Utils.nullObject(this);
     }
 
     constructor() {
@@ -254,7 +235,6 @@ class World extends Component {
             scene = null;
             renderer = null;
             Stage.remove(World.element);
-            Utils.nullObject(World);
             return super.destroy();
         };
     }

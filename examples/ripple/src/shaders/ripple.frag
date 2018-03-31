@@ -20,7 +20,7 @@ void main() {
     float d = v.x * center.x * vUv.x + v.y * center.y * vUv.y;
     vec2 dir = vUv / 2.0;
     vec2 offset = dir * (sin((1.0 - progress) * d * amplitude - (1.0 - progress) * speed) + 0.5) / 30.0;
-    vec4 rgba = mix(texture2D(texture1, vUv + offset), texture2D(texture2, vUv), smoothstep(0.2, 1.0, progress));
-    rgba.a *= opacity;
-    gl_FragColor = rgba;
+    vec4 color = mix(texture2D(texture1, vUv + offset), texture2D(texture2, vUv), smoothstep(0.2, 1.0, progress));
+    color.a *= opacity;
+    gl_FragColor = color;
 }

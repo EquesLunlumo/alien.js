@@ -1,16 +1,6 @@
 {
   "examples": [
     {
-      "path": "https://github.com/pschroen/alien.js",
-      "title": "source code",
-      "description": ""
-    },
-    {
-      "path": "https://medium.com/@activetheory/mira-exploring-the-potential-of-the-future-web-e1f7f326d58e",
-      "title": "inspiration",
-      "description": ""
-    },
-    {
       "title": "ui"
     },
     {
@@ -50,6 +40,11 @@
       "slug": "rotate",
       "title": "rotate",
       "description": ""
+    },
+    {
+      "slug": "rotate2",
+      "title": "rotate 2",
+      "description": "pinhole"
     },
     {
       "slug": "noise_warp",

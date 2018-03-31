@@ -1,0 +1,80 @@
+{
+  "examples": [
+    {
+      "title": "ui"
+    },
+    {
+      "path": "",
+      "title": "about",
+      "description": ""
+    },
+    {
+      "title": "shader"
+    },
+    {
+      "slug": "colour_beam",
+      "title": "colour beam",
+      "description": ""
+    },
+    {
+      "slug": "dissolve",
+      "title": "dissolve",
+      "description": "fade transition"
+    },
+    {
+      "slug": "colorize",
+      "title": "colorize",
+      "description": "fade transition"
+    },
+    {
+      "slug": "chromatic_aberration",
+      "title": "chromatic aberration",
+      "description": "simple"
+    },
+    {
+      "slug": "chromatic_aberration2",
+      "title": "chromatic aberration 2",
+      "description": "barrel distortion"
+    },
+    {
+      "slug": "rotate",
+      "title": "rotate",
+      "description": ""
+    },
+    {
+      "slug": "rotate2",
+      "title": "rotate 2",
+      "description": "pinhole"
+    },
+    {
+      "slug": "noise_warp",
+      "title": "noise warp",
+      "description": ""
+    },
+    {
+      "slug": "noise_dizzy",
+      "title": "noise dizzy",
+      "description": ""
+    },
+    {
+      "slug": "directional_warp",
+      "title": "directional warp",
+      "description": ""
+    },
+    {
+      "slug": "directional_warp2",
+      "title": "directional warp 2",
+      "description": "scroll transition"
+    },
+    {
+      "slug": "ripple",
+      "title": "ripple",
+      "description": ""
+    },
+    {
+      "slug": "glitch_displace",
+      "title": "glitch displace",
+      "description": ""
+    }
+  ]
+}

@@ -81,23 +81,18 @@ class TitleTexture extends Component {
                 text = CanvasFont.createText(canvas, Stage.width, Stage.height, data.title.toUpperCase(), `200 ${Device.phone ? 28 : 66}px Oswald`, Config.UI_COLOR, {
                     lineHeight: Device.phone ? 35 : 80,
                     letterSpacing: 0,
-                    textAlign: Device.phone ? 'left' : 'center'
+                    textAlign: 'center'
                 });
                 text2 = CanvasFont.createText(canvas, Stage.width, Stage.height, data.description.toUpperCase(), '400 14px Karla', Config.UI_COLOR, {
                     lineHeight: 16,
-                    letterSpacing: Device.phone ? 1.0 : 2.4,
-                    textAlign: Device.phone ? 'left' : 'center'
+                    letterSpacing: Device.phone ? 1 : 2.4,
+                    textAlign: 'center'
                 });
                 text.add(text2);
-                if (Device.phone) {
-                    text2.x = 1;
-                    text2.y = 10 + text2.totalHeight;
-                    text.x = 20;
-                    text.y = 55;
-                } else {
-                    text2.y = 18 + text2.totalHeight;
-                    text.y = (Stage.height - (text.totalHeight + 18 + text2.totalHeight) + 124) / 2;
-                }
+                const margin = Device.phone ? 10 : 18,
+                    offset = Device.phone ? 50 : 124;
+                text2.y = margin + text2.totalHeight;
+                text.y = (Stage.height - (text.totalHeight + margin + text2.totalHeight) + offset) / 2;
                 canvas.add(text);
                 canvas.render();
                 data.graphics.text = text;
@@ -132,9 +127,9 @@ class Title extends Component {
                 texture: { value: texture },
                 opacity: { value: 0 },
                 progress: { value: 0 },
-                amplitude: { value: Device.phone ? 50 : 100 },
-                speed: { value: Device.phone ? 1 : 10 },
-                direction: { value: new THREE.Vector2(1.0, -1.0) },
+                amplitude: { value: Device.phone ? 75 : 100 },
+                speed: { value: Device.phone ? 5 : 10 },
+                direction: { value: new THREE.Vector2(1, -1) },
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
@@ -157,7 +152,7 @@ class Title extends Component {
         this.animateIn = callback => {
             shader.uniforms.opacity.value = 0;
             shader.uniforms.progress.value = 0;
-            shader.uniforms.direction.value = this.direction < 0 ? new THREE.Vector2(-1.0, 1.0) : new THREE.Vector2(1.0, -1.0);
+            shader.uniforms.direction.value = this.direction < 0 ? new THREE.Vector2(-1, 1) : new THREE.Vector2(1, -1);
             TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 250, 'linear');
             TweenManager.tween(shader.uniforms.progress, { value: 1 }, 1600, 'easeOutCubic', callback);
         };
@@ -165,7 +160,7 @@ class Title extends Component {
         this.animateOut = callback => {
             shader.uniforms.opacity.value = 1;
             shader.uniforms.progress.value = 1;
-            shader.uniforms.direction.value = this.direction < 0 ? new THREE.Vector2(-1.0, 1.0) : new THREE.Vector2(1.0, -1.0);
+            shader.uniforms.direction.value = this.direction < 0 ? new THREE.Vector2(-1, 1) : new THREE.Vector2(1, -1);
             TweenManager.tween(shader.uniforms.opacity, { value: 0 }, 250, 'linear');
             TweenManager.tween(shader.uniforms.progress, { value: 0 }, 1200, 'easeOutCubic', callback);
         };
@@ -202,7 +197,7 @@ class Space extends Component {
                 texture2: { value: texture2 },
                 opacity: { value: 0 },
                 progress: { value: 0 },
-                direction: { value: new THREE.Vector2(-1.0, 1.0) },
+                direction: { value: new THREE.Vector2(-1, 1) },
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
@@ -286,7 +281,7 @@ class Space extends Component {
                 playing2 = false;
             }
             setTexture1();
-            setTexture2();
+            if (video1 !== video2) setTexture2();
         }
 
         function unsetTextures(t1, t2) {
@@ -364,6 +359,11 @@ class World extends Component {
         return this.singleton;
     }
 
+    static destroy() {
+        if (this.singleton) this.singleton.destroy();
+        return Utils.nullObject(this);
+    }
+
     constructor() {
         super();
         const self = this;
@@ -379,7 +379,7 @@ class World extends Component {
             renderer = new THREE.WebGLRenderer({ powerPreference: 'high-performance' });
             renderer.setPixelRatio(World.dpr);
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(60, Stage.width / Stage.height, 1, 10000);
+            camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
             World.scene = scene;
             World.renderer = renderer;
             World.element = renderer.domElement;
@@ -395,8 +395,10 @@ class World extends Component {
 
         function resize() {
             renderer.setSize(Stage.width, Stage.height);
-            camera.aspect = Stage.width / Stage.height;
-            camera.position.z = 1 / Math.tan(Math.radians(30)) * 0.5 * Stage.height;
+            camera.left = -Stage.width / 2;
+            camera.right = Stage.width / 2;
+            camera.top = Stage.height / 2;
+            camera.bottom = -Stage.height / 2;
             camera.updateProjectionMatrix();
             World.resolution.value.set(Stage.width * World.dpr, Stage.height * World.dpr);
         }
@@ -421,7 +423,6 @@ class World extends Component {
             scene = null;
             renderer = null;
             Stage.remove(World.element);
-            Utils.nullObject(World);
             return super.destroy();
         };
     }
@@ -567,7 +568,7 @@ class Main {
         function initLoader() {
             Promise.all([
                 FontLoader.loadFonts(['Oswald', 'Karla']),
-                AssetLoader.loadAssets(['assets/data/config.json?' + Utils.timestamp()])
+                AssetLoader.loadAssets([`assets/data/config.json?${Utils.timestamp()}`])
             ]).then(() => {
                 const work = Assets.getData('config').work;
                 work.forEach(item => Config.LIST.push(new Work(item)));

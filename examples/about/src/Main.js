@@ -6,21 +6,38 @@
 
 /* global THREE */
 
-import { Timer, Events, Stage, Interface, Component, Canvas, CanvasGraphics, Device, Interaction, Mouse, Scroll, Video, Utils,
-    Assets, AssetLoader, FontLoader, StateDispatcher, TweenManager, Interpolation, Vector2, WebAudio, Shader } from '../alien.js/src/Alien';
+import { Timer, Events, Stage, Interface, Component, Canvas, CanvasGraphics, Device, Interaction, Mouse, Accelerometer, Utils,
+    Assets, AssetLoader, FontLoader, StateDispatcher, TweenManager, Interpolation, Storage, Vector2, WebAudio, Shader } from '../alien.js/src/Alien.js';
 
-import vertSpace from './shaders/space.vert';
-import fragSpace from './shaders/space.frag';
+import vertFluidBasic from './shaders/fluid/basic.vert';
+import fragpass from './shaders/fluid/pass.frag';
+import fragview from './shaders/fluid/view.frag';
 
 Config.UI_COLOR = 'white';
+Config.UI_OFFSET = Device.phone ? 10 : 20;
 Config.NAV_WIDTH = 320;
+Config.ABOUT_COPY = 'Future web framework.';
+Config.ABOUT_HYDRA_URL = 'https://medium.com/@activetheory/mira-exploring-the-potential-of-the-future-web-e1f7f326d58e';
+Config.ABOUT_GITHUB_URL = 'https://github.com/pschroen/alien.js';
+
+Config.ASSETS = [
+    'assets/js/lib/three.min.js',
+    'assets/sounds/bass_drum.mp3',
+    'assets/sounds/deep_spacy_loop.mp3',
+    'assets/sounds/water_loop.mp3'
+];
 Config.EXAMPLES = [];
+
+Global.EXAMPLE_INDEX = 0;
+Global.SOUND = true;
 
 Events.START = 'start';
 Events.UI_HIDE = 'ui_hide';
 Events.UI_SHOW = 'ui_show';
 Events.OPEN_NAV = 'open_nav';
 Events.CLOSE_NAV = 'close_nav';
+Events.OPEN_ABOUT = 'open_about';
+Events.CLOSE_ABOUT = 'close_about';
 
 Assets.CORS = 'Anonymous';
 
@@ -44,13 +61,6 @@ class Cursor {
     }
 }
 
-class Tests {
-
-    static shaderVideo() {
-        return !Device.mobile && Device.browser !== 'safari' && !Device.detect('trident');
-    }
-}
-
 class Data {
 
     static init() {
@@ -63,10 +73,7 @@ class Data {
         addListeners();
 
         function setIndexes(list = Config.EXAMPLES) {
-            for (let i = 0; i < list.length; i++) {
-                list[i].index = i;
-                if (typeof Global.EXAMPLE_INDEX !== 'number' && (list[i].slug || list[i].path === '')) Global.EXAMPLE_INDEX = list[i].index;
-            }
+            for (let i = 0; i < list.length; i++) list[i].index = i;
         }
 
         function addListeners() {
@@ -118,8 +125,8 @@ class ExampleLoader extends Component {
         initLoader();
 
         function initLoader() {
-            window.get(`https://rawgit.com/pschroen/alien.js/master/${item.path}dist/assets/js/${item.slug}.js`).then(data => {
-                window.eval(`(function(){${data.replace('new Main;', `Global.EXAMPLE=Stage;Global.STAGE.add(Stage);Assets.CDN='https://rawgit.com/pschroen/alien.js/master/${item.path}dist/';new Main;`)}})();`);
+            window.get(`https://rawgit.com/pschroen/alien.js/master/${item.path}dist/assets/js/${item.slug}.js?${Utils.timestamp()}`).then(data => {
+                window.eval(`(function(){${data.replace('new Main;', `Global.EXAMPLE=Stage;Global.STAGE.add(Stage);Global.STAGE.element.insertBefore(Stage.element, Global.STAGE.element.firstChild);Assets.CDN='https://rawgit.com/pschroen/alien.js/master/${item.path}dist/';new Main;`)}})();`);
                 Global.EXAMPLE.css({ left: 0, top: 0 });
                 loadComplete();
             }).catch(() => {
@@ -133,329 +140,132 @@ class ExampleLoader extends Component {
     }
 }
 
-class Info extends Interface {
+class AudioController {
+
+    static init() {
+        const water = WebAudio.getSound('water_loop');
+        let mouseSpeed = 0,
+            lastEventTime = 0,
+            lastMouseX = 0,
+            lastMouseY = 0;
+
+        function getMouseSpeed(xNormalized, yNormalized, easing) {
+            const dist = Math.abs(xNormalized - lastMouseX) + Math.abs(yNormalized - lastMouseY),
+                time = WebAudio.context.currentTime - lastEventTime;
+            if (time === 0) return mouseSpeed;
+            const speed = dist / time;
+            mouseSpeed += speed * 0.01;
+            mouseSpeed *= easing;
+            lastEventTime = WebAudio.context.currentTime;
+            if (Math.abs(lastMouseX - xNormalized) + Math.abs(lastMouseY - yNormalized) > 0.2) mouseSpeed = 0;
+            lastMouseX = xNormalized;
+            lastMouseY = yNormalized;
+            return mouseSpeed;
+        }
+
+        this.updatePosition = (x = Mouse.x, y = Mouse.y) => {
+            const speed = getMouseSpeed(x / Stage.width, y / Stage.height, 0.96);
+            this.trigger('mouse_move', speed, (((x / Stage.width) * 2) - 1) * 0.8, Math.abs(1 - (y / Stage.height)));
+        };
+
+        this.trigger = (event, ...params) => {
+            switch (event) {
+                case 'fluid_start':
+                    WebAudio.play('water_loop', 0, true);
+                    WebAudio.fadeInAndPlay('deep_spacy_loop', 0.71, true, 2000, 'linear');
+                    break;
+                case 'fluid_stop':
+                    WebAudio.fadeOutAndStop('water_loop', 500, 'linear');
+                    WebAudio.fadeOutAndStop('deep_spacy_loop', 500, 'linear');
+                    break;
+                case 'mouse_move':
+                    if (water) {
+                        TweenManager.tween(water.gain, { value: params[0] }, 100, 'linear');
+                        //water.gain.value = params[0];
+                        water.setPanTo(params[1]);
+                        water.playbackRate.value = 0.8 + params[2] / 2.5;
+                    }
+                    break;
+                case 'about_section':
+                    TweenManager.tween(WebAudio.gain, { value: 0.3 }, 1000, 'linear');
+                    break;
+                case 'fluid_section':
+                    TweenManager.tween(WebAudio.gain, { value: 1 }, 500, 'linear');
+                    break;
+                case 'sound_off':
+                    TweenManager.tween(WebAudio.gain, { value: 0 }, 500, 'linear');
+                    break;
+                case 'sound_on':
+                    TweenManager.tween(WebAudio.gain, { value: 1 }, 500, 'linear');
+                    break;
+            }
+        };
+
+        this.mute = () => {
+            this.trigger('sound_off');
+        };
+
+        this.unmute = () => {
+            this.trigger('sound_on');
+        };
+    }
+}
+
+class About extends Interface {
 
     constructor() {
-        super('Info');
+        super('About');
         const self = this;
-        const height = 185 + (Config.EXAMPLES.length * 27) + 20,
-            texts = [];
+        const texts = [];
         let wrapper, alienkitty, description;
 
         initHTML();
-        initViews();
         initText();
         addListeners();
 
         function initHTML() {
-            self.invisible();
-            self.size(Device.phone ? Stage.width : Config.NAV_WIDTH, '100%').setZ(99999).mouseEnabled(true);
+            self.size('100%').size(800, 430).center();
             wrapper = self.create('.wrapper');
-            wrapper.size(Device.phone ? Stage.width : Config.NAV_WIDTH, height);
-            wrapper.interact(null, closeNav);
-            wrapper.hit.css({ cursor: '' });
-        }
-
-        function initViews() {
+            wrapper.size(600, 350).enable3D(2000);
+            wrapper.rotationY = 0;
+            wrapper.rotationX = 0;
             alienkitty = wrapper.initClass(AlienKitty);
-            alienkitty.css({ top: 20, left: 15 });
+            alienkitty.center().transform({ z: -20 }).css({ marginTop: -88 });
         }
 
         function initText() {
-            description = wrapper.create('.description');
+            description = self.create('.description');
             description.size(260, 50);
-            description.fontStyle('Consolas, "Lucida Console", Monaco, monospace', 11, Config.UI_COLOR);
+            description.fontStyle('Roboto Mono', 11, Config.UI_COLOR);
             description.css({
-                left: 20,
-                top: 135,
-                lineHeight: 14,
-                opacity: 0.75
+                left: 350,
+                top: 200,
+                fontWeight: '400',
+                lineHeight: 25,
+                letterSpacing: 12 * 0.03,
+                opacity: 0.35
             });
-            description.top = 200;
-            description.text('Future web framework.');
+            description.text(Config.ABOUT_COPY);
             texts.push(description);
-            Config.EXAMPLES.forEach((item, i) => {
-                const link = wrapper.create('.link');
-                link.size('auto', 20).setZ(99999);
-                link.fontStyle('Consolas, "Lucida Console", Monaco, monospace', 11, Config.UI_COLOR);
+            ['Source code', 'Inspiration'].forEach((text, i) => {
+                const link = self.create('.link');
+                link.size('auto', 20);
+                link.fontStyle('Roboto Mono', 11, Config.UI_COLOR);
                 link.css({
-                    left: 20,
-                    top: 185 + i * 27,
-                    lineHeight: 14
+                    left: 350,
+                    top: 250 + i * 27,
+                    fontWeight: '400',
+                    lineHeight: 15,
+                    letterSpacing: 1,
+                    textTransform: 'uppercase'
                 });
-                link.text(item.title);
-                if (item.slug || item.path || item.path === '') {
-                    link.letters = link.split();
-                    link.interact(hover, click);
-                    link.item = item;
-                }
-                if (item.description) {
-                    link.create('.t', 'span').html(`&nbsp;(${item.description})`).css({
-                        position: 'relative',
-                        display: 'block',
-                        width: 'auto',
-                        height: 'auto',
-                        margin: 0,
-                        padding: 0,
-                        cssFloat: 'left',
-                        opacity: 0.75
-                    });
-                }
+                link.text(text);
+                link.letters = link.split();
+                link.interact(hover, click);
+                link.hit.mouseEnabled(true);
+                link.title = text;
                 texts.push(link);
             });
-        }
-
-        function hover(e) {
-            if (e.action === 'over') e.object.letters.forEach((letter, i) => letter.tween({ y: -5, opacity: 0 }, 125, 'easeOutCubic', 15 * i, () => letter.transform({ y: 5 }).tween({ y: 0, opacity: 1 }, 300, 'easeOutCubic')));
-        }
-
-        function click(e) {
-            WebAudio.mute();
-            const item = e.object.item;
-            if (!item.slug && item.path) setTimeout(() => getURL(item.path), 300);
-            else Data.setExample(item.path);
-        }
-
-        function addListeners() {
-            self.initClass(Scroll, self);
-            self.events.add(Events.KEYBOARD_UP, keyUp);
-        }
-
-        function keyUp(e) {
-            // Escape
-            if (e.keyCode === 27) closeNav();
-        }
-
-        function closeNav() {
-            self.events.fire(Events.CLOSE_NAV);
-        }
-
-        this.animateIn = () => {
-            this.clearTimers();
-            this.visible();
-            alienkitty.ready().then(alienkitty.animateIn);
-            texts.forEach((text, i) => text.clearTween().transform({ y: 50 }).css({ opacity: 0 }).tween({ y: 0, opacity: text.hit ? 1 : 0.75 }, 1000, 'easeOutCubic', 500 + i * 80));
-            wrapper.clearTween().transform({ x: 20 }).css({ opacity: 0 }).tween({ x: 0, opacity: 1 }, 600, 'easeOutCubic');
-        };
-
-        this.animateOut = callback => {
-            wrapper.tween({ opacity: 0 }, 125, 'easeOutCubic', callback);
-        };
-    }
-}
-
-class NavBackground extends Interface {
-
-    constructor(size, start, end, out) {
-        super('.NavBackground');
-        const self = this;
-        this.enabled = false;
-        const mouse = new Vector2(),
-            props = {
-                wobbly: 1,
-                expanded: 0
-            },
-            target = {
-                position: 0,
-                scroll: 0
-            };
-        let canvas, fill, points,
-            width = end - start,
-            direction = width < 0 ? -1 : 1,
-            dragging = false,
-            distance = 0;
-
-        initHTML();
-        initCanvas();
-        initFill();
-        initPoints();
-        addListeners();
-        this.startRender(loop);
-
-        function initHTML() {
-            self.size(size, '100%').mouseEnabled(false);
-        }
-
-        function initCanvas() {
-            canvas = self.initClass(Canvas, size, Stage.height, true);
-        }
-
-        function initFill() {
-            fill = self.initClass(CanvasGraphics);
-            fill.fillStyle = '#000';
-            canvas.add(fill);
-        }
-
-        function initPoints() {
-            points = [];
-            for (let i = 0; i < 6; i++) {
-                const point = new Vector2();
-                point.x = 0;
-                points.push(point);
-            }
-        }
-
-        function drawSpline() {
-            fill.clear();
-            fill.beginPath();
-            fill.moveTo(points[0].x, points[0].y);
-            let i;
-            for (i = 1; i < points.length - 2; i++) {
-                const xc = (points[i].x + points[i + 1].x) / 2,
-                    yc = (points[i].y + points[i + 1].y) / 2;
-                fill.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
-            }
-            fill.quadraticCurveTo(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
-        }
-
-        function drawSolid() {
-            drawSpline();
-            fill.lineTo(start, Stage.height);
-            fill.lineTo(start, 0);
-            fill.lineTo(points[0].x, points[0].y);
-            fill.fill();
-        }
-
-        function addListeners() {
-            self.events.add(Mouse.input, Interaction.START, down);
-            self.events.add(Mouse.input, Interaction.DRAG, drag);
-            self.events.add(Mouse.input, Interaction.END, up);
-            up();
-        }
-
-        function stopInertia() {
-            TweenManager.clearTween(target);
-        }
-
-        function down() {
-            if (!self.enabled) return;
-            stopInertia();
-            distance = 0;
-            self.tweening = true;
-            TweenManager.tween(props, { expanded: 0.15 }, 2000, 'easeOutElastic');
-            Cursor.grabbing();
-        }
-
-        function drag() {
-            if (!self.enabled) return;
-            dragging = true;
-            distance += Mouse.input.delta.x * 4;
-            Cursor.grabbing();
-        }
-
-        function up() {
-            if (!self.enabled) return;
-            dragging = false;
-            distance = 0;
-            const m = (() => {
-                if (Device.os === 'android') return 35;
-                return 25;
-            })();
-            TweenManager.tween(props, { expanded: 0 }, 2000, 'easeOutElastic');
-            TweenManager.tween(target, { scroll: target.scroll + Mouse.input.delta.x * m }, 500, 'easeOutQuint', () => self.animateOut());
-            Cursor.clear();
-        }
-
-        function loop() {
-            if (self.enabled) {
-                mouse.lerp(Mouse, 0.1);
-                target.scroll += (distance - target.scroll) * 0.1;
-                if (Math.abs(target.scroll) < 0.001) target.scroll = 0;
-                target.position += ((end - mouse.x) - target.position) * 0.1;
-                if (((direction > 0 && target.scroll > width) || (direction < 0 && target.scroll < width))) self.events.fire(Events.OPEN_NAV, { direction });
-            }
-            let x = Math.clamp((target.position + target.scroll) / width, 0, 1.8);
-            x = Interpolation.Sine.In(x);
-            if ((x > 0 && !self.animatedIn) || self.tweening || self.redraw) {
-                for (let i = 0; i < points.length; i++) {
-                    let difY = Math.abs(mouse.y - points[i].y) / Stage.height;
-                    difY = Interpolation.Sine.In(difY);
-                    const offset = (200 * props.wobbly - (difY * 120) * props.wobbly) * x * direction;
-                    points[i].x = start + offset + out * props.expanded * direction;
-                }
-                drawSolid();
-                canvas.render();
-                if (self.redraw) self.redraw = false;
-            }
-        }
-
-        this.resize = (s, p1, p2, o) => {
-            stopInertia();
-            size = s;
-            start = p1;
-            end = p2;
-            out = o;
-            width = end - start;
-            direction = width < 0 ? -1 : 1;
-            this.size(size, '100%');
-            canvas.size(size, Stage.height);
-            const inc = Stage.height / (points.length - 1);
-            for (let i = 0; i < points.length; i++) {
-                points[i].y = inc * i;
-                points[i].x = start;
-            }
-            this.redraw = true;
-        };
-
-        this.reset = () => {
-            stopInertia();
-            this.animatedIn = false;
-            this.enabled = false;
-            dragging = false;
-            distance = 0;
-            props.wobbly = 1;
-            props.expanded = 0;
-            target.position = 0;
-            target.scroll = 0;
-            this.redraw = true;
-        };
-
-        this.animateIn = callback => {
-            stopInertia();
-            this.animatedIn = true;
-            this.enabled = false;
-            dragging = false;
-            this.tweening = true;
-            TweenManager.tween(props, { wobbly: 0, expanded: 1 }, callback ? 800 : 2000, callback ? 'easeOutCubic' : 'easeOutElastic', () => {
-                this.tweening = false;
-                target.position = 0;
-                target.scroll = 0;
-                if (callback) callback();
-            });
-        };
-
-        this.animateOut = () => {
-            if (dragging) return;
-            stopInertia();
-            this.animatedIn = false;
-            this.enabled = false;
-            dragging = false;
-            distance = 0;
-            this.tweening = true;
-            TweenManager.tween(props, { wobbly: 1, expanded: 0 }, 400, 'easeInCubic', () => this.tweening = false);
-            TweenManager.tween(target, { position: 0, scroll: 0 }, 400, 'easeInCubic');
-        };
-    }
-}
-
-class Nav extends Interface {
-
-    constructor() {
-        super('Nav');
-        const self = this;
-        const width = Config.NAV_WIDTH * 1.5;
-
-        initHTML();
-        initBackground();
-        addListeners();
-
-        function initHTML() {
-            self.size('100%').mouseEnabled(false);
-        }
-
-        function initBackground() {
-            self.left = self.initClass(NavBackground, Device.phone ? Stage.width : width, 0, Device.phone ? Stage.width : width, Device.phone ? Stage.width + 100 : Config.NAV_WIDTH);
-            self.right = self.initClass(NavBackground, Stage.width, Stage.width, Stage.width - width, Stage.width + 100);
         }
 
         function addListeners() {
@@ -464,32 +274,73 @@ class Nav extends Interface {
         }
 
         function resize() {
-            self.left.resize(Device.phone ? Stage.width : width, 0, Device.phone ? Stage.width : width, Device.phone ? Stage.width + 100 : Config.NAV_WIDTH);
-            self.right.resize(Stage.width, Stage.width, Stage.width - width, Stage.width + 100);
+            if (Stage.width < 800) {
+                wrapper.transform({ x: 100 });
+                texts.forEach(text => text.css({ left: 270 }));
+            } else {
+                wrapper.transform({ x: 0 });
+                texts.forEach(text => text.css({ left: 350 }));
+            }
         }
 
-        this.reset = () => {
-            this.left.reset();
-            this.right.reset();
+        function hover(e) {
+            if (e.action === 'over') {
+                e.object.letters.forEach((letter, i) => {
+                    letter.tween({ y: -5, opacity: 0 }, 125, 'easeOutCubic', 15 * i, () => {
+                        letter.transform({ y: 5 }).tween({ y: 0, opacity: 1 }, 300, 'easeOutCubic');
+                    });
+                });
+            }
+        }
+
+        function click(e) {
+            AudioController.mute();
+            setTimeout(() => {
+                const title = e.object.title.toLowerCase();
+                getURL(~title.indexOf('source') ? Config.ABOUT_GITHUB_URL : Config.ABOUT_HYDRA_URL);
+            }, 300);
+        }
+
+        this.update = () => {
+            if (Device.mobile) {
+                wrapper.rotationY += (Accelerometer.x - wrapper.rotationY) * 0.07;
+                wrapper.rotationX += (-Accelerometer.y - wrapper.rotationX) * 0.07;
+            } else {
+                wrapper.rotationY += (Math.range(Mouse.x, 0, Stage.width, -5, 5) - wrapper.rotationY) * 0.07;
+                wrapper.rotationX += (-Math.range(Mouse.y, 0, Stage.height, -10, 10) - wrapper.rotationX) * 0.07;
+            }
+            wrapper.transform();
         };
 
         this.animateIn = () => {
-            this.left.animateIn();
-            this.right.animateIn();
+            alienkitty.ready().then(alienkitty.animateIn);
+            texts.forEach((text, i) => text.transform({ y: 50 }).css({ opacity: 0 }).tween({ y: 0, opacity: text.hit ? 1 : 0.75 }, 1000, 'easeOutCubic', 500 + i * 80));
         };
 
-        this.animateOut = () => {
-            this.left.animateOut();
-            this.right.animateOut();
+        this.animateOut = callback => {
+            alienkitty.animateOut();
+            texts.forEach((text, i) => text.tween({ y: 20, opacity: 0 }, 500, 'easeInCubic', 40 + (texts.length - i) * 40));
+            this.delayedCall(callback, 1000);
         };
     }
 }
 
 class Button extends Interface {
 
-    constructor(data) {
-        super(data.name);
+    constructor() {
+        super('Button');
         const self = this;
+        this.needsUpdate = false;
+        const data = {
+            width: 80,
+            height: 60,
+            radius: 24,
+            posX: 52,
+            scale: 1,
+            littleCircleScale: 0,
+            lineWidth: 0,
+            multiTween: true
+        };
         let canvas, mask, line, circle, littleCircle, timeout;
 
         initHTML();
@@ -499,12 +350,16 @@ class Button extends Interface {
         initLittleCircle();
 
         function initHTML() {
-            self.invisible();
-            self.size(data.width, data.height).css({ opacity: 0 });
+            self.size(data.width, data.height);
+            self.css({
+                top: Config.UI_OFFSET + 6,
+                right: Config.UI_OFFSET + 6,
+                opacity: 0
+            });
         }
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, data.width, data.height, true);
+            canvas = self.initClass(Canvas, data.width, data.height, true, true);
         }
 
         function initLine() {
@@ -580,16 +435,6 @@ class Button extends Interface {
             canvas.render();
         };
 
-        this.hideButton = () => {
-            this.animatedIn = false;
-            Timer.clearTimeout(timeout);
-            TweenManager.clearTween(data);
-            data.posX = 52;
-            data.lineWidth = 0;
-            TweenManager.tween(data, { radius: 0, scale: 0, littleCircleScale: 0 }, 400, 'easeOutCubic');
-            this.tween({ opacity: 0 }, 400, 'easeOutCubic', () => this.invisible());
-        };
-
         this.showButton = () => {
             Timer.clearTimeout(timeout);
             TweenManager.clearTween(data);
@@ -598,8 +443,20 @@ class Button extends Interface {
             data.radius = 0;
             data.scale = 0;
             data.littleCircleScale = 0;
-            TweenManager.tween(data, { radius: 24, scale: 1, littleCircleScale: 0 }, 400, 'easeOutCubic');
-            this.visible().tween({ opacity: 0.5 }, 400, 'easeOutCubic');
+            this.needsUpdate = true;
+            TweenManager.tween(data, { radius: 24, scale: 1, littleCircleScale: 0 }, 400, 'easeOutCubic', () => this.needsUpdate = false);
+            this.tween({ opacity: 1 }, 400, 'easeOutCubic');
+        };
+
+        this.hideButton = () => {
+            this.animatedIn = false;
+            Timer.clearTimeout(timeout);
+            TweenManager.clearTween(data);
+            data.posX = 52;
+            data.lineWidth = 0;
+            this.needsUpdate = true;
+            TweenManager.tween(data, { radius: 0, scale: 0, littleCircleScale: 0 }, 400, 'easeOutCubic', () => this.needsUpdate = false);
+            this.tween({ opacity: 0 }, 400, 'easeOutCubic');
         };
 
         this.animateIn = () => {
@@ -607,6 +464,7 @@ class Button extends Interface {
             this.animatedIn = true;
             Timer.clearTimeout(timeout);
             TweenManager.clearTween(data);
+            this.needsUpdate = true;
             const start = () => {
                 TweenManager.tween(data, { scale: 0, littleCircleScale: 1 }, 400, 'easeOutCubic');
                 TweenManager.tween(data, { lineWidth: 1 }, 600, 'easeOutQuart', 200);
@@ -625,10 +483,890 @@ class Button extends Interface {
             this.animatedIn = false;
             Timer.clearTimeout(timeout);
             TweenManager.clearTween(data);
+            this.needsUpdate = true;
             TweenManager.tween(data, { posX: 52, spring: 1, damping: 0.5 }, 600, 'easeOutElastic');
             TweenManager.tween(data, { radius: 24, spring: 1, damping: 0.5 }, 400, 'easeOutElastic', 200);
             TweenManager.tween(data, { scale: 1, littleCircleScale: 0 }, 400, 'easeOutCubic', 200);
-            TweenManager.tween(data, { lineWidth: 0 }, 400, 'easeOutQuart', 200);
+            TweenManager.tween(data, { lineWidth: 0 }, 400, 'easeOutQuart', 200, () => this.needsUpdate = false);
+        };
+    }
+}
+
+class MuteButton extends Interface {
+
+    constructor() {
+        super('MuteButton');
+        const self = this;
+        this.enabled = true;
+        this.needsUpdate = false;
+        const data = {
+            points: ['0.0048959479406107675,1.0192572485968008', '0.7440789483408068,1.1424541571342257', '1.3665350510328338,1.5722319717448148', '1.8516030710118443,2.161114514098655', '2.240878664481656,2.820613552436704', '2.5676840288925646,3.514673473755097', '2.852586758087085,4.227720074875111', '3.1087495131409355,4.952019250371872', '3.34491745226601,5.6833491709621455', '3.567664418707203,6.419033113515608', '3.7818384346752723,7.157364720628305', '3.991883208559571,7.89692012231687', '4.20161725978479,8.636571274379023', '4.414765516613279,9.375206805563112', '4.63544224654283,10.111540516820927', '4.868521677309701,10.84389177472948', '5.119915026729167,11.569934940861607', '5.39761872371416,12.285923841396897', '5.713181917701164,12.985402709853393', '6.084405647772996,13.655730591437308', '6.539749114583216,14.269197994950089', '7.119419081486065,14.759057858970056', '7.833381135450722,14.992018994281448', '8.572728856296692,14.870293116359157', '9.195338448495015,14.440785522641196', '9.680208055209789,13.851743515423879', '10.069105540383624,13.192016772217295', '10.395484129094136,12.49774462805595', '10.679967569881235,11.784536775684892', '10.935718523820654,11.060079921712221', '11.171497123710282,10.328625192177268', '11.393877212794976,9.592821204379307', '11.607714300578508,8.854391465042932', '11.817437120864248,8.114743171200885', '12.026879167662877,7.375006748905537', '12.23976162559024,6.636291663928467', '12.460198762144124,5.899884115317883', '12.693064805060779,5.167449492656206', '12.94425974121603,4.441348209381902', '13.221791230462259,3.7252818987187086', '13.537197191296478,3.0257489622651876', '13.908222508104089,2.355292698961461', '14.363251508608741,1.7415778212244037', '14.942374903123344,1.2510267443085306', '15.655824077518226,1.016232894445948', '16.396796540942944,1.1306049293101161', '17.02729399630583,1.5480186791997996', '17.520961172283407,2.12932705736226', '17.916597221147896,2.7848665081119037', '18.247580495047032,3.4768520761875497', '18.535159931485325,4.188764440295052', '18.792722810328243,4.9125381796621195', '19.029373679851147,5.6437213782868945', '19.25191100208862,6.379463437982535', '19.46526890312083,7.1180337064741765', '19.673999657085446,7.8579706805470435', '19.882131427610886,8.598101537217175', '20.0932506280392,9.33733538914369', '20.311684913718352,10.074372222547858', '20.542181228403805,10.807581899228586', '20.790759355659176,11.534616867737883', '21.065453160862333,12.251819559078669', '21.37769574040844,12.95281518967201', '21.74512715658105,13.625332467857985', '22.19607183875985,14.242202106038283', '22.770556855267387,14.73847581597864', '23.48079398096972,14.98341765723907', '24.236808416010575,14.995504117332072'],
+            width: 24,
+            height: 16,
+            progress: 1,
+            yMultiplier: 1
+        };
+        let canvas, line, points;
+
+        initHTML();
+        initCanvas();
+        initLine();
+        initPoints();
+        addListeners();
+
+        function initHTML() {
+            self.size(data.width, data.height);
+            self.css({
+                left: Config.UI_OFFSET + 10,
+                bottom: Config.UI_OFFSET + 10,
+                opacity: 0
+            });
+            if (!Global.SOUND) data.yMultiplier = 0;
+        }
+
+        function initCanvas() {
+            canvas = self.initClass(Canvas, data.width, data.height, true, true);
+        }
+
+        function initLine() {
+            line = self.initClass(CanvasGraphics);
+            line.lineWidth = 1.5;
+            line.strokeStyle = Config.UI_COLOR;
+            canvas.add(line);
+        }
+
+        function initPoints() {
+            points = data.points.map(p => {
+                return p.split(',');
+            });
+        }
+
+        function addListeners() {
+            self.interact(hover, click);
+            self.hit.size(data.width * 2, data.height * 2).center();
+        }
+
+        function hover(e) {
+            TweenManager.clearTween(data);
+            self.needsUpdate = true;
+            if (e.action === 'over') TweenManager.tween(data, { yMultiplier: Global.SOUND ? 0.75 : 0.25 }, 275, 'easeInOutCubic', () => self.needsUpdate = false);
+            else TweenManager.tween(data, { yMultiplier: Global.SOUND ? 1 : 0 }, 275, 'easeInOutCubic', () => self.needsUpdate = false);
+        }
+
+        function click() {
+            if (Global.SOUND) {
+                AudioController.mute();
+                Global.SOUND = false;
+                TweenManager.clearTween(data);
+                self.needsUpdate = true;
+                TweenManager.tween(data, { yMultiplier: 0 }, 300, 'easeOutCubic', () => self.needsUpdate = false);
+            } else {
+                AudioController.unmute();
+                Global.SOUND = true;
+                TweenManager.clearTween(data);
+                self.needsUpdate = true;
+                TweenManager.tween(data, { yMultiplier: 1 }, 300, 'easeOutCubic', () => self.needsUpdate = false);
+            }
+            Storage.set('sound', Global.SOUND);
+        }
+
+        function drawLine() {
+            const progress = points.length * data.progress;
+            let start = true;
+            line.clear();
+            line.beginPath();
+            for (let i = 0; i < points.length; i++) {
+                if (progress >= i) {
+                    if (start) {
+                        start = false;
+                        line.moveTo(points[i][0], Math.max(points[i][1] * data.yMultiplier + (data.height * 0.5) * (1 - data.yMultiplier), 1));
+                    } else {
+                        line.lineTo(points[i][0], Math.max(points[i][1] * data.yMultiplier + (data.height * 0.5) * (1 - data.yMultiplier), 1));
+                    }
+                }
+            }
+            line.stroke();
+        }
+
+        this.update = () => {
+            drawLine();
+            canvas.render();
+        };
+
+        this.showButton = () => {
+            if (!this.enabled) return;
+            TweenManager.clearTween(data);
+            data.progress = 0;
+            this.needsUpdate = true;
+            TweenManager.tween(data, { progress: 1 }, 1020, 'easeInOutExpo', () => this.needsUpdate = false);
+            this.tween({ opacity: 1 }, 400, 'easeOutCubic');
+            this.mouseEnabled(true);
+        };
+
+        this.hideButton = () => {
+            this.mouseEnabled(false);
+            TweenManager.clearTween(data);
+            this.needsUpdate = true;
+            TweenManager.tween(data, { progress: 0.94 }, 1160, 'easeInOutQuart', () => this.needsUpdate = false);
+            this.tween({ opacity: 0 }, 400, 'easeOutCubic');
+        };
+    }
+}
+
+class FooterSide extends Interface {
+
+    constructor() {
+        super('FooterSide');
+        const self = this;
+        let title;
+
+        initHTML();
+        initTitle();
+
+        function initHTML() {
+            self.size('100%').mouseEnabled(false);
+        }
+
+        function initTitle() {
+            title = self.create('.title');
+            title.size('100%');
+            title.inner = title.create('.inner');
+            title.inner.fontStyle('Roboto Mono', 11, Config.UI_COLOR);
+            title.inner.css({
+                top: -30,
+                right: 6,
+                fontWeight: '400',
+                lineHeight: 15,
+                letterSpacing: 1,
+                textTransform: 'uppercase',
+                whiteSpace: 'nowrap'
+            });
+            title.inner.text(Config.EXAMPLES[Global.EXAMPLE_INDEX].sideTitle);
+            title.inner.element.style.transformOrigin = 'right center';
+            title.inner.element.style.transform = 'rotate(-90deg) translateX(100%)';
+        }
+
+        function swapTitle() {
+            title.tween({ x: -10, opacity: 0 }, 300, 'easeInSine', () => {
+                title.inner.text(Config.EXAMPLES[Global.EXAMPLE_INDEX].sideTitle);
+                title.transform({ x: 10 }).tween({ x: 0, opacity: 1 }, 1000, 'easeOutCubic');
+            });
+        }
+
+        this.update = swapTitle;
+    }
+}
+
+class FooterInfo extends Interface {
+
+    constructor() {
+        super('FooterInfo');
+        const self = this;
+        let index, length;
+
+        initHTML();
+        initIndex();
+        initLength();
+
+        function initHTML() {
+            self.css({
+                position: 'relative',
+                display: 'block',
+                fontWeight: '400',
+                lineHeight: 15,
+                letterSpacing: 1,
+                whiteSpace: 'nowrap',
+                cssFloat: 'right'
+            });
+        }
+
+        function initIndex() {
+            index = self.create('.index');
+            index.fontStyle('Roboto Mono', 11, Config.UI_COLOR);
+            index.css({
+                position: 'relative',
+                display: 'block',
+                cssFloat: 'left'
+            });
+            index.text(Utils.pad(Global.EXAMPLE_INDEX + 1));
+        }
+
+        function initLength() {
+            length = self.create('.length');
+            length.fontStyle('Roboto Mono', 11, Config.UI_COLOR);
+            length.css({
+                position: 'relative',
+                display: 'block',
+                cssFloat: 'left'
+            });
+            length.text(`/${Utils.pad(Config.EXAMPLES.length)}`);
+        }
+
+        function swapIndex() {
+            index.tween({ y: -10, opacity: 0 }, 300, 'easeInSine', () => {
+                index.text(Utils.pad(Global.EXAMPLE_INDEX + 1));
+                index.transform({ y: 10 }).tween({ y: 0, opacity: 1 }, 1000, 'easeOutCubic');
+            });
+        }
+
+        this.update = swapIndex;
+    }
+}
+
+class Footer extends Interface {
+
+    constructor() {
+        super('Footer');
+        const self = this;
+        let info, side;
+
+        initHTML();
+        initInfo();
+        initSide();
+
+        function initHTML() {
+            self.css({
+                left: Config.UI_OFFSET + 10,
+                right: Config.UI_OFFSET + 10,
+                bottom: Config.UI_OFFSET + 10
+            });
+        }
+
+        function initInfo() {
+            info = self.initClass(FooterInfo);
+            info.update();
+            info.transform({ x: -10 }).css({ opacity: 0 }).tween({ x: 0, opacity: 1 }, 1000, 'easeOutQuart', 2700);
+        }
+
+        function initSide() {
+            side = self.initClass(FooterSide);
+            side.transform({ x: -10 }).css({ opacity: 0 }).tween({ x: 0, opacity: 1 }, 1000, 'easeOutQuart', 2900);
+        }
+
+        this.update = () => {
+            info.update();
+            side.update();
+        };
+    }
+}
+
+class HeaderExample extends Interface {
+
+    constructor(item) {
+        super('.HeaderExample');
+        const self = this;
+        let text, line;
+
+        initHTML();
+
+        function initHTML() {
+            if (!item) {
+                self.size('100%', 35);
+                self.css({
+                    position: 'relative',
+                    display: 'block',
+                    cssFloat: 'left',
+                    clear: 'left',
+                    cursor: 'pointer'
+                });
+            } else if (!(item.slug || item.path || item.path === '')) {
+                self.size(40, 15);
+                self.css({
+                    position: 'relative',
+                    display: 'block',
+                    cssFloat: 'left',
+                    clear: 'left'
+                });
+                line = self.create('.header-info-source-line');
+                line.size(20, 1).center(0, 1);
+                line.css({
+                    left: 10,
+                    bottom: 0,
+                    backgroundColor: 'rgba(255, 255, 255, 0.25)'
+                });
+                line.transformPoint('left center').transform({ scaleX: 0 });
+            } else {
+                self.size('auto', 15);
+                self.css({
+                    position: 'relative',
+                    display: 'block',
+                    cssFloat: 'left',
+                    clear: 'left',
+                    padding: '5px 10px'
+                });
+                text = self.create('.header-info-source-text');
+                text.size('auto', 15);
+                text.fontStyle('Roboto Mono', 11, Config.UI_COLOR);
+                text.css({
+                    position: 'relative',
+                    fontWeight: '400',
+                    lineHeight: 15,
+                    letterSpacing: 1,
+                    textTransform: 'uppercase',
+                    whiteSpace: 'nowrap',
+                    opacity: 0
+                });
+                text.text(item.title.toUpperCase());
+                text.transformPoint('left center');
+                text.size();
+                self.size(text.width, text.height);
+                self.interact(hover, click);
+            }
+        }
+
+        function hover(e) {
+            if (!self.animatedIn) return;
+            if (e.action === 'over') {
+                if (text) text.tween({ scale: 1.05, opacity: 1 }, 325, 'easeOutCubic');
+                if (line) line.tween({ scaleX: 1.25 }, 275, 'easeInOutCubic');
+            } else {
+                if (text) text.tween({ scale: 1, opacity: 0.35 }, 325, 'easeOutCubic');
+                if (line) line.tween({ scaleX: 1 }, 275, 'easeInOutCubic');
+            }
+        }
+
+        function click() {
+            self.events.fire(Events.CLICK, { item });
+        }
+
+        this.animateIn = delay => {
+            if (line) line.transform({ scaleX: 0 }).css({ opacity: 1 }).tween({ scaleX: 1 }, 550, 'easeInOutCubic', delay, () => this.animatedIn = true);
+            if (text) text.transform({ scale: 1.25 }).tween({ y: 0, scale: 1, opacity: 0.35 }, 500, 'easeOutQuart', delay, () => this.animatedIn = true);
+            self.transform({ y: -10 }).tween({ y: 0, opacity: 1 }, 325, 'easeOutQuart', delay);
+        };
+
+        this.animateOut = (callback, num, delay, total) => {
+            this.animatedIn = false;
+            if (line) line.tween({ scaleX: 0, opacity: 0 }, 450, 'easeOutCubic', delay);
+            if (text) text.tween({ y: 10, opacity: 0 }, 400, 'easeOutCubic', delay);
+            self.tween({ y: -10, opacity: 0 }, 650, 'easeOutCubic', delay, () => {
+                if (num === total) callback();
+            });
+        };
+    }
+}
+
+class HeaderExamples extends Interface {
+
+    constructor() {
+        super('HeaderExamples');
+        const self = this;
+        const buttons = [];
+        let open = false;
+
+        initHTML();
+        initViews();
+        addListeners();
+
+        function initHTML() {
+            self.css({
+                left: 0,
+                top: 0
+            });
+            self.mouseEnabled(false);
+        }
+
+        function initViews() {
+            self.initClass(HeaderExample);
+            let width = 0,
+                height = 0;
+            const examples = Assets.getData('config').examples;
+            examples.forEach(item => {
+                const button = self.initClass(HeaderExample, new Example(item));
+                self.events.add(button, Events.CLICK, switchExample);
+                buttons.push(button);
+                if (button.width > width) width = button.width;
+                height += button.height;
+            });
+            self.size(width + 50, height + 50);
+        }
+
+        function addListeners() {
+            self.bind('mouseleave', closeExamples);
+            self.bind('touchend', closeExamples);
+        }
+
+        function closeExamples(e) {
+            if (e.target.className !== 'HeaderExample' && e.target.parentElement.className !== 'HeaderExample') {
+                if (!open) return;
+                self.events.fire(Events.UPDATE);
+                animateOut();
+            }
+        }
+
+        function animateIn() {
+            open = true;
+            self.mouseEnabled(true);
+            self.show();
+            buttons.forEach((button, i) => button.animateIn(i * 100));
+        }
+
+        function animateOut() {
+            const remove = () => {
+                self.hide();
+                open = false;
+                self.mouseEnabled(false);
+            };
+            buttons.forEach((button, i) => button.animateOut(remove, i, (buttons.length - i) * 50, buttons.length - 1));
+        }
+
+        function switchExample(e) {
+            Data.setExample(e.item.path);
+        }
+
+        this.animateIn = animateIn;
+
+        this.animateOut = animateOut;
+    }
+}
+
+class HeaderExamplesButton extends Interface {
+
+    constructor(copy) {
+        super('HeaderExamplesButton');
+        const self = this;
+        let text, letters, examples,
+            open = false;
+
+        initHTML();
+        initText();
+        initView();
+        addListeners();
+
+        function initHTML() {
+            self.css({
+                position: 'relative',
+                display: 'block',
+                padding: 10,
+                cssFloat: 'left'
+            });
+        }
+
+        function initText() {
+            text = self.create('.text');
+            text.fontStyle('Roboto Mono', 11, Config.UI_COLOR);
+            text.css({
+                position: 'relative',
+                display: 'block',
+                fontWeight: '400',
+                lineHeight: 15,
+                letterSpacing: 1,
+                textTransform: 'uppercase',
+                whiteSpace: 'nowrap'
+            });
+            text.text(copy);
+            letters = text.split();
+        }
+
+        function initView() {
+            examples = self.initClass(HeaderExamples);
+        }
+
+        function addListeners() {
+            self.interact(hover, null);
+            self.mouseEnabled(true);
+            self.events.add(examples, Events.UPDATE, close);
+        }
+
+        function hover(e) {
+            if (open) return;
+            if (e.action === 'over') {
+                examples.animateIn();
+                self.mouseEnabled(false);
+                letters.forEach((letter, i) => {
+                    letter.tween({ y: -5, opacity: 0 }, 125, 'easeOutCubic', 15 * i, () => {
+                        letter.transform({ y: 5 }).tween({ y: 0, opacity: 1 }, 300, 'easeOutCubic');
+                    });
+                });
+                open = true;
+            }
+        }
+
+        function close() {
+            open = false;
+            self.mouseEnabled(true);
+        }
+
+        function animateOut() {
+            examples.animateOut();
+            open = false;
+            self.mouseEnabled(true);
+        }
+
+        this.animateIn = () => {
+            this.transform({ x: -10 }).css({ opacity: 0 }).tween({ x: 0, opacity: 1 }, 450, 'easeOutCubic', 450, () => this.animatedIn = true);
+        };
+
+        this.animateOut = animateOut;
+    }
+}
+
+class HeaderItem extends Interface {
+
+    constructor(copy) {
+        super('HeaderItem');
+        const self = this;
+        let text, letters;
+
+        initHTML();
+        initText();
+        addListeners();
+
+        function initHTML() {
+            self.css({
+                position: 'relative',
+                display: 'block',
+                padding: 10,
+                cssFloat: 'left'
+            });
+        }
+
+        function initText() {
+            text = self.create('.text');
+            text.fontStyle('Roboto Mono', 11, Config.UI_COLOR);
+            text.css({
+                position: 'relative',
+                display: 'block',
+                fontWeight: '400',
+                lineHeight: 15,
+                letterSpacing: 1,
+                textTransform: 'uppercase',
+                whiteSpace: 'nowrap'
+            });
+            text.text(copy);
+            letters = text.split();
+        }
+
+        function addListeners() {
+            self.interact(hover, click);
+            self.hit.mouseEnabled(true);
+        }
+
+        function hover(e) {
+            if (e.action === 'over') {
+                letters.forEach((letter, i) => {
+                    letter.tween({ y: -5, opacity: 0 }, 125, 'easeOutCubic', 15 * i, () => {
+                        letter.transform({ y: 5 }).tween({ y: 0, opacity: 1 }, 300, 'easeOutCubic');
+                    });
+                });
+            }
+        }
+
+        function click() {
+            self.events.fire(Events.CLICK);
+        }
+    }
+}
+
+class Header extends Interface {
+
+    constructor() {
+        super('Header');
+        const self = this;
+        let about, examples, source;
+
+        initHTML();
+        initAbout();
+        initExamples();
+        initSource();
+        addListeners();
+
+        function initHTML() {
+            self.size(260, 'auto');
+            self.css({
+                left: Config.UI_OFFSET,
+                top: Config.UI_OFFSET
+            });
+        }
+
+        function initAbout() {
+            about = self.initClass(HeaderItem, 'About');
+            about.transform({ x: -10 }).css({ opacity: 0 }).tween({ x: 0, opacity: 1 }, 1000, 'easeOutQuart', 2100);
+        }
+
+        function initExamples() {
+            examples = self.initClass(HeaderExamplesButton, 'Examples');
+            examples.transform({ x: -10 }).css({ opacity: 0 }).tween({ x: 0, opacity: 1 }, 1000, 'easeOutQuart', 2300);
+        }
+
+        function initSource() {
+            source = self.initClass(HeaderItem, 'Source code');
+            source.transform({ x: -10 }).css({ opacity: 0 }).tween({ x: 0, opacity: 1 }, 1000, 'easeOutQuart', 2500);
+        }
+
+        function addListeners() {
+            self.events.add(about, Events.CLICK, aboutClick);
+            self.events.add(source, Events.CLICK, sourceClick);
+        }
+
+        function aboutClick() {
+            self.events.fire(Events.OPEN_ABOUT);
+        }
+
+        function sourceClick() {
+            AudioController.mute();
+            setTimeout(() => getURL(Config.ABOUT_GITHUB_URL), 300);
+        }
+    }
+}
+
+/*class Logo extends Interface {
+
+    constructor() {
+        super('Logo');
+        const self = this;
+        const size = Device.phone ? 40 : 64;
+        let alienkitty;
+
+        initHTML();
+        initView();
+
+        function initHTML() {
+            self.size(90, 86);
+            self.css({
+                left: Config.UI_OFFSET,
+                top: Config.UI_OFFSET
+            });
+            const ratio = size / 90;
+            if (ratio < 1) self.transformPoint(0, 0).transform({ scale: ratio });
+            self.interact(null, click);
+        }
+
+        function initView() {
+            alienkitty = self.initClass(AlienKitty);
+            alienkitty.ready().then(alienkitty.animateIn);
+        }
+
+        function click() {
+            self.events.fire(Events.OPEN_ABOUT);
+        }
+    }
+}*/
+
+class NavBackground extends Interface {
+
+    constructor(size, start, end, out) {
+        super('.NavBackground');
+        const self = this;
+        this.enabled = false;
+        const mouse = new Vector2(),
+            props = {
+                wobbly: 1,
+                expanded: 0
+            },
+            target = {
+                position: 0,
+                scroll: 0
+            };
+        let canvas, fill, points,
+            width = end - start,
+            direction = width < 0 ? -1 : 1,
+            dragging = false,
+            distance = 0;
+
+        initHTML();
+        initCanvas();
+        initFill();
+        initPoints();
+        addListeners();
+        this.startRender(loop);
+
+        function initHTML() {
+            self.size(size, '100%').mouseEnabled(false);
+        }
+
+        function initCanvas() {
+            canvas = self.initClass(Canvas, size, Stage.height, true, true);
+        }
+
+        function initFill() {
+            fill = self.initClass(CanvasGraphics);
+            fill.fillStyle = '#000';
+            canvas.add(fill);
+        }
+
+        function initPoints() {
+            points = [];
+            for (let i = 0; i < 6; i++) {
+                const point = new Vector2();
+                point.x = 0;
+                points.push(point);
+            }
+        }
+
+        function drawSpline() {
+            fill.clear();
+            fill.beginPath();
+            fill.moveTo(points[0].x, points[0].y);
+            let i;
+            for (i = 1; i < points.length - 2; i++) {
+                const xc = (points[i].x + points[i + 1].x) / 2,
+                    yc = (points[i].y + points[i + 1].y) / 2;
+                fill.quadraticCurveTo(points[i].x, points[i].y, xc, yc);
+            }
+            fill.quadraticCurveTo(points[i].x, points[i].y, points[i + 1].x, points[i + 1].y);
+        }
+
+        function drawSolid() {
+            drawSpline();
+            fill.lineTo(start, Stage.height);
+            fill.lineTo(start, 0);
+            fill.lineTo(points[0].x, points[0].y);
+            fill.fill();
+        }
+
+        function addListeners() {
+            self.events.add(Mouse.input, Interaction.START, down);
+            self.events.add(Mouse.input, Interaction.DRAG, drag);
+            self.events.add(Mouse.input, Interaction.END, up);
+            up();
+        }
+
+        function stopInertia() {
+            TweenManager.clearTween(target);
+        }
+
+        function down() {
+            if (!self.enabled) return;
+            stopInertia();
+            distance = 0;
+            self.tweening = true;
+            TweenManager.tween(props, { expanded: 0.15 }, 2000, 'easeOutElastic');
+            Cursor.grabbing();
+        }
+
+        function drag() {
+            if (!self.enabled) return;
+            dragging = true;
+            distance += Mouse.input.delta.x * 4;
+            Cursor.grabbing();
+        }
+
+        function up() {
+            if (!self.enabled) return;
+            dragging = false;
+            distance = 0;
+            const m = (() => {
+                if (Device.os === 'android') return 35;
+                return 25;
+            })();
+            TweenManager.tween(props, { expanded: 0 }, 2000, 'easeOutElastic');
+            TweenManager.tween(target, { scroll: target.scroll + Mouse.input.delta.x * m }, 500, 'easeOutQuint');
+            Cursor.clear();
+        }
+
+        function loop() {
+            if (self.enabled) {
+                mouse.lerp(Mouse, 0.1);
+                target.scroll += (distance - target.scroll) * 0.1;
+                if (Math.abs(target.scroll) < 0.001) target.scroll = 0;
+                target.position += ((end - mouse.x) - target.position) * 0.1;
+                if (((direction > 0 && target.scroll > width) || (direction < 0 && target.scroll < width))) self.events.fire(Events.OPEN_NAV, { direction });
+            }
+            let x = Math.clamp((target.position + target.scroll) / width, 0, 1.8);
+            x = Interpolation.Sine.In(x);
+            if ((x > 0 && !self.animatedIn) || self.tweening || self.redraw) {
+                for (let i = 0; i < points.length; i++) {
+                    let difY = Math.abs(mouse.y - points[i].y) / Stage.height;
+                    difY = Interpolation.Sine.In(difY);
+                    const offset = (Config.NAV_WIDTH * props.wobbly - (difY * 120) * props.wobbly) * x * direction;
+                    points[i].x = start + offset + out * props.expanded * direction;
+                }
+                drawSolid();
+                canvas.render();
+                if (self.redraw) self.redraw = false;
+            }
+        }
+
+        this.resize = (s, p1, p2, o) => {
+            stopInertia();
+            size = s;
+            start = p1;
+            end = p2;
+            out = o;
+            width = end - start;
+            direction = width < 0 ? -1 : 1;
+            this.size(size, '100%');
+            canvas.size(size, Stage.height);
+            const inc = Stage.height / (points.length - 1);
+            for (let i = 0; i < points.length; i++) {
+                points[i].y = inc * i;
+                points[i].x = start;
+            }
+            this.redraw = true;
+        };
+
+        this.reset = () => {
+            stopInertia();
+            this.animatedIn = false;
+            this.enabled = false;
+            dragging = false;
+            distance = 0;
+            props.wobbly = 1;
+            props.expanded = 0;
+            target.position = 0;
+            target.scroll = 0;
+            this.redraw = true;
+        };
+
+        this.animateIn = callback => {
+            stopInertia();
+            this.animatedIn = true;
+            this.enabled = false;
+            dragging = false;
+            this.tweening = true;
+            TweenManager.tween(props, { wobbly: 0, expanded: 1 }, callback ? 800 : 2000, callback ? 'easeOutCubic' : 'easeOutElastic', () => {
+                this.tweening = false;
+                target.position = 0;
+                target.scroll = 0;
+                if (callback) callback();
+            });
+        };
+
+        this.animateOut = () => {
+            if (dragging || this.animatedIn) return;
+            stopInertia();
+            this.animatedIn = false;
+            this.enabled = false;
+            dragging = false;
+            distance = 0;
+            this.tweening = true;
+            TweenManager.tween(props, { wobbly: 1, expanded: 0 }, 400, 'easeInCubic', () => this.tweening = false);
+            TweenManager.tween(target, { position: 0, scroll: 0 }, 400, 'easeInCubic');
+        };
+    }
+}
+
+class Nav extends Interface {
+
+    constructor() {
+        super('Nav');
+        const self = this;
+        const width = Config.NAV_WIDTH * 1.5;
+
+        initHTML();
+        initBackground();
+        addListeners();
+
+        function initHTML() {
+            self.size('100%').mouseEnabled(false);
+        }
+
+        function initBackground() {
+            self.right = self.initClass(NavBackground, Stage.width, Stage.width, Stage.width - width, Stage.width + 100);
+        }
+
+        function addListeners() {
+            self.events.add(Events.RESIZE, resize);
+            resize();
+        }
+
+        function resize() {
+            self.right.resize(Stage.width, Stage.width, Stage.width - width, Stage.width + 100);
+        }
+
+        this.reset = () => {
+            this.right.reset();
         };
     }
 }
@@ -643,84 +1381,59 @@ class UI extends Interface {
     constructor() {
         super('UI');
         const self = this;
-        const buttons = [{
-            name: '.button',
-            width: 80,
-            height: 60,
-            context: null,
-            img: null,
-            radius: 24,
-            posX: 52,
-            scale: 1,
-            littleCircleScale: 0,
-            lineWidth: 0,
-            object: null,
-            needsUpdate: true,
-            multiTween: true
-        }, {
-            name: '.button',
-            width: 80,
-            height: 60,
-            context: null,
-            img: null,
-            radius: 24,
-            posX: 52,
-            scale: 1,
-            littleCircleScale: 0,
-            lineWidth: 0,
-            object: null,
-            needsUpdate: true,
-            multiTween: true
-        }];
-        let prevent, bg, nav, info;
+        const buttons = [];
+        let bg, nav, footer, about;
 
         initHTML();
         initViews();
+        initBackground();
         addListeners();
         Stage.add(this);
         this.startRender(loop);
 
         function initHTML() {
-            self.size('100%').css({ left: 0, top: 0 }).mouseEnabled(false);
-            bg = self.create('.bg');
-            bg.size('100%');
-            bg.interact(null, closeNav);
-            bg.hit.css({ cursor: '' });
-            bg.hit.mouseEnabled(true);
-            bg.hide();
+            self.size('100%').mouseEnabled(false);
+            self.css({
+                left: 0,
+                top: 0
+            });
         }
 
         function initViews() {
             nav = self.initClass(Nav);
-            buttons.forEach(button => button.object = self.initClass(Button, button));
-            buttons[0].object.transform({ rotation: 180 }).center(0, 1).css({ left: 20 });
-            buttons[1].object.center(0, 1).css({ right: 20 });
-            buttons[0].background = nav.left;
-            buttons[1].background = nav.right;
             self.nav = nav;
+            self.initClass(Header);
+            footer = self.initClass(Footer);
+            buttons.push(self.initClass(MuteButton));
+            buttons.push(self.initClass(Button));
+            buttons[1].background = nav.right;
+        }
+
+        function initBackground() {
+            bg = self.create('.bg');
+            bg.size('100%').bg('#000').css({ opacity: 0 });
+            bg.interact(null, closeAbout);
+            bg.hit.css({ cursor: '' });
+            bg.hit.mouseEnabled(true);
+            bg.hit.hide();
         }
 
         function addListeners() {
-            buttons.forEach(button => {
-                button.object.interact(hover, hover);
-                button.object.hit.css({ cursor: '' });
-                button.object.hit.mouseEnabled(true);
-                button.object.button = button;
-            });
+            buttons[1].interact(hover, hover);
+            buttons[1].hit.css({ cursor: '' });
+            buttons[1].hit.mouseEnabled(true);
             self.events.add(Events.UI_HIDE, hide);
             self.events.add(Events.UI_SHOW, show);
             self.events.add(Events.OPEN_NAV, openNav);
             self.events.add(Events.CLOSE_NAV, closeNav);
-            if (!Device.mobile) {
-                self.events.add(Mouse.input, Interaction.START, down);
-                self.events.add(Mouse.input, Interaction.END, up);
-                up();
-            }
+            self.events.add(Events.OPEN_ABOUT, openAbout);
+            self.events.add(Events.CLOSE_ABOUT, closeAbout);
+            self.events.add(Events.KEYBOARD_UP, keyUp);
         }
 
         function hover(e) {
             if (self.animatedIn) return;
-            const button = e.object.button;
+            const button = e.object;
             if (e.action === 'over' || e.action === 'click') {
                 button.noTap = false;
                 Timer.clearTimeout(button.delay);
@@ -734,64 +1447,33 @@ class UI extends Interface {
         }
 
         function over(button) {
-            if (prevent) return;
-            Timer.clearTimeout(button.timeout);
-            button.needsUpdate = true;
-            button.object.animateIn();
-            button.object.tween({ opacity: 1 }, 400, 'easeOutCubic');
+            button.animateIn();
             button.background.enabled = true;
-            buttons.forEach(b => {
-                if (b !== button) out(b);
-            });
         }
 
         function out(button) {
-            Timer.clearTimeout(button.timeout);
-            button.timeout = self.delayedCall(() => button.needsUpdate = false, 2000);
-            button.object.animateOut();
-            button.object.tween({ opacity: 0.5 }, 400, 'easeOutCubic');
+            button.animateOut();
             button.background.animateOut();
         }
 
         function hide() {
-            buttons.forEach(button => {
-                Timer.clearTimeout(button.delay);
-                Timer.clearTimeout(button.timeout);
-                button.needsUpdate = true;
-                button.timeout = self.delayedCall(() => button.needsUpdate = false, 2000);
-                button.object.hideButton();
-            });
+            buttons.forEach(button => button.hideButton());
         }
 
         function show() {
-            buttons.forEach(button => {
-                Timer.clearTimeout(button.delay);
-                Timer.clearTimeout(button.timeout);
-                button.delay = self.delayedCall(() => {
-                    button.needsUpdate = true;
-                    button.timeout = self.delayedCall(() => button.needsUpdate = false, 2000);
-                    button.object.showButton();
-                }, 400);
-            });
+            buttons.forEach(button => button.showButton());
         }
 
         function loop() {
+            if (about) about.update();
             buttons.forEach(button => {
-                if (button.needsUpdate) button.object.update();
+                if (button.needsUpdate) button.update();
             });
         }
 
-        function openNav(e) {
+        function openNav() {
             if (self.animatedIn) return;
             self.animatedIn = true;
-            if (e.direction > 0) {
-                nav.left.animateIn();
-                self.delayedCall(() => {
-                    info = self.initClass(Info);
-                    info.animateIn();
-                    bg.show();
-                }, 1000);
-            }
             hide();
             Cursor.clear();
         }
@@ -799,175 +1481,185 @@ class UI extends Interface {
         function closeNav() {
             if (!self.animatedIn) return;
             self.animatedIn = false;
-            bg.hide();
-            if (info) info.animateOut(() => {
-                if (info) info = info.destroy();
-            });
             nav.animateOut();
             show();
         }
 
-        function down() {
-            prevent = true;
+        function openAbout() {
+            about = self.initClass(About);
+            bg.tween({ opacity: 0.85 }, 2000, 'easeOutSine');
+            about.animateIn();
+            bg.hit.show();
+            if (Global.SOUND) AudioController.trigger('about_section');
         }
 
-        function up() {
-            prevent = false;
+        function closeAbout() {
+            bg.hit.hide();
+            if (about) about.animateOut(() => {
+                if (about) about = about.destroy();
+            });
+            bg.tween({ opacity: 0 }, 1000, 'easeOutSine');
+            if (Global.SOUND) AudioController.trigger('fluid_section');
         }
+
+        function keyUp(e) {
+            // Escape
+            if (e.keyCode === 27) closeAbout();
+        }
+
+        this.update = () => {
+            footer.update();
+        };
+
+        this.enableMuteButton = () => {
+            buttons[0].enabled = true;
+        };
+
+        this.disableMuteButton = () => {
+            buttons[0].enabled = false;
+        };
 
         this.reset = () => {
             self.animatedIn = false;
-            bg.hide();
             nav.reset();
         };
     }
 }
 
-class VideoTexture extends Component {
+class Fluid extends Component {
 
     constructor() {
         super();
         const self = this;
-        let video, texture, promise;
+        const pointer = {
+            isMove: false,
+            isDown: false,
+            currentX: 0,
+            currentY: 0,
+            prevX: 0,
+            prevY: 0
+        };
+        let renderer, camera, buffer0, buffer1, pass, view, passScene, viewScene;
 
-        initVideo();
-        this.startRender(loop, 40);
+        initRenderer();
+        initFramebuffers();
+        initShaders();
+        addListeners();
+        defer(loop);
 
-        function initVideo() {
-            video = self.initClass(Video, {
-                src: Config.ASSETS['galaxy'],
-                width: 1920,
-                height: 1080,
-                preload: true,
-                loop: true
-            });
-            video.object.mouseEnabled(false);
-            if (Device.mobile) Stage.bind('touchend', start);
-            texture = new THREE.Texture(video.element);
-            texture.minFilter = THREE.LinearFilter;
-            self.texture = texture;
-            start();
+        function initRenderer() {
+            renderer = World.renderer;
+            camera = World.camera;
         }
 
-        function start() {
-            video.play();
+        function initFramebuffers() {
+            const params = {
+                    minFilter: THREE.LinearFilter,
+                    magFilter: THREE.LinearFilter,
+                    wrapS: THREE.ClampToEdgeWrapping,
+                    wrapT: THREE.ClampToEdgeWrapping,
+                    format: THREE.RGBAFormat,
+                    type: Device.os === 'ios' ? THREE.HalfFloatType : THREE.FloatType,
+                    depthBuffer: false,
+                    stencilBuffer: false
+                },
+                width = Stage.width * World.dpr,
+                height = Stage.height * World.dpr;
+            if (buffer0) buffer0.dispose();
+            if (buffer1) buffer1.dispose();
+            buffer0 = new THREE.WebGLRenderTarget(width, height, params);
+            buffer1 = new THREE.WebGLRenderTarget(width, height, params);
+        }
+
+        function createScene(material) {
+            const scene = new THREE.Scene(),
+                mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), material);
+            scene.add(mesh);
+            return scene;
+        }
+
+        function initShaders() {
+            pass = self.initClass(Shader, vertFluidBasic, fragpass, {
+                time: World.time,
+                frame: World.frame,
+                resolution: World.resolution,
+                mouse: { value: Mouse.inverseNormal },
+                velocity: { value: new THREE.Vector2(0, 0) },
+                strength: { value: new THREE.Vector2(50, 0) },
+                texture: { value: buffer0.texture }
+            });
+            passScene = createScene(pass.material);
+            view = self.initClass(Shader, vertFluidBasic, fragview, {
+                time: World.time,
+                frame: World.frame,
+                resolution: World.resolution,
+                mouse: { value: Mouse.inverseNormal },
+                texture: { value: buffer0.texture }
+            });
+            viewScene = createScene(view.material);
+        }
+
+        function updateShaders() {
+            pass.uniforms.texture.value = buffer0.texture;
+            view.uniforms.texture.value = buffer0.texture;
         }
 
         function loop() {
-            if (video.ready()) {
-                texture.needsUpdate = true;
-                if (!self.loaded) {
-                    self.loaded = true;
-                    promise.resolve();
-                }
-            }
-        }
-
-        this.ready = () => {
-            promise = Promise.create();
-            return promise;
-        };
-
-        this.destroy = () => {
-            Stage.unbind('touchend', start);
-            return super.destroy();
-        };
-    }
-}
-
-class Space extends Component {
-
-    constructor() {
-        super();
-        const self = this;
-        this.object3D = new THREE.Object3D();
-        const ratio = 1920 / 1080;
-        let texture, img, video, shader, mesh,
-            beamWidth = 40;
-
-        World.scene.add(this.object3D);
-
-        function initTexture() {
-            img = Assets.createImage(Config.ASSETS['galaxy']);
-            return Assets.loadImage(img).then(finishSetup);
-        }
-
-        function initVideoTexture() {
-            video = self.initClass(VideoTexture);
-            return video.ready().then(finishSetup);
-        }
-
-        function finishSetup() {
-            if (video) {
-                texture = video.texture;
-            } else {
-                texture = new THREE.Texture(img);
-                texture.minFilter = THREE.LinearFilter;
-                texture.needsUpdate = true;
-            }
-            initMesh();
-        }
-
-        function initMesh() {
-            self.object3D.visible = false;
-            shader = self.initClass(Shader, vertSpace, fragSpace, {
-                time: World.time,
-                resolution: World.resolution,
-                mouse: { value: Mouse.inverseNormal },
-                texture: { value: texture },
-                opacity: { value: 0 },
-                radius: { value: 0 },
-                beam: { value: 0 },
-                beamWidth: { value: beamWidth },
-                depthWrite: false,
-                depthTest: false
-            });
-            mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), shader.material);
-            mesh.scale.set(Stage.width, Stage.height, 1);
-            mesh.position.z = 100;
-            self.object3D.add(mesh);
+            const deltaX = pointer.currentX - pointer.prevX,
+                deltaY = pointer.currentY - pointer.prevY;
+            pointer.prevX = pointer.currentX;
+            pointer.prevY = pointer.currentY;
+            pass.uniforms.velocity.value.x = deltaX;
+            pass.uniforms.velocity.value.y = deltaY;
+            const distance = Math.min(10, Math.sqrt(deltaX * deltaX + deltaY * deltaY)) / 10;
+            pass.uniforms.strength.value.x = !pointer.isMove || pointer.isDown ? 50 : 50 * distance;
+            pass.uniforms.strength.value.y = 50 * distance;
+            pass.uniforms.texture.value = buffer0.texture;
+            renderer.render(passScene, camera, buffer1);
+            const buffer = buffer0;
+            buffer0 = buffer1;
+            buffer1 = buffer;
+            renderer.render(viewScene, camera);
+            AudioController.updatePosition();
+            World.frame.value++;
         }
 
         function addListeners() {
             self.events.add(Events.RESIZE, resize);
             self.events.add(Mouse.input, Interaction.START, down);
+            self.events.add(Mouse.input, Interaction.MOVE, move);
             self.events.add(Mouse.input, Interaction.END, up);
-            up();
-            resize();
-        }
-
-        function down() {
-            beamWidth = 1.2;
-            WebAudio.trigger('DeepWarp');
-        }
-
-        function up() {
-            beamWidth = 40;
         }
 
         function resize() {
-            if (Stage.width / Stage.height > ratio) mesh.scale.set(Stage.width, Stage.width / ratio, 1);
-            else mesh.scale.set(Stage.height * ratio, Stage.height, 1);
+            initFramebuffers();
+            updateShaders();
+            World.frame.value = 0;
         }
 
-        function loop() {
-            if (!self.object3D.visible) return;
-            shader.uniforms.beamWidth.value += (beamWidth - shader.uniforms.beamWidth.value) * 0.3;
+        function down() {
+            pointer.isDown = true;
+            move();
+        }
+
+        function move() {
+            if (!pointer.isMove && self.animatedIn) pointer.isMove = true;
+            pointer.currentX = Mouse.x;
+            pointer.currentY = -Mouse.y;
+        }
+
+        function up() {
+            pointer.isDown = false;
         }
 
         this.animateIn = () => {
-            addListeners();
+            this.animatedIn = true;
             this.startRender(loop);
-            this.object3D.visible = true;
-            shader.uniforms.beam.value = 0;
-            TweenManager.tween(shader.uniforms.beam, { value: 1 }, 1000, 'easeOutSine');
         };
 
-        this.ready = () => Tests.shaderVideo() ? initVideoTexture() : initTexture();
-
         this.destroy = () => {
-            mesh = null;
-            shader = null;
+            if (buffer0) buffer0.dispose();
+            if (buffer1) buffer1.dispose();
             return super.destroy();
         };
     }
@@ -982,19 +1674,15 @@ class World extends Component {
 
     static destroy() {
         if (this.singleton) this.singleton.destroy();
-        this.singleton = null;
-        return this.singleton;
+        return Utils.nullObject(this);
     }
 
     constructor() {
         super();
         const self = this;
-        const audioMinVolume = 0.5,
-            audioMoveDecay = 0.95;
-        let renderer, scene, camera, spacy,
-            audioMoveVolume = audioMinVolume;
+        let renderer, scene, camera;
 
-        World.dpr = Math.min(1.5, Device.pixelRatio);
+        World.dpr = 1;
 
         initWorld();
         addListeners();
@@ -1004,57 +1692,31 @@ class World extends Component {
             renderer = new THREE.WebGLRenderer({ powerPreference: 'high-performance' });
             renderer.setPixelRatio(World.dpr);
             scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(60, Stage.width / Stage.height, 1, 10000);
+            camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
             World.scene = scene;
             World.renderer = renderer;
             World.element = renderer.domElement;
             World.camera = camera;
             World.time = { value: 0 };
+            World.frame = { value: 0 };
             World.resolution = { value: new THREE.Vector2(Stage.width * World.dpr, Stage.height * World.dpr) };
         }
 
         function addListeners() {
-            self.events.add(Mouse.input, Interaction.MOVE, move);
             self.events.add(Events.RESIZE, resize);
             resize();
         }
 
-        function move() {
-            audioMoveVolume = Math.range(Mouse.input.velocity.length(), 0, 8, 0.5, 1, true);
-        }
-
         function resize() {
             renderer.setSize(Stage.width, Stage.height);
-            camera.aspect = Stage.width / Stage.height;
-            camera.position.z = 1 / Math.tan(Math.radians(30)) * 0.5 * Stage.height;
-            camera.updateProjectionMatrix();
             World.resolution.value.set(Stage.width * World.dpr, Stage.height * World.dpr);
         }
 
         function loop(t, delta) {
             World.time.value += delta * 0.001;
-            renderer.render(scene, camera);
-            if (spacy) {
-                audioMoveVolume *= audioMoveDecay;
-                if (audioMoveVolume < audioMinVolume) audioMoveVolume = audioMinVolume;
-                spacy.gain.value += (audioMoveVolume - spacy.gain.value) * 0.3;
-            }
         }
 
-        this.initAudio = () => {
-            spacy = WebAudio.getSound('DeepSpacy');
-            if (spacy) {
-                spacy.gain.value = audioMinVolume;
-                spacy.loop = true;
-                WebAudio.trigger('DeepSpacy');
-            }
-        };
-
         this.destroy = () => {
-            if (spacy) {
-                spacy.stop();
-                spacy = null;
-            }
             for (let i = scene.children.length - 1; i >= 0; i--) {
                 const object = scene.children[i];
                 scene.remove(object);
@@ -1069,7 +1731,6 @@ class World extends Component {
             scene = null;
             renderer = null;
             Stage.remove(World.element);
-            Utils.nullObject(World);
             return super.destroy();
         };
     }
@@ -1174,12 +1835,15 @@ class Loader extends Interface {
             number = self.create('.number');
             number.size(150, 25).center();
             number.inner = number.create('.inner');
-            number.inner.fontStyle('Consolas, "Lucida Console", Monaco, monospace', 11, Config.UI_COLOR);
+            number.inner.fontStyle('Roboto Mono', 11, Config.UI_COLOR);
             number.inner.css({
                 width: '100%',
+                fontWeight: '400',
                 lineHeight: 25,
+                letterSpacing: 1,
                 textAlign: 'center',
-                whiteSpace: 'nowrap'
+                whiteSpace: 'nowrap',
+                opacity: 0.35
             });
             number.inner.text('');
         }
@@ -1188,12 +1852,16 @@ class Loader extends Interface {
             title = self.create('.title');
             title.size(600, 25).center().css({ opacity: 0 });
             title.inner = title.create('.inner');
-            title.inner.fontStyle('Consolas, "Lucida Console", Monaco, monospace', 11, Config.UI_COLOR);
+            title.inner.fontStyle('Roboto Mono', 11, Config.UI_COLOR);
             title.inner.css({
                 width: '100%',
+                fontWeight: '400',
                 lineHeight: 25,
+                letterSpacing: 1,
                 textAlign: 'center',
-                whiteSpace: 'nowrap'
+                textTransform: 'uppercase',
+                whiteSpace: 'nowrap',
+                opacity: 0.35
             });
             title.inner.text(Device.mobile ? 'Put on your headphones' : 'Turn up your speakers');
         }
@@ -1232,7 +1900,7 @@ class Loader extends Interface {
         function click() {
             self.events.remove(Mouse.input, Interaction.CLICK, click);
             self.events.fire(Events.START, { click: true });
-            WebAudio.trigger('BassDrum');
+            WebAudio.trigger('bass_drum');
         }
 
         function swapTitle(text) {
@@ -1254,11 +1922,11 @@ class Example {
 
     constructor(item) {
         this.slug = item.slug;
-        if (item.slug) this.path = `examples/${this.slug}/`;
-        else this.path = item.path;
+        this.path = this.slug ? `examples/${this.slug}/` : item.path;
         this.title = item.title;
-        this.pageTitle = `${this.title} / Alien.js Example Project`;
+        this.pageTitle = `${this.title} / Alien.js Example`;
         this.description = item.description;
+        this.sideTitle = this.description ? `${this.title} / ${this.description}` : this.title;
     }
 }
 
@@ -1268,41 +1936,44 @@ class Main {
 
         if (!Device.webgl) window.location = 'fallback.html';
 
-        let loader, space, example,
+        let loader, fluid, example,
             orientation = Stage.orientation;
 
         WebAudio.init();
 
-        setConfig();
+        initData();
         initStage();
         initLoader();
         addListeners();
 
-        function setConfig() {
-            Config.ASSETS = {
-                'three': 'assets/js/lib/three.min.js',
-                'BassDrum': 'assets/sounds/BassDrum.mp3',
-                'DeepSpacy': 'assets/sounds/DeepSpacy.mp3',
-                'DeepWarp': 'assets/sounds/DeepWarp.mp3',
-                'galaxy': Tests.shaderVideo() ? 'assets/video/galaxy.mp4' : 'assets/images/shot/galaxy.jpg'
-            };
+        function initData() {
+            const sound = Storage.get('sound');
+            Global.SOUND = typeof sound === 'boolean' ? sound : true;
+            if (!Global.SOUND) WebAudio.mute();
         }
 
         function initStage() {
             Stage.size('100%');
+            Stage.transform({ scale: 1.3 }).css({ opacity: 0 }).tween({ scale: 1, opacity: 1 }, 3000, 'easeOutCubic', () => {
+                Stage.clearTransform();
+                Stage.clearOpacity();
+            });
 
             Mouse.init();
+            Accelerometer.init();
 
             Global.STAGE = Stage;
         }
 
         function initLoader() {
             Promise.all([
-                FontLoader.loadFonts(['Consolas, "Lucida Console", Monaco, monospace', 'Oswald', 'Karla']),
-                AssetLoader.loadAssets(['assets/data/config.json?' + Utils.timestamp()])
+                FontLoader.loadFonts(['Roboto Mono', 'Oswald', 'Karla']),
+                AssetLoader.loadAssets([`assets/data/config.json?${Utils.timestamp()}`])
             ]).then(() => {
                 const examples = Assets.getData('config').examples;
-                examples.forEach(item => Config.EXAMPLES.push(new Example(item)));
+                examples.forEach(item => {
+                    if (item.slug || item.path || item.path === '') Config.EXAMPLES.push(new Example(item));
+                });
 
                 Data.init();
                 Data.dispatcher.lock();
@@ -1313,16 +1984,17 @@ class Main {
         }
 
         function initWorld() {
+            AudioController.init();
+
             World.instance();
             Stage.add(World);
 
-            space = Stage.initClass(Space);
+            fluid = Stage.initClass(Fluid);
         }
 
         function addListeners() {
             Stage.events.add(Events.START, start);
             Stage.events.add(Events.OPEN_NAV, openNav);
-            Stage.events.add(Events.CLOSE_NAV, closeNav);
             Stage.events.add(Events.RESIZE, resize);
             Stage.events.add(Events.VISIBILITY, visibility);
         }
@@ -1331,11 +2003,8 @@ class Main {
             loader.animateOut(() => {
                 loader = loader.destroy();
                 if (e.click) {
-                    space.ready().then(() => {
-                        space.animateIn();
-
-                        World.instance().initAudio();
-                    });
+                    fluid.animateIn();
+                    AudioController.trigger('fluid_start');
 
                     UI.instance();
                     Stage.delayedCall(() => {
@@ -1359,28 +2028,29 @@ class Main {
 
                 let item = e.item;
                 if (!item) item = Data.next();
+                UI.instance().update();
+
                 if (item.path !== '') {
                     example = Stage.initClass(ExampleLoader, item);
                     Stage.events.add(example, Events.COMPLETE, loadComplete);
+                    UI.instance().disableMuteButton();
                 } else {
-                    setConfig();
                     Global.EXAMPLE = null;
                     Stage.loaded = true;
+                    UI.instance().enableMuteButton();
                 }
 
                 UI.instance().nav.right.animateIn(() => {
-                    if (space) space = space.destroy();
+                    if (fluid) fluid = fluid.destroy();
                     if (World.singleton) World.destroy();
                     if (Global.LAST_EXAMPLE) Global.LAST_EXAMPLE.destroy();
+                    if (AudioController.trigger) AudioController.trigger('fluid_stop');
 
                     if (item.path === '') {
-                        WebAudio.unmute();
                         initWorld();
-                        space.ready().then(() => {
-                            space.animateIn();
-
-                            World.instance().initAudio();
-                        });
+                        if (Global.SOUND) AudioController.unmute();
+                        fluid.animateIn();
+                        AudioController.trigger('fluid_start');
                     }
 
                     Stage.destroyed = true;
@@ -1392,10 +2062,6 @@ class Main {
 
                 WebAudio.mute();
             }
-        }
-
-        function closeNav() {
-            WebAudio.unmute();
         }
 
         function loadComplete() {
@@ -1411,7 +2077,6 @@ class Main {
 
                 UI.instance().reset();
                 Stage.delayedCall(() => {
-                    Stage.element.appendChild(UI.instance().element);
                     Stage.events.fire(Events.UI_SHOW);
                     Data.dispatcher.unlock();
                 }, 1000);
@@ -1424,7 +2089,7 @@ class Main {
 
         function visibility(e) {
             if (e.type === 'blur') WebAudio.mute();
-            else WebAudio.unmute();
+            else if (Global.SOUND) WebAudio.unmute();
         }
     }
 }

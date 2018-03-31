@@ -6,7 +6,7 @@ uniform float opacity;
 varying vec2 vUv;
 
 void main() {
-    vec4 rgba = texture2D(texture, vUv);
-    rgba.a *= opacity;
-    gl_FragColor = rgba;
+    vec4 color = texture2D(texture, vUv);
+    color.a *= opacity;
+    gl_FragColor = color;
 }

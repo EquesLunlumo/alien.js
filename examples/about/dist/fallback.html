@@ -1,12 +1,20 @@
 <!DOCTYPE html>
+<!--
+     _  /._  _ 
+    /_|///_'/ /
+-->
 <html lang="en">
 <head>
     <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge, chrome=1">
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="theme-color" content="#000000">
 
     <title>Error creating WebGL context!!1</title>
 
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto+Mono:400|Oswald:200|Karla:400">
 
     <style>
         body, html {
@@ -16,19 +24,37 @@
             height: 100%;
             overflow: hidden;
             background: black;
-            color: white;
-            font-family: Consolas, "Lucida Console", Monaco, monospace;
+            font-family: 'Roboto Mono';
             font-size: 11px;
-            line-height: 25px;
+            color: white;
+            font-weight: 400;
+            line-height: 20px;
+            letter-spacing: 1px;
+            touch-action: none;
+            text-rendering: optimizeLegibility;
+            -moz-osx-font-smoothing: grayscale;
+            -webkit-font-smoothing: antialiased;
+            font-smoothing: antialiased;
+        }
+        * {
+            outline: none;
+            border: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+            -webkit-text-size-adjust: none;
+            text-size-adjust: none;
         }
         a {
             color: white;
-            text-decoration: none;
         }
     </style>
 </head>
 <body>
-<div style="position: absolute; width: 90px; height: 86px; background-size: 90px 86px; left: 50%; top: 50%; margin-left: -45px; margin-top: -108px; background-image: url(assets/images/fallback.png)"></div>
-<div style="position: absolute; width: 300px; height: 25px; background-size: 300px 25px; left: 50%; top: 50%; margin-left: -150px; margin-top: -12.5px; text-align: center; white-space: nowrap;">Error creating WebGL context<br><a href="https://www.google.com/chrome/browser/">Upgrade your browser</a></div>
+<div style="position: absolute; width: 90px; height: 86px; background-size: 90px 86px; left: 50%; top: 50%; margin-left: -45px; margin-top: -108px; background-image: url(assets/images/fallback.png);"></div>
+<div style="position: absolute; width: 300px; height: 25px; background-size: 300px 25px; left: 50%; top: 50%; margin-left: -150px; margin-top: -12.5px; text-align: center; text-transform: uppercase; white-space: nowrap; opacity: 0.35;">Error creating WebGL context<br><a href="https://www.google.com/chrome/browser/">Upgrade your browser</a></div>
 </body>
 </html>

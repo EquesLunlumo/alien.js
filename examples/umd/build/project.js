@@ -746,7 +746,28 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 this.phone = !this.tablet;
                 this.webgl = function () {
                     try {
-                        return !!window.WebGLRenderingContext && !!document.createElement('canvas').getContext('experimental-webgl');
+                        var names = ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'],
+                            canvas = document.createElement('canvas');
+                        var gl = void 0;
+                        for (var i = 0; i < names.length; i++) {
+                            gl = canvas.getContext(names[i]);
+                            if (gl) break;
+                        }
+                        var info = gl.getExtension('WEBGL_debug_renderer_info'),
+                            output = {};
+                        if (info) output.gpu = gl.getParameter(info.UNMASKED_RENDERER_WEBGL).toLowerCase();
+                        output.renderer = gl.getParameter(gl.RENDERER).toLowerCase();
+                        output.version = gl.getParameter(gl.VERSION).toLowerCase();
+                        output.glsl = gl.getParameter(gl.SHADING_LANGUAGE_VERSION).toLowerCase();
+                        output.extensions = gl.getSupportedExtensions();
+                        output.detect = function (matches) {
+                            if (output.gpu && output.gpu.includes(matches)) return true;
+                            if (output.version && output.version.includes(matches)) return true;
+                            for (var _i2 = 0; _i2 < output.extensions.length; _i2++) {
+                                if (output.extensions[_i2].toLowerCase().includes(matches)) return true;
+                            }return false;
+                        };
+                        return output;
                     } catch (e) {
                         return false;
                     }
@@ -1822,8 +1843,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 return this;
             }
         }, {
-            key: 'clearAlpha',
-            value: function clearAlpha() {
+            key: 'clearOpacity',
+            value: function clearOpacity() {
                 this.element.style.opacity = '';
                 return this;
             }
@@ -1831,7 +1852,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             key: 'size',
             value: function size(w) {
                 var h = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : w;
+                var noScale = arguments[2];
 
+                if (typeof h === 'boolean') {
+                    noScale = h;
+                    h = w;
+                }
                 if (typeof w !== 'undefined') {
                     if (typeof w === 'string' || typeof h === 'string') {
                         if (typeof w !== 'string') w = w + 'px';
@@ -1841,7 +1867,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     } else {
                         this.element.style.width = w + 'px';
                         this.element.style.height = h + 'px';
-                        this.element.style.backgroundSize = w + 'px ' + h + 'px';
+                        if (!noScale) this.element.style.backgroundSize = w + 'px ' + h + 'px';
                     }
                 }
                 this.width = this.element.offsetWidth;
@@ -1875,6 +1901,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     this.element.style.backgroundRepeat = repeat;
                 }
                 if (x === 'cover' || x === 'contain') {
+                    repeat = typeof repeat === 'number' ? repeat + 'px' : repeat;
                     this.element.style.backgroundSize = x;
                     this.element.style.backgroundRepeat = 'no-repeat';
                     this.element.style.backgroundPosition = typeof y !== 'undefined' ? y + ' ' + repeat : 'center';
@@ -2224,6 +2251,22 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 return this;
             }
         }, {
+            key: 'preventScroll',
+            value: function preventScroll() {
+                if (!Device.mobile) return;
+                var preventScroll = function preventScroll(e) {
+                    var target = e.target;
+                    if (target.nodeName === 'INPUT' || target.nodeName === 'TEXTAREA' || target.nodeName === 'SELECT' || target.nodeName === 'A') return;
+                    var prevent = true;
+                    while (target.parentNode && prevent) {
+                        if (target.scrollParent) prevent = false;
+                        target = target.parentNode;
+                    }
+                    if (prevent) e.preventDefault();
+                };
+                this.element.addEventListener('touchstart', preventScroll, { passive: false });
+            }
+        }, {
             key: 'overflowScroll',
             value: function overflowScroll(direction) {
                 if (!Device.mobile) return;
@@ -2242,6 +2285,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     overflow.overflowY = 'hidden';
                 }
                 this.css(overflow);
+                this.element.scrollParent = true;
                 this.element.preventEvent = function (e) {
                     return e.stopPropagation();
                 };
@@ -2510,6 +2554,56 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function init() {
                 var _this14 = this;
 
+                var Sound = function () {
+                    function Sound(asset) {
+                        _classCallCheck(this, Sound);
+
+                        var self = this;
+                        this.asset = Assets.getPath(asset);
+                        if (WebAudio.context.createStereoPanner) this.stereo = WebAudio.context.createStereoPanner();
+                        this.output = WebAudio.context.createGain();
+                        this.volume = 1;
+                        this.rate = 1;
+                        if (this.stereo) this.stereo.connect(this.output);
+                        this.output.connect(WebAudio.output);
+                        this.gain = {
+                            set value(value) {
+                                self.volume = value;
+                                self.output.gain.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                            },
+                            get value() {
+                                return self.volume;
+                            }
+                        };
+                        this.playbackRate = {
+                            set value(value) {
+                                self.rate = value;
+                                if (self.source) self.source.playbackRate.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                            },
+                            get value() {
+                                return self.rate;
+                            }
+                        };
+                    }
+
+                    _createClass(Sound, [{
+                        key: 'setPanTo',
+                        value: function setPanTo(value) {
+                            if (this.stereo) this.stereo.pan.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                        }
+                    }, {
+                        key: 'stop',
+                        value: function stop() {
+                            if (this.source) {
+                                this.source.stop();
+                                this.playing = false;
+                            }
+                        }
+                    }]);
+
+                    return Sound;
+                }();
+
                 if (!this.active) {
                     this.active = true;
 
@@ -2517,20 +2611,22 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     var sounds = {};
                     var context = void 0;
 
-                    if (window.AudioContext) context = new AudioContext();
-                    if (!context) return;
-                    this.globalGain = context.createGain();
-                    this.globalGain.connect(context.destination);
-                    this.globalGain.value = this.globalGain.gain.defaultValue;
-                    this.gain = {
-                        set value(value) {
-                            _self.globalGain.value = value;
-                            _self.globalGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
-                        },
-                        get value() {
-                            return _self.globalGain.value;
-                        }
-                    };
+                    if (window.AudioContext) {
+                        context = new AudioContext();
+                        this.output = context.createGain();
+                        this.volume = 1;
+                        this.output.connect(context.destination);
+                        this.gain = {
+                            set value(value) {
+                                _self.volume = value;
+                                _self.output.gain.setTargetAtTime(value, context.currentTime, 0.01);
+                            },
+                            get value() {
+                                return _self.volume;
+                            }
+                        };
+                        this.context = context;
+                    }
 
                     this.loadSound = function (id, callback) {
                         var promise = Promise.create();
@@ -2544,6 +2640,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                                     sound.buffer = buffer;
                                     sound.complete = true;
                                     callback();
+                                }, function () {
+                                    callback();
                                 });
                             });
                         }).catch(function () {
@@ -2555,25 +2653,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     };
 
                     this.createSound = function (id, asset, callback) {
-                        var sound = {};
-                        sound.asset = Assets.getPath(asset);
-                        sound.audioGain = context.createGain();
-                        sound.audioGain.connect(_this14.globalGain);
-                        sound.audioGain.value = sound.audioGain.gain.defaultValue;
-                        sound.gain = {
-                            set value(value) {
-                                sound.audioGain.value = value;
-                                sound.audioGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
-                            },
-                            get value() {
-                                return sound.audioGain.value;
-                            }
-                        };
-                        sound.stop = function () {
-                            if (sound.source) sound.source.stop();
-                        };
-                        sounds[id] = sound;
+                        sounds[id] = new Sound(asset);
                         if (Device.os === 'ios') callback();else _this14.loadSound(id, callback);
+                        return sounds[id];
                     };
 
                     this.getSound = function (id) {
@@ -2587,15 +2669,69 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                         if (!sound.ready) _this14.loadSound(id);
                         sound.ready().then(function () {
                             if (sound.complete) {
+                                if (sound.stopping && sound.loop) {
+                                    sound.stopping = false;
+                                    return;
+                                }
+                                sound.playing = true;
                                 sound.source = context.createBufferSource();
                                 sound.source.buffer = sound.buffer;
-                                sound.source.connect(sound.audioGain);
-                                sound.audioGain.gain.setValueAtTime(0, context.currentTime);
-                                sound.source.loop = !!sound.loop;
+                                sound.source.loop = sound.loop;
+                                sound.source.playbackRate.setValueAtTime(sound.rate, context.currentTime);
+                                sound.source.connect(sound.stereo ? sound.stereo : sound.output);
                                 sound.source.start();
-                                sound.audioGain.gain.setTargetAtTime(sound.audioGain.value, context.currentTime, 0.01);
+                                sound.output.gain.cancelScheduledValues(context.currentTime);
+                                sound.output.gain.setValueAtTime(0, context.currentTime);
+                                defer(function () {
+                                    return sound.output.gain.setTargetAtTime(sound.volume, context.currentTime, 0.01);
+                                });
                             }
                         });
+                    };
+
+                    this.play = function (id) {
+                        var volume = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+                        var loop = arguments[2];
+
+                        if (!context) return;
+                        if (typeof volume === 'boolean') {
+                            loop = volume;
+                            volume = 1;
+                        }
+                        var sound = _this14.getSound(id);
+                        if (sound) {
+                            sound.volume = volume;
+                            sound.loop = !!loop;
+                            _this14.trigger(id);
+                        }
+                    };
+
+                    this.fadeInAndPlay = function (id, volume, loop, time, ease) {
+                        var delay = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 0;
+
+                        if (!context) return;
+                        var sound = _this14.getSound(id);
+                        if (sound) {
+                            sound.volume = 0;
+                            sound.loop = !!loop;
+                            _this14.trigger(id);
+                            TweenManager.tween(sound.gain, { value: volume }, time, ease, delay);
+                        }
+                    };
+
+                    this.fadeOutAndStop = function (id, time, ease) {
+                        var delay = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
+
+                        if (!context) return;
+                        var sound = _this14.getSound(id);
+                        if (sound && sound.playing) {
+                            TweenManager.tween(sound.gain, { value: 0 }, time, ease, delay, function () {
+                                if (!sound.stopping) return;
+                                sound.stopping = false;
+                                sound.stop();
+                            });
+                            sound.stopping = true;
+                        }
                     };
 
                     this.mute = function () {
@@ -2609,13 +2745,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     };
 
                     this.stop = function () {
-                        _this14.active = false;
                         if (!context) return;
+                        _this14.active = false;
                         for (var id in sounds) {
                             var sound = sounds[id];
                             if (sound) sound.stop();
                         }
-                        context.close();
+                        _this14.context.close();
                     };
                 }
 
@@ -2648,6 +2784,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             function initHTML() {
                 self.css({ overflow: 'hidden' });
+                self.preventScroll();
             }
 
             function addListeners() {
@@ -2749,8 +2886,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 return this;
             }
         }, {
-            key: 'copyFrom',
-            value: function copyFrom(v) {
+            key: 'copy',
+            value: function copy(v) {
                 this.x = v.x || 0;
                 this.y = v.y || 0;
                 return this;
@@ -3002,7 +3139,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function down(e) {
-                e.preventDefault();
                 self.isTouching = true;
                 self.x = e.x;
                 self.y = e.y;
@@ -3718,29 +3854,38 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      */
 
     var Canvas = function Canvas(w) {
+        var h = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : w;
+
         var _this19 = this;
 
-        var h = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : w;
-        var whiteAlpha = arguments[2];
+        var retina = arguments[2];
+        var whiteAlpha = arguments[3];
 
         _classCallCheck(this, Canvas);
+
+        if (typeof h === 'boolean') {
+            retina = h;
+            h = w;
+        }
 
         var self = this;
         this.element = document.createElement('canvas');
         this.context = this.element.getContext('2d');
         this.object = new Interface(this.element);
         this.children = [];
+        this.retina = retina;
 
         size(w, h);
 
         function size(w, h) {
-            self.element.width = w * 2;
-            self.element.height = h * 2;
+            var ratio = retina ? 2 : 1;
+            self.element.width = w * ratio;
+            self.element.height = h * ratio;
             self.width = w;
             self.height = h;
-            self.scale = 2;
+            self.scale = ratio;
             self.object.size(self.width, self.height);
-            self.context.scale(2, 2);
+            self.context.scale(ratio, ratio);
             self.element.style.width = w + 'px';
             self.element.style.height = h + 'px';
             if (whiteAlpha) {
@@ -3937,6 +4082,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      */
 
     /**
+     * Webcam interface.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    if (!navigator.getUserMedia) navigator.getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+    /**
+     * Webcam interaction.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
      * Linked list.
      *
      * @author Patrick Schroen / https://github.com/pschroen
@@ -3955,7 +4114,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
      */
 
     /**
-     * 3D utilities.
+     * 3D utilities with texture promise method.
      *
      * @author Patrick Schroen / https://github.com/pschroen
      */
