@@ -129,6 +129,7 @@ class VideoTexture extends Component {
                 loop: true
             });
             video.object.mouseEnabled(false);
+            video.object.element.setAttribute('crossorigin', 'anonymous');
             if (Device.mobile) Stage.bind('touchend', start);
             texture = new THREE.Texture(video.element);
             texture.minFilter = THREE.LinearFilter;
