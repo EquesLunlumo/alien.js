@@ -960,6 +960,7 @@ class HeaderExamplesButton extends Interface {
 
         function initView() {
             examples = self.initClass(HeaderExamples);
+            if (examples.height > Stage.height) self.hide();
         }
 
         function addListeners() {
