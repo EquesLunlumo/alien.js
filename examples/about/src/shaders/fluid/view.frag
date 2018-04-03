@@ -1,9 +1,7 @@
 // Based on https://www.shadertoy.com/view/XlsBDf by davidar
 
 uniform float time;
-uniform int frame;
 uniform vec2 resolution;
-uniform vec2 mouse;
 uniform sampler2D texture;
 
 #define PI 3.141592653589793

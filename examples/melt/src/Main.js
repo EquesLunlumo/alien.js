@@ -299,6 +299,18 @@ class World extends Component {
         this.destroy = () => {
             if (buffer0) buffer0.dispose();
             if (buffer1) buffer1.dispose();
+            viewScene.remove(viewMesh);
+            viewMesh.geometry.dispose();
+            viewMesh.material.dispose();
+            passScene.remove(passMesh);
+            passMesh.geometry.dispose();
+            passMesh.material.dispose();
+            renderTarget.dispose();
+            renderTarget = null;
+            viewMesh = null;
+            passMesh = null;
+            viewScene = null;
+            passScene = null;
             for (let i = scene.children.length - 1; i >= 0; i--) {
                 const object = scene.children[i];
                 scene.remove(object);

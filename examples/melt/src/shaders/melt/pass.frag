@@ -5,7 +5,6 @@ uniform int frame;
 uniform vec2 resolution;
 uniform sampler2D texture1;
 uniform sampler2D texture2;
-uniform float opacity;
 
 varying vec2 vUv;
 

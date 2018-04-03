@@ -208,7 +208,7 @@ npm install
 npm start
 ```
 
-Then open [http://localhost:8080/](http://localhost:8080/) to see the alien.js.org home page. The `npm start` script runs `npm run dev`, so you can start experimenting with the code right away! :)
+Then open [http://localhost:8080/](http://localhost:8080/). The `npm start` script runs `npm run dev`, so you can start experimenting with the code right away! :)
 
 ### Updating
 

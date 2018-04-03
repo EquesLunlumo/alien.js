@@ -57,7 +57,14 @@ class Effects extends Component {
         };
 
         this.destroy = () => {
+            scene.remove(mesh);
+            mesh.geometry.dispose();
+            mesh.material.dispose();
             renderTarget.dispose();
+            renderTarget = null;
+            mesh = null;
+            camera = null;
+            scene = null;
             return super.destroy();
         };
     }

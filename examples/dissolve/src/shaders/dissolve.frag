@@ -10,7 +10,7 @@ uniform float progress;
 varying vec2 vUv;
 
 void main() {
-    vec4 color = mix(texture2D(texture2, vUv), texture2D(texture1, vUv), progress);
+    vec4 color = mix(texture2D(texture1, vUv), texture2D(texture2, vUv), progress);
     color.a *= opacity;
     gl_FragColor = color;
 }

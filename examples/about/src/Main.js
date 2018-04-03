@@ -10,8 +10,8 @@ import { Timer, Events, Stage, Interface, Component, Canvas, CanvasGraphics, Dev
     Assets, AssetLoader, FontLoader, StateDispatcher, TweenManager, Interpolation, Storage, Vector2, WebAudio, Shader } from '../alien.js/src/Alien.js';
 
 import vertFluidBasic from './shaders/fluid/basic.vert';
-import fragpass from './shaders/fluid/pass.frag';
-import fragview from './shaders/fluid/view.frag';
+import fragFluidPass from './shaders/fluid/pass.frag';
+import fragFluidView from './shaders/fluid/view.frag';
 
 Config.UI_COLOR = 'white';
 Config.UI_OFFSET = Device.phone ? 10 : 20;
@@ -30,6 +30,7 @@ Config.EXAMPLES = [];
 
 Global.EXAMPLE_INDEX = 0;
 Global.SOUND = true;
+Global.ABOUT_OPEN = false;
 
 Events.START = 'start';
 Events.UI_HIDE = 'ui_hide';
@@ -180,8 +181,8 @@ class AudioController {
                     break;
                 case 'mouse_move':
                     if (water) {
-                        TweenManager.tween(water.gain, { value: params[0] }, 100, 'linear');
-                        //water.gain.value = params[0];
+                        //TweenManager.tween(water.gain, { value: params[0] }, 100, 'linear');
+                        water.gain.value = params[0];
                         water.setPanTo(params[1]);
                         water.playbackRate.value = 0.8 + params[2] / 2.5;
                     }
@@ -1487,6 +1488,7 @@ class UI extends Interface {
         }
 
         function openAbout() {
+            Global.ABOUT_OPEN = true;
             about = self.initClass(About);
             bg.tween({ opacity: 0.85 }, 2000, 'easeOutSine');
             about.animateIn();
@@ -1498,6 +1500,7 @@ class UI extends Interface {
             bg.hit.hide();
             if (about) about.animateOut(() => {
                 if (about) about = about.destroy();
+                Global.ABOUT_OPEN = false;
             });
             bg.tween({ opacity: 0 }, 1000, 'easeOutSine');
             if (Global.SOUND) AudioController.trigger('fluid_section');
@@ -1540,7 +1543,7 @@ class Fluid extends Component {
             prevX: 0,
             prevY: 0
         };
-        let renderer, camera, buffer0, buffer1, pass, view, passScene, viewScene;
+        let renderer, camera, buffer0, buffer1, pass, view, passScene, viewScene, passMesh, viewMesh;
 
         initRenderer();
         initFramebuffers();
@@ -1571,15 +1574,8 @@ class Fluid extends Component {
             buffer1 = new THREE.WebGLRenderTarget(width, height, params);
         }
 
-        function createScene(material) {
-            const scene = new THREE.Scene(),
-                mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), material);
-            scene.add(mesh);
-            return scene;
-        }
-
         function initShaders() {
-            pass = self.initClass(Shader, vertFluidBasic, fragpass, {
+            pass = self.initClass(Shader, vertFluidBasic, fragFluidPass, {
                 time: World.time,
                 frame: World.frame,
                 resolution: World.resolution,
@@ -1588,15 +1584,17 @@ class Fluid extends Component {
                 strength: { value: new THREE.Vector2(50, 0) },
                 texture: { value: buffer0.texture }
             });
-            passScene = createScene(pass.material);
-            view = self.initClass(Shader, vertFluidBasic, fragview, {
+            passScene = new THREE.Scene();
+            passMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), pass.material);
+            passScene.add(passMesh);
+            view = self.initClass(Shader, vertFluidBasic, fragFluidView, {
                 time: World.time,
-                frame: World.frame,
                 resolution: World.resolution,
-                mouse: { value: Mouse.inverseNormal },
                 texture: { value: buffer0.texture }
             });
-            viewScene = createScene(view.material);
+            viewScene = new THREE.Scene();
+            viewMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), view.material);
+            viewScene.add(viewMesh);
         }
 
         function updateShaders() {
@@ -1660,6 +1658,16 @@ class Fluid extends Component {
         this.destroy = () => {
             if (buffer0) buffer0.dispose();
             if (buffer1) buffer1.dispose();
+            viewScene.remove(viewMesh);
+            viewMesh.geometry.dispose();
+            viewMesh.material.dispose();
+            passScene.remove(passMesh);
+            passMesh.geometry.dispose();
+            passMesh.material.dispose();
+            viewMesh = null;
+            passMesh = null;
+            viewScene = null;
+            passScene = null;
             return super.destroy();
         };
     }
@@ -2079,8 +2087,12 @@ class Main {
         }
 
         function visibility(e) {
-            if (e.type === 'blur') WebAudio.mute();
-            else if (Global.SOUND) WebAudio.unmute();
+            if (e.type === 'blur') {
+                WebAudio.mute();
+            } else if (Global.SOUND) {
+                if (!Global.ABOUT_OPEN) WebAudio.unmute();
+                else AudioController.trigger('about_section');
+            }
         }
     }
 }

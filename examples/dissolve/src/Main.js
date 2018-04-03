@@ -119,8 +119,8 @@ class Space extends Component {
         initTextures();
 
         function initTextures() {
-            img1 = Assets.createImage('assets/images/NGC_1672_1920px.jpg');
-            img2 = Assets.createImage('assets/images/Orion_Nebula_1920px.jpg');
+            img1 = Assets.createImage('assets/images/Orion_Nebula_1920px.jpg');
+            img2 = Assets.createImage('assets/images/NGC_1672_1920px.jpg');
             Promise.all([Assets.loadImage(img1), Assets.loadImage(img2)]).then(finishSetup);
         }
 
