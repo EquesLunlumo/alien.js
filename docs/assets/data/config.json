@@ -47,6 +47,11 @@
       "description": "pinhole"
     },
     {
+      "slug": "mask",
+      "title": "mask",
+      "description": "levels transition"
+    },
+    {
       "slug": "noise_warp",
       "title": "noise warp",
       "description": ""
@@ -75,6 +80,11 @@
       "slug": "glitch_displace",
       "title": "glitch displace",
       "description": ""
+    },
+    {
+      "slug": "melt",
+      "title": "melt",
+      "description": "feedback buffer"
     }
   ]
 }

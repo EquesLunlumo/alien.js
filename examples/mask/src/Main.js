@@ -6,18 +6,23 @@
 
 /* global THREE */
 
-import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Interaction, Mouse, Utils, AssetLoader, FontLoader, TweenManager, Shader } from '../alien.js/src/Alien.js';
+import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Interaction, Mouse, Utils,
+    Assets, AssetLoader, FontLoader, TweenManager, Shader, Effects } from '../alien.js/src/Alien.js';
 
 import vertBasicShader from './shaders/basic_shader.vert';
 import fragBasicShader from './shaders/basic_shader.frag';
-import vertColourBeam from './shaders/colour_beam.vert';
-import fragColourBeam from './shaders/colour_beam.frag';
+import vertBasicPass from './shaders/basic_pass.vert';
+import fragMask from './shaders/mask.frag';
 
 Config.UI_COLOR = 'white';
 
 Config.ASSETS = [
-    'assets/js/lib/three.min.js'
+    'assets/js/lib/three.min.js',
+    'assets/images/HubblePAO_1920px.jpg',
+    'assets/images/mask.jpg'
 ];
+
+Assets.CORS = 'Anonymous';
 
 
 class TitleTexture extends Component {
@@ -42,7 +47,7 @@ class TitleTexture extends Component {
                 canvas.remove(text);
                 text = text.destroy();
             }
-            text = CanvasFont.createText(canvas, Stage.width, Stage.height, 'Colour Beam'.toUpperCase(), `200 ${Device.phone ? 28 : 66}px Oswald`, Config.UI_COLOR, {
+            text = CanvasFont.createText(canvas, Stage.width, Stage.height, 'Mask'.toUpperCase(), `200 ${Device.phone ? 28 : 66}px Oswald`, Config.UI_COLOR, {
                 lineHeight: Device.phone ? 35 : 80,
                 letterSpacing: 0,
                 textAlign: 'center'
@@ -71,6 +76,7 @@ class Title extends Component {
 
         function initCanvasTexture() {
             title = self.initClass(TitleTexture);
+            self.texture = title.texture;
         }
 
         function initMesh() {
@@ -99,30 +105,38 @@ class Title extends Component {
     }
 }
 
-class ColourBeam extends Component {
+class Space extends Component {
 
     constructor() {
         super();
         const self = this;
         this.object3D = new THREE.Object3D();
-        let shader, mesh, title,
-            beamWidth = 40;
+        const ratio = 1920 / 1080;
+        let img, texture, shader, mesh, title;
 
         World.scene.add(this.object3D);
 
-        initMesh();
-        initTitle();
-        addListeners();
+        function initTextures() {
+            img = Assets.createImage('assets/images/HubblePAO_1920px.jpg');
+            return Assets.loadImage(img).then(finishSetup);
+        }
+
+        function finishSetup() {
+            texture = new THREE.Texture(img);
+            texture.minFilter = THREE.LinearFilter;
+            texture.needsUpdate = true;
+            initMesh();
+            initTitle();
+            addListeners();
+        }
 
         function initMesh() {
             self.object3D.visible = false;
-            shader = self.initClass(Shader, vertColourBeam, fragColourBeam, {
+            shader = self.initClass(Shader, vertBasicShader, fragBasicShader, {
                 time: World.time,
                 resolution: World.resolution,
-                mouse: { value: Mouse.inverseNormal },
-                radius: { value: 0 },
-                beam: { value: 0 },
-                beamWidth: { value: beamWidth },
+                texture: { value: texture },
+                opacity: { value: 0 },
                 depthWrite: false,
                 depthTest: false
             });
@@ -136,37 +150,23 @@ class ColourBeam extends Component {
 
         function addListeners() {
             self.events.add(Events.RESIZE, resize);
-            self.events.add(Mouse.input, Interaction.START, down);
-            self.events.add(Mouse.input, Interaction.END, up);
-            up();
             resize();
         }
 
-        function down() {
-            beamWidth = 1.2;
-        }
-
-        function up() {
-            beamWidth = 40;
-        }
-
         function resize() {
-            mesh.scale.set(Stage.width, Stage.height, 1);
+            if (Stage.width / Stage.height > ratio) mesh.scale.set(Stage.width, Stage.width / ratio, 1);
+            else mesh.scale.set(Stage.height * ratio, Stage.height, 1);
             title.update();
         }
 
-        function loop() {
-            if (!self.object3D.visible) return;
-            shader.uniforms.beamWidth.value += (beamWidth - shader.uniforms.beamWidth.value) * 0.3;
-        }
-
         this.animateIn = () => {
-            this.startRender(loop);
-            this.object3D.visible = true;
-            shader.uniforms.beam.value = 0;
-            TweenManager.tween(shader.uniforms.beam, { value: 1 }, 1000, 'easeOutSine');
+            self.object3D.visible = true;
+            shader.uniforms.opacity.value = 0;
+            TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutCubic');
             title.animateIn();
         };
+
+        this.ready = initTextures;
     }
 }
 
@@ -185,13 +185,13 @@ class World extends Component {
     constructor() {
         super();
         const self = this;
-        let renderer, scene, camera;
+        let maskimg, mask, renderer, scene, camera, shader, effects,
+            opacity = 0;
 
         World.dpr = Math.min(2, Device.pixelRatio);
 
         initWorld();
         addListeners();
-        this.startRender(loop);
 
         function initWorld() {
             renderer = new THREE.WebGLRenderer({ powerPreference: 'high-performance' });
@@ -202,13 +202,53 @@ class World extends Component {
             World.renderer = renderer;
             World.element = renderer.domElement;
             World.camera = camera;
+            World.shader = shader;
+            World.effects = effects;
             World.time = { value: 0 };
             World.resolution = { value: new THREE.Vector2(Stage.width * World.dpr, Stage.height * World.dpr) };
+            shader = self.initClass(Shader, vertBasicPass, fragMask, {
+                time: World.time,
+                texture: { type: 't', value: null },
+                mask: { type: 't', value: null },
+                opacity: { value: opacity },
+                depthWrite: false,
+                depthTest: false
+            });
+            effects = self.initClass(Effects, Stage, {
+                renderer,
+                scene,
+                camera,
+                shader,
+                dpr: World.dpr
+            });
+        }
+
+        function initTextures() {
+            maskimg = Assets.createImage('assets/images/mask.jpg');
+            return Assets.loadImage(maskimg).then(finishSetup);
+        }
+
+        function finishSetup() {
+            mask = new THREE.Texture(maskimg);
+            mask.minFilter = THREE.LinearFilter;
+            mask.needsUpdate = true;
+            shader.set('mask', mask);
         }
 
         function addListeners() {
             self.events.add(Events.RESIZE, resize);
+            self.events.add(Mouse.input, Interaction.START, down);
+            self.events.add(Mouse.input, Interaction.END, up);
+            up();
             resize();
+        }
+
+        function down() {
+            opacity = 0;
+        }
+
+        function up() {
+            opacity = 1;
         }
 
         function resize() {
@@ -223,8 +263,19 @@ class World extends Component {
 
         function loop(t, delta) {
             World.time.value += delta * 0.001;
-            renderer.render(scene, camera);
+            effects.render();
+            shader.uniforms.opacity.value += (opacity - shader.uniforms.opacity.value) * 0.3;
         }
+
+        this.animateIn = () => {
+            this.startRender(loop);
+            shader.uniforms.opacity.value = 0;
+            TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 7000, 'easeOutSine');
+            //shader.set('opacity', 0);
+            //shader.tween('opacity', 1, 3000, 'easeInOutSine');
+        };
+
+        this.ready = initTextures;
 
         this.destroy = () => {
             for (let i = scene.children.length - 1; i >= 0; i--) {
@@ -265,7 +316,7 @@ class Progress extends Interface {
         }
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, size, true);
+            canvas = self.initClass(Canvas, size);
         }
 
         function initCircle() {
@@ -352,7 +403,7 @@ class Loader extends Interface {
 class Main {
 
     constructor() {
-        let loader, beam;
+        let loader, space;
 
         initStage();
         initLoader();
@@ -386,8 +437,14 @@ class Main {
             World.instance();
             Stage.add(World);
 
-            beam = Stage.initClass(ColourBeam);
-            beam.animateIn();
+            space = Stage.initClass(Space);
+            Promise.all([
+                World.instance().ready(),
+                space.ready()
+            ]).then(() => {
+                space.animateIn();
+                World.instance().animateIn();
+            });
         }
     }
 }

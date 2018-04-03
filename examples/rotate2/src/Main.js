@@ -190,6 +190,7 @@ class Space extends Component {
             }
             initMesh();
             initTitle();
+            addListeners();
         }
 
         function initMesh() {
@@ -223,7 +224,6 @@ class Space extends Component {
         }
 
         this.animateIn = () => {
-            addListeners();
             this.object3D.visible = true;
             shader.uniforms.opacity.value = 0;
             TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutCubic');
@@ -255,6 +255,7 @@ class World extends Component {
         World.dpr = Math.min(2, Device.pixelRatio);
 
         initWorld();
+        addListeners();
 
         function initWorld() {
             renderer = new THREE.WebGLRenderer({ powerPreference: 'high-performance' });
@@ -320,7 +321,6 @@ class World extends Component {
         }
 
         this.animateIn = () => {
-            addListeners();
             this.startRender(loop);
             shader.uniforms.beam.value = 0;
             TweenManager.tween(shader.uniforms.beam, { value: 1 }, 1000, 'easeOutSine');

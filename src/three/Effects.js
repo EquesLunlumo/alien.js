@@ -21,17 +21,17 @@ class Effects extends Component {
         this.camera = params.camera;
         this.shader = params.shader;
         this.dpr = params.dpr || 1;
-        let renderTarget, camera, scene, mesh;
+        let renderTarget, scene, camera, mesh;
 
-        initRT();
+        initEffects();
         addListeners();
 
-        function initRT() {
+        function initEffects() {
             renderTarget = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
             self.texture = renderTarget.texture;
             self.texture.minFilter = THREE.LinearFilter;
-            camera = new THREE.OrthographicCamera(self.stage.width / -2, self.stage.width / 2, self.stage.height / 2, self.stage.height / -2, 1, 1000);
             scene = new THREE.Scene();
+            camera = new THREE.OrthographicCamera(self.stage.width / -2, self.stage.width / 2, self.stage.height / 2, self.stage.height / -2, 1, 1000);
             mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), self.shader.material);
             scene.add(mesh);
         }

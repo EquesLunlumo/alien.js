@@ -1546,7 +1546,6 @@ class Fluid extends Component {
         initFramebuffers();
         initShaders();
         addListeners();
-        defer(loop);
 
         function initRenderer() {
             renderer = World.renderer;
@@ -1605,26 +1604,6 @@ class Fluid extends Component {
             view.uniforms.texture.value = buffer0.texture;
         }
 
-        function loop() {
-            const deltaX = pointer.currentX - pointer.prevX,
-                deltaY = pointer.currentY - pointer.prevY;
-            pointer.prevX = pointer.currentX;
-            pointer.prevY = pointer.currentY;
-            pass.uniforms.velocity.value.x = deltaX;
-            pass.uniforms.velocity.value.y = deltaY;
-            const distance = Math.min(10, Math.sqrt(deltaX * deltaX + deltaY * deltaY)) / 10;
-            pass.uniforms.strength.value.x = !pointer.isMove || pointer.isDown ? 50 : 50 * distance;
-            pass.uniforms.strength.value.y = 50 * distance;
-            pass.uniforms.texture.value = buffer0.texture;
-            renderer.render(passScene, camera, buffer1);
-            const buffer = buffer0;
-            buffer0 = buffer1;
-            buffer1 = buffer;
-            renderer.render(viewScene, camera);
-            AudioController.updatePosition();
-            World.frame.value++;
-        }
-
         function addListeners() {
             self.events.add(Events.RESIZE, resize);
             self.events.add(Mouse.input, Interaction.START, down);
@@ -1651,6 +1630,26 @@ class Fluid extends Component {
 
         function up() {
             pointer.isDown = false;
+        }
+
+        function loop() {
+            const deltaX = pointer.currentX - pointer.prevX,
+                deltaY = pointer.currentY - pointer.prevY;
+            pointer.prevX = pointer.currentX;
+            pointer.prevY = pointer.currentY;
+            pass.uniforms.velocity.value.x = deltaX;
+            pass.uniforms.velocity.value.y = deltaY;
+            const distance = Math.min(10, Math.sqrt(deltaX * deltaX + deltaY * deltaY)) / 10;
+            pass.uniforms.strength.value.x = !pointer.isMove || pointer.isDown ? 50 : 50 * distance;
+            pass.uniforms.strength.value.y = 50 * distance;
+            pass.uniforms.texture.value = buffer0.texture;
+            renderer.render(passScene, camera, buffer1);
+            const buffer = buffer0;
+            buffer0 = buffer1;
+            buffer1 = buffer;
+            renderer.render(viewScene, camera);
+            AudioController.updatePosition();
+            World.frame.value++;
         }
 
         this.animateIn = () => {
@@ -1681,7 +1680,7 @@ class World extends Component {
     constructor() {
         super();
         const self = this;
-        let renderer, scene, camera;
+        let renderer, camera;
 
         World.dpr = 1;
 
@@ -1692,9 +1691,7 @@ class World extends Component {
         function initWorld() {
             renderer = new THREE.WebGLRenderer({ powerPreference: 'high-performance' });
             renderer.setPixelRatio(World.dpr);
-            scene = new THREE.Scene();
             camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-            World.scene = scene;
             World.renderer = renderer;
             World.element = renderer.domElement;
             World.camera = camera;
@@ -1718,18 +1715,11 @@ class World extends Component {
         }
 
         this.destroy = () => {
-            for (let i = scene.children.length - 1; i >= 0; i--) {
-                const object = scene.children[i];
-                scene.remove(object);
-                if (object.geometry) object.geometry.dispose();
-                if (object.material) object.material.dispose();
-            }
             renderer.dispose();
             renderer.forceContextLoss();
             renderer.context = null;
             renderer.domElement = null;
             camera = null;
-            scene = null;
             renderer = null;
             Stage.remove(World.element);
             return super.destroy();

@@ -6,18 +6,23 @@
 
 /* global THREE */
 
-import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Interaction, Mouse, Utils, AssetLoader, FontLoader, TweenManager, Shader } from '../alien.js/src/Alien.js';
+import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Mouse, Utils,
+    Assets, AssetLoader, FontLoader, TweenManager, Utils3D, Shader } from '../alien.js/src/Alien.js';
 
 import vertBasicShader from './shaders/basic_shader.vert';
 import fragBasicShader from './shaders/basic_shader.frag';
-import vertColourBeam from './shaders/colour_beam.vert';
-import fragColourBeam from './shaders/colour_beam.frag';
+import vertMeltBasic from './shaders/melt/basic.vert';
+import fragMeltPass from './shaders/melt/pass.frag';
+import fragMeltView from './shaders/melt/view.frag';
 
 Config.UI_COLOR = 'white';
 
 Config.ASSETS = [
-    'assets/js/lib/three.min.js'
+    'assets/js/lib/three.min.js',
+    'assets/images/HubblePAO_1920px.jpg'
 ];
+
+Assets.CORS = 'Anonymous';
 
 
 class TitleTexture extends Component {
@@ -42,7 +47,7 @@ class TitleTexture extends Component {
                 canvas.remove(text);
                 text = text.destroy();
             }
-            text = CanvasFont.createText(canvas, Stage.width, Stage.height, 'Colour Beam'.toUpperCase(), `200 ${Device.phone ? 28 : 66}px Oswald`, Config.UI_COLOR, {
+            text = CanvasFont.createText(canvas, Stage.width, Stage.height, 'Melt'.toUpperCase(), `200 ${Device.phone ? 28 : 66}px Oswald`, Config.UI_COLOR, {
                 lineHeight: Device.phone ? 35 : 80,
                 letterSpacing: 0,
                 textAlign: 'center'
@@ -71,6 +76,7 @@ class Title extends Component {
 
         function initCanvasTexture() {
             title = self.initClass(TitleTexture);
+            self.texture = title.texture;
         }
 
         function initMesh() {
@@ -99,30 +105,38 @@ class Title extends Component {
     }
 }
 
-class ColourBeam extends Component {
+class Space extends Component {
 
     constructor() {
         super();
         const self = this;
         this.object3D = new THREE.Object3D();
-        let shader, mesh, title,
-            beamWidth = 40;
+        const ratio = 1920 / 1080;
+        let img, texture, shader, mesh, title;
 
         World.scene.add(this.object3D);
 
-        initMesh();
-        initTitle();
-        addListeners();
+        function initTextures() {
+            img = Assets.createImage('assets/images/HubblePAO_1920px.jpg');
+            return Assets.loadImage(img).then(finishSetup);
+        }
+
+        function finishSetup() {
+            texture = new THREE.Texture(img);
+            texture.minFilter = THREE.LinearFilter;
+            texture.needsUpdate = true;
+            initMesh();
+            initTitle();
+            addListeners();
+        }
 
         function initMesh() {
             self.object3D.visible = false;
-            shader = self.initClass(Shader, vertColourBeam, fragColourBeam, {
+            shader = self.initClass(Shader, vertBasicShader, fragBasicShader, {
                 time: World.time,
                 resolution: World.resolution,
-                mouse: { value: Mouse.inverseNormal },
-                radius: { value: 0 },
-                beam: { value: 0 },
-                beamWidth: { value: beamWidth },
+                texture: { value: texture },
+                opacity: { value: 0 },
                 depthWrite: false,
                 depthTest: false
             });
@@ -136,37 +150,23 @@ class ColourBeam extends Component {
 
         function addListeners() {
             self.events.add(Events.RESIZE, resize);
-            self.events.add(Mouse.input, Interaction.START, down);
-            self.events.add(Mouse.input, Interaction.END, up);
-            up();
             resize();
         }
 
-        function down() {
-            beamWidth = 1.2;
-        }
-
-        function up() {
-            beamWidth = 40;
-        }
-
         function resize() {
-            mesh.scale.set(Stage.width, Stage.height, 1);
+            if (Stage.width / Stage.height > ratio) mesh.scale.set(Stage.width, Stage.width / ratio, 1);
+            else mesh.scale.set(Stage.height * ratio, Stage.height, 1);
             title.update();
         }
 
-        function loop() {
-            if (!self.object3D.visible) return;
-            shader.uniforms.beamWidth.value += (beamWidth - shader.uniforms.beamWidth.value) * 0.3;
-        }
-
         this.animateIn = () => {
-            this.startRender(loop);
-            this.object3D.visible = true;
-            shader.uniforms.beam.value = 0;
-            TweenManager.tween(shader.uniforms.beam, { value: 1 }, 1000, 'easeOutSine');
+            self.object3D.visible = true;
+            shader.uniforms.opacity.value = 0;
+            TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutCubic');
             title.animateIn();
         };
+
+        this.ready = initTextures;
     }
 }
 
@@ -185,48 +185,120 @@ class World extends Component {
     constructor() {
         super();
         const self = this;
-        let renderer, scene, camera;
+        let renderer, scene, camera, renderTarget, buffer0, buffer1, pass, view, passScene, viewScene, passMesh, viewMesh;
 
         World.dpr = Math.min(2, Device.pixelRatio);
 
         initWorld();
+        initFramebuffers();
+        initShaders();
         addListeners();
-        this.startRender(loop);
 
         function initWorld() {
             renderer = new THREE.WebGLRenderer({ powerPreference: 'high-performance' });
+            renderer.setSize(Stage.width, Stage.height);
             renderer.setPixelRatio(World.dpr);
             scene = new THREE.Scene();
-            camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+            camera = new THREE.OrthographicCamera(-Stage.width / 2, Stage.width / 2, Stage.height / 2, -Stage.height / 2, 0, 1);
+            renderTarget = Utils3D.createRT(Stage.width * World.dpr, Stage.height * World.dpr);
             World.scene = scene;
             World.renderer = renderer;
             World.element = renderer.domElement;
             World.camera = camera;
             World.time = { value: 0 };
+            World.frame = { value: 0 };
             World.resolution = { value: new THREE.Vector2(Stage.width * World.dpr, Stage.height * World.dpr) };
+        }
+
+        function initFramebuffers() {
+            const params = {
+                    minFilter: THREE.LinearFilter,
+                    magFilter: THREE.LinearFilter,
+                    wrapS: THREE.ClampToEdgeWrapping,
+                    wrapT: THREE.ClampToEdgeWrapping,
+                    format: THREE.RGBAFormat,
+                    type: Device.os === 'ios' ? THREE.HalfFloatType : THREE.FloatType,
+                    depthBuffer: false,
+                    stencilBuffer: false
+                },
+                width = Stage.width * World.dpr,
+                height = Stage.height * World.dpr;
+            if (buffer0) buffer0.dispose();
+            if (buffer1) buffer1.dispose();
+            buffer0 = new THREE.WebGLRenderTarget(width, height, params);
+            buffer1 = new THREE.WebGLRenderTarget(width, height, params);
+        }
+
+        function initShaders() {
+            pass = self.initClass(Shader, vertMeltBasic, fragMeltPass, {
+                time: World.time,
+                frame: World.frame,
+                resolution: World.resolution,
+                texture1: { value: buffer0.texture },
+                texture2: { value: renderTarget.texture }
+            });
+            passScene = new THREE.Scene();
+            passMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), pass.material);
+            passMesh.scale.set(Stage.width, Stage.height, 1);
+            passScene.add(passMesh);
+            view = self.initClass(Shader, vertMeltBasic, fragMeltView, {
+                time: World.time,
+                resolution: World.resolution,
+                texture: { value: buffer0.texture }
+            });
+            viewScene = new THREE.Scene();
+            viewMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), view.material);
+            viewMesh.scale.set(Stage.width, Stage.height, 1);
+            viewScene.add(viewMesh);
+        }
+
+        function updateShaders() {
+            pass.uniforms.texture2.value = renderTarget.texture;
+            pass.uniforms.texture1.value = buffer0.texture;
+            view.uniforms.texture.value = buffer0.texture;
         }
 
         function addListeners() {
             self.events.add(Events.RESIZE, resize);
-            resize();
         }
 
         function resize() {
             renderer.setSize(Stage.width, Stage.height);
+            renderTarget.dispose();
+            renderTarget = Utils3D.createRT(Stage.width * World.dpr, Stage.height * World.dpr);
             camera.left = -Stage.width / 2;
             camera.right = Stage.width / 2;
             camera.top = Stage.height / 2;
             camera.bottom = -Stage.height / 2;
             camera.updateProjectionMatrix();
+            initFramebuffers();
+            updateShaders();
+            passMesh.scale.set(Stage.width, Stage.height, 1);
+            viewMesh.scale.set(Stage.width, Stage.height, 1);
+            World.frame.value = 0;
             World.resolution.value.set(Stage.width * World.dpr, Stage.height * World.dpr);
         }
 
         function loop(t, delta) {
             World.time.value += delta * 0.001;
-            renderer.render(scene, camera);
+            renderer.render(scene, camera, renderTarget, true);
+            pass.uniforms.texture2.value = renderTarget.texture;
+            pass.uniforms.texture1.value = buffer0.texture;
+            renderer.render(passScene, camera, buffer1);
+            const buffer = buffer0;
+            buffer0 = buffer1;
+            buffer1 = buffer;
+            renderer.render(viewScene, camera);
+            World.frame.value++;
         }
 
+        this.animateIn = () => {
+            this.startRender(loop);
+        };
+
         this.destroy = () => {
+            if (buffer0) buffer0.dispose();
+            if (buffer1) buffer1.dispose();
             for (let i = scene.children.length - 1; i >= 0; i--) {
                 const object = scene.children[i];
                 scene.remove(object);
@@ -265,7 +337,7 @@ class Progress extends Interface {
         }
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, size, true);
+            canvas = self.initClass(Canvas, size);
         }
 
         function initCircle() {
@@ -352,7 +424,7 @@ class Loader extends Interface {
 class Main {
 
     constructor() {
-        let loader, beam;
+        let loader, space;
 
         initStage();
         initLoader();
@@ -386,8 +458,11 @@ class Main {
             World.instance();
             Stage.add(World);
 
-            beam = Stage.initClass(ColourBeam);
-            beam.animateIn();
+            space = Stage.initClass(Space);
+            space.ready().then(() => {
+                space.animateIn();
+                World.instance().animateIn();
+            });
         }
     }
 }

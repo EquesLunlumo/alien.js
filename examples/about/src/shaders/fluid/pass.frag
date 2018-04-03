@@ -17,13 +17,12 @@ uniform sampler2D texture;
 #define kappa 0.1
 
 void main() {
-    vec2 p = gl_FragCoord.xy;
-
     if (frame < 10) {
         gl_FragColor = vec4(0, 0, 1, 0);
         return;
     }
 
+    vec2 p = gl_FragCoord.xy;
     vec4 color = T(p);
 
     vec4 n = T(p + vec2(0, 1));

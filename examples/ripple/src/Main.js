@@ -73,6 +73,7 @@ class Title extends Component {
 
         initCanvasTexture();
         initMesh();
+        addListeners();
 
         function initCanvasTexture() {
             title = self.initClass(TitleTexture);
@@ -122,7 +123,6 @@ class Title extends Component {
         };
 
         this.animateIn = () => {
-            addListeners();
             this.startRender(loop);
             this.object3D.visible = true;
             shader.uniforms.opacity.value = 0;

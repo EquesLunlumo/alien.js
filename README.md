@@ -36,12 +36,14 @@ glslify [shader](https://rawgit.com/pschroen/alien.js/master/examples/shader/dis
 [chromatic aberration 2](https://rawgit.com/pschroen/alien.js/master/examples/chromatic_aberration2/dist/) (barrel distortion)  
 [rotate](https://rawgit.com/pschroen/alien.js/master/examples/rotate/dist/)  
 [rotate 2](https://rawgit.com/pschroen/alien.js/master/examples/rotate2/dist/) (pinhole)  
+[mask](https://rawgit.com/pschroen/alien.js/master/examples/mask/dist/) (levels transition)  
 [noise warp](https://rawgit.com/pschroen/alien.js/master/examples/noise_warp/dist/)  
 [noise dizzy](https://rawgit.com/pschroen/alien.js/master/examples/noise_dizzy/dist/)  
 [directional warp](https://rawgit.com/pschroen/alien.js/master/examples/directional_warp/dist/)  
 [directional warp 2](https://rawgit.com/pschroen/alien.js/master/examples/directional_warp2/dist/) (scroll transition)  
 [ripple](https://rawgit.com/pschroen/alien.js/master/examples/ripple/dist/)  
-[glitch displace](https://rawgit.com/pschroen/alien.js/master/examples/glitch_displace/dist/)
+[glitch displace](https://rawgit.com/pschroen/alien.js/master/examples/glitch_displace/dist/)  
+[melt](https://rawgit.com/pschroen/alien.js/master/examples/melt/dist/) (feedback buffer)
 
 ### Example `Interface` design pattern
 
@@ -243,7 +245,8 @@ npm run build
 
 ### Inspiration
 
-* Active Theory's [Finding Love Shaders](https://github.com/activetheory/Finding-Love-Shaders)
+* Active Theory's [GitHub](https://github.com/activetheory)
+* Active Theory's [gists](https://gist.github.com/activetheory)
 * Active Theory's [Mira](https://medium.com/@activetheory/mira-exploring-the-potential-of-the-future-web-e1f7f326d58e)
 * [Active Theory](https://activetheory.net/)
 * [ECMAScript modules in browsers](https://jakearchibald.com/2017/es-modules-in-browsers/)

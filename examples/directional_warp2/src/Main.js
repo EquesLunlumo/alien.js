@@ -281,7 +281,7 @@ class Space extends Component {
                 playing2 = false;
             }
             setTexture1();
-            if (video1 !== video2) setTexture2();
+            setTexture2();
         }
 
         function unsetTextures(t1, t2) {

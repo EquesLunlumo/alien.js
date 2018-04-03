@@ -125,6 +125,7 @@ class Space extends Component {
             texture.needsUpdate = true;
             initMesh();
             initTitle();
+            addListeners();
         }
 
         function initMesh() {
@@ -157,7 +158,6 @@ class Space extends Component {
         }
 
         this.animateIn = () => {
-            addListeners();
             self.object3D.visible = true;
             shader.uniforms.opacity.value = 0;
             TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutCubic');
