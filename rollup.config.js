@@ -1,6 +1,6 @@
 import { timestamp, unexport, babel, uglify } from 'rollup-plugin-bundleutils';
 
-let pkg = require('./package.json');
+const pkg = require('./package.json');
 
 export default {
     input: 'src/Alien.js',

@@ -6,7 +6,7 @@ import eslint from 'rollup-plugin-eslint';
 import path from 'path';
 import replace from 'replace';
 
-let pkg = require('./alien.js/package.json'),
+const pkg = require('./alien.js/package.json'),
     project = path.basename(__dirname);
 
 replace({
