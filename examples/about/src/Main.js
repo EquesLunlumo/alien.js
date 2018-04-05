@@ -181,10 +181,10 @@ class AudioController {
                     break;
                 case 'mouse_move':
                     if (water) {
-                        //TweenManager.tween(water.gain, { value: params[0] }, 100, 'linear');
-                        water.gain.value = params[0];
-                        water.setPanTo(params[1]);
-                        water.playbackRate.value = 0.8 + params[2] / 2.5;
+                        TweenManager.tween(water.gain, { value: Math.clamp(params[0], 0, 1) }, 100, 'linear');
+                        //water.gain.value = Math.clamp(params[0], 0, 1);
+                        water.setPanTo(Math.clamp(params[1], -1, 1));
+                        water.playbackRate.value = Math.clamp(0.8 + params[2] / 2.5, 0.8, 1.2);
                     }
                     break;
                 case 'about_section':
@@ -548,6 +548,7 @@ class MuteButton extends Interface {
         }
 
         function hover(e) {
+            if (!this.enabled) return;
             TweenManager.clearTween(data);
             self.needsUpdate = true;
             if (e.action === 'over') TweenManager.tween(data, { yMultiplier: Global.SOUND ? 0.75 : 0.25 }, 275, 'easeInOutCubic', () => self.needsUpdate = false);
