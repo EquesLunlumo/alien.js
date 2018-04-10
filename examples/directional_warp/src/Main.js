@@ -51,7 +51,7 @@ class TitleTexture extends Component {
                 letterSpacing: 0,
                 textAlign: 'center'
             });
-            const offset = Device.phone ? 55 : 124;
+            const offset = Device.phone ? 55 : 120;
             text.y = (Stage.height - text.totalHeight + offset) / 2;
             canvas.add(text);
             canvas.render();

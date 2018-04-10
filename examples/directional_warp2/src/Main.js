@@ -90,8 +90,8 @@ class TitleTexture extends Component {
                 });
                 text.add(text2);
                 const margin = Device.phone ? 10 : 18,
-                    offset = Device.phone ? 50 : 124;
-                text2.y = margin + text2.totalHeight;
+                    offset = Device.phone ? 50 : 120;
+                text2.y = text2.totalHeight + margin;
                 text.y = (Stage.height - (text.totalHeight + margin + text2.totalHeight) + offset) / 2;
                 canvas.add(text);
                 canvas.render();

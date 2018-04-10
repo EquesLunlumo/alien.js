@@ -242,11 +242,11 @@ class About extends Interface {
                 left: 350,
                 top: 200,
                 fontWeight: '400',
-                lineHeight: 25,
-                letterSpacing: 12 * 0.03,
+                lineHeight: 11 * 1.7,
+                letterSpacing: 11 * 0.03,
                 opacity: 0.35
             });
-            description.text(Config.ABOUT_COPY);
+            description.html(Config.ABOUT_COPY);
             texts.push(description);
             ['Source code', 'Inspiration'].forEach((text, i) => {
                 const link = self.create('.link');
@@ -1391,10 +1391,10 @@ class UI extends Interface {
         initViews();
         initBackground();
         addListeners();
-        Stage.add(this);
         this.startRender(loop);
 
         function initHTML() {
+            Stage.add(self);
             self.size('100%').mouseEnabled(false);
             self.css({
                 left: 0,
@@ -1941,12 +1941,12 @@ class Main {
 
         WebAudio.init();
 
-        initData();
+        initSound();
         initStage();
         initLoader();
         addListeners();
 
-        function initData() {
+        function initSound() {
             const sound = Storage.get('sound');
             Global.SOUND = typeof sound === 'boolean' ? sound : true;
             if (!Global.SOUND) WebAudio.mute();
