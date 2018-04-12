@@ -17,8 +17,8 @@ class Events {
                 this.links = [];
             }
 
-            add(event, callback, object, target) {
-                this.events.push({ event, callback, object, target });
+            add(event, callback, object) {
+                this.events.push({ event, callback, object });
             }
 
             remove(event, callback) {
@@ -35,7 +35,6 @@ class Events {
                 const clone = Utils.cloneArray(this.events);
                 for (let i = 0; i < clone.length; i++) {
                     if (clone[i].event === event && !clone[i].removed) {
-                        if (clone[i].target && object && typeof object === 'object') object.target = object.target || clone[i].target;
                         clone[i].callback(object);
                         called = true;
                     }
@@ -84,7 +83,7 @@ class Events {
                 Events.emitter.add(event, callback, this);
             } else {
                 const emitter = object.events.emitter;
-                emitter.add(event, callback, this, object);
+                emitter.add(event, callback, this);
                 emitter.link(this);
                 linked.push(emitter);
             }
