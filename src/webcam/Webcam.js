@@ -149,6 +149,7 @@ class Webcam extends Component {
         };
 
         this.destroy = () => {
+            URL.revokeObjectURL(this.element.src);
             this.element.src = '';
             this.object.destroy();
             return super.destroy();

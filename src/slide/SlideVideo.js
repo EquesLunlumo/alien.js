@@ -89,6 +89,7 @@ class SlideVideo extends Component {
                     this.element.removeEventListener('pause', pause, true);
                     this.pause();
                 }
+                URL.revokeObjectURL(this.element.src);
                 this.element.src = '';
             }
             return super.destroy();
