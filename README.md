@@ -46,6 +46,74 @@ glslify [shader](https://rawgit.com/pschroen/alien.js/master/examples/shader/dis
 [glitch displace](https://rawgit.com/pschroen/alien.js/master/examples/glitch_displace/dist/)  
 [melt](https://rawgit.com/pschroen/alien.js/master/examples/melt/dist/) (feedback buffer)
 
+### Example Class structure
+
+```js
+//
+//  Class
+//  │
+//  ├── Decorators
+//  └── Constructor
+//      │
+//      └── Private scope
+//          │
+//          ├── Constants
+//          ├── Variables
+//          ├── Functions
+//          │
+//          └── Public scope
+//              │
+//              ├── Functions
+//              └── Overrides
+//
+
+class About extends Interface {
+
+    constructor() {
+        super('About');
+        const self = this;
+
+        // Private scope
+
+        let wrapper;
+
+        initHTML();
+        addListeners();
+
+        function initHTML() {
+            self.size('100%');
+            wrapper = self.create('.wrapper');
+        }
+
+        function addListeners() {
+            self.events.add(Events.RESIZE, resize);
+            resize();
+        }
+
+        function resize() {
+        }
+
+        // Public scope
+
+        this.update = () => {
+        };
+
+        this.animateIn = callback => {
+        };
+
+        this.animateOut = callback => {
+        };
+
+        // Overrides
+
+        this.destroy = () => {
+            // ...
+            return super.destroy();
+        };
+    }
+}
+```
+
 ### Example `Interface` design pattern
 
 ```js
