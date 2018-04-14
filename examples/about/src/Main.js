@@ -165,6 +165,7 @@ class AudioController {
         }
 
         this.updatePosition = (x = Mouse.x, y = Mouse.y) => {
+            if (!WebAudio.context) return;
             const speed = getMouseSpeed(x / Stage.width, y / Stage.height, 0.96);
             this.trigger('mouse_move', speed, (((x / Stage.width) * 2) - 1) * 0.8, Math.abs(1 - (y / Stage.height)));
         };
@@ -183,7 +184,7 @@ class AudioController {
                     if (water) {
                         TweenManager.tween(water.gain, { value: Math.clamp(params[0], 0, 1) }, 100, 'linear');
                         //water.gain.value = Math.clamp(params[0], 0, 1);
-                        water.setPanTo(Math.clamp(params[1], -1, 1));
+                        water.stereoPan.value = Math.clamp(params[1], -1, 1);
                         water.playbackRate.value = Math.clamp(0.8 + params[2] / 2.5, 0.8, 1.2);
                     }
                     break;

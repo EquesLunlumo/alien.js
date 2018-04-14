@@ -26,6 +26,7 @@ class WebAudio {
                 if (this.stereo) this.stereo.connect(this.output);
                 this.output.connect(WebAudio.output);
                 this.output.gain.setValueAtTime(0, WebAudio.context.currentTime);
+
                 this.gain = {
                     set value(value) {
                         self.volume = value;
@@ -35,6 +36,7 @@ class WebAudio {
                         return self.volume;
                     }
                 };
+
                 this.playbackRate = {
                     set value(value) {
                         self.rate = value;
@@ -44,17 +46,23 @@ class WebAudio {
                         return self.rate;
                     }
                 };
-            }
 
-            setPanTo(value) {
-                if (this.stereo) this.stereo.pan.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
-            }
+                this.stereoPan = {
+                    set value(value) {
+                        self.pan = value;
+                        if (self.stereo) self.stereo.pan.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                    },
+                    get value() {
+                        return self.pan;
+                    }
+                };
 
-            stop() {
-                if (this.source) {
-                    this.source.stop();
-                    this.playing = false;
-                }
+                this.stop = () => {
+                    if (this.source) {
+                        this.source.stop();
+                        this.playing = false;
+                    }
+                };
             }
         }
 
