@@ -7,7 +7,6 @@
 /* global THREE */
 
 import { Component } from '../util/Component.js';
-import { TweenManager } from '../tween/TweenManager.js';
 
 class Shader extends Component {
 
@@ -73,29 +72,6 @@ class Shader extends Component {
             };
             return code.replace(/#s?chunk\(\s?(\w+)\s?\);/g, threeChunk);
         }
-    }
-
-    set(key, value) {
-        TweenManager.clearTween(this.uniforms[key]);
-        this.uniforms[key].value = value;
-    }
-
-    tween(key, value, time, ease, delay, callback, update) {
-        return TweenManager.tween(this.uniforms[key], { value }, time, ease, delay, callback, update);
-    }
-
-    getValues() {
-        const out = {};
-        for (let key in this.uniforms) out[key] = this.uniforms[key].value;
-        return out;
-    }
-
-    copyUniformsTo(object) {
-        for (let key in this.uniforms) object.uniforms[key] = this.uniforms[key];
-    }
-
-    cloneUniformsTo(object) {
-        for (let key in this.uniforms) object.uniforms[key] = { type: this.uniforms[key].type, value: this.uniforms[key].value };
     }
 
     destroy() {

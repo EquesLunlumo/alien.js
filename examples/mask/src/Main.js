@@ -232,7 +232,7 @@ class World extends Component {
             mask = new THREE.Texture(maskimg);
             mask.minFilter = THREE.LinearFilter;
             mask.needsUpdate = true;
-            shader.set('mask', mask);
+            shader.uniforms.mask.value = mask;
         }
 
         function addListeners() {
@@ -271,8 +271,6 @@ class World extends Component {
             this.startRender(loop);
             shader.uniforms.opacity.value = 0;
             TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 7000, 'easeOutSine');
-            //shader.set('opacity', 0);
-            //shader.tween('opacity', 1, 3000, 'easeInOutSine');
         };
 
         this.ready = initTextures;

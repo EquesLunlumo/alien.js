@@ -59,90 +59,90 @@ class TweenManager {
         this.removeMathTween = tween => {
             tweens.remove(tween);
         };
-    }
 
-    static tween(object, props, time, ease, delay, callback, update) {
-        if (typeof delay !== 'number') {
-            update = callback;
-            callback = delay;
-            delay = 0;
-        }
-        let promise = null;
-        if (typeof Promise !== 'undefined') {
-            promise = Promise.create();
-            if (callback) promise.then(callback);
-            callback = promise.resolve;
-        }
-        const tween = new MathTween(object, props, time, ease, delay, update, callback);
-        return promise || tween;
-    }
-
-    static clearTween(object) {
-        if (object.mathTween) object.mathTween.stop();
-        if (object.mathTweens) {
-            const tweens = object.mathTweens;
-            for (let i = tweens.length - 1; i >= 0; i--) {
-                const tween = tweens[i];
-                if (tween) tween.stop();
+        this.tween = (object, props, time, ease, delay, callback, update) => {
+            if (typeof delay !== 'number') {
+                update = callback;
+                callback = delay;
+                delay = 0;
             }
-            object.mathTweens = null;
-        }
-    }
+            let promise = null;
+            if (typeof Promise !== 'undefined') {
+                promise = Promise.create();
+                if (callback) promise.then(callback);
+                callback = promise.resolve;
+            }
+            const tween = new MathTween(object, props, time, ease, delay, update, callback);
+            return promise || tween;
+        };
 
-    static isTransform(key) {
-        return ~this.TRANSFORMS.indexOf(key);
-    }
+        this.clearTween = object => {
+            if (object.mathTween) object.mathTween.stop();
+            if (object.mathTweens) {
+                const tweens = object.mathTweens;
+                for (let i = tweens.length - 1; i >= 0; i--) {
+                    const tween = tweens[i];
+                    if (tween) tween.stop();
+                }
+                object.mathTweens = null;
+            }
+        };
 
-    static getEase(name) {
-        return this.CSS_EASES[name] || this.CSS_EASES.easeOutCubic;
-    }
+        this.isTransform = key => {
+            return ~this.TRANSFORMS.indexOf(key);
+        };
 
-    static getAllTransforms(object) {
-        const obj = {};
-        for (let i = 0; i < this.TRANSFORMS.length; i++) {
-            const key = this.TRANSFORMS[i],
-                val = object[key];
-            if (val !== 0 && typeof val === 'number') obj[key] = val;
-        }
-        return obj;
-    }
+        this.getEase = name => {
+            return this.CSS_EASES[name] || this.CSS_EASES.easeOutCubic;
+        };
 
-    static parseTransform(props) {
-        let transforms = '';
-        if (typeof props.x !== 'undefined' || typeof props.y !== 'undefined' || typeof props.z !== 'undefined') {
-            const x = props.x || 0,
-                y = props.y || 0,
-                z = props.z || 0;
-            let translate = '';
-            translate += x + 'px, ';
-            translate += y + 'px, ';
-            translate += z + 'px';
-            transforms += 'translate3d(' + translate + ')';
-        }
-        if (typeof props.scale !== 'undefined') {
-            transforms += 'scale(' + props.scale + ')';
-        } else {
-            if (typeof props.scaleX !== 'undefined') transforms += 'scaleX(' + props.scaleX + ')';
-            if (typeof props.scaleY !== 'undefined') transforms += 'scaleY(' + props.scaleY + ')';
-        }
-        if (typeof props.rotation !== 'undefined') transforms += 'rotate(' + props.rotation + 'deg)';
-        if (typeof props.rotationX !== 'undefined') transforms += 'rotateX(' + props.rotationX + 'deg)';
-        if (typeof props.rotationY !== 'undefined') transforms += 'rotateY(' + props.rotationY + 'deg)';
-        if (typeof props.rotationZ !== 'undefined') transforms += 'rotateZ(' + props.rotationZ + 'deg)';
-        if (typeof props.skewX !== 'undefined') transforms += 'skewX(' + props.skewX + 'deg)';
-        if (typeof props.skewY !== 'undefined') transforms += 'skewY(' + props.skewY + 'deg)';
-        if (typeof props.perspective !== 'undefined') transforms += 'perspective(' + props.perspective + 'px)';
-        return transforms;
-    }
+        this.getAllTransforms = object => {
+            const obj = {};
+            for (let i = 0; i < this.TRANSFORMS.length; i++) {
+                const key = this.TRANSFORMS[i],
+                    val = object[key];
+                if (val !== 0 && typeof val === 'number') obj[key] = val;
+            }
+            return obj;
+        };
 
-    static interpolate(num, alpha, ease) {
-        const fn = Interpolation.convertEase(ease);
-        return num * (typeof fn === 'function' ? fn(alpha) : Interpolation.solve(fn, alpha));
-    }
+        this.parseTransform = props => {
+            let transforms = '';
+            if (typeof props.x !== 'undefined' || typeof props.y !== 'undefined' || typeof props.z !== 'undefined') {
+                const x = props.x || 0,
+                    y = props.y || 0,
+                    z = props.z || 0;
+                let translate = '';
+                translate += x + 'px, ';
+                translate += y + 'px, ';
+                translate += z + 'px';
+                transforms += 'translate3d(' + translate + ')';
+            }
+            if (typeof props.scale !== 'undefined') {
+                transforms += 'scale(' + props.scale + ')';
+            } else {
+                if (typeof props.scaleX !== 'undefined') transforms += 'scaleX(' + props.scaleX + ')';
+                if (typeof props.scaleY !== 'undefined') transforms += 'scaleY(' + props.scaleY + ')';
+            }
+            if (typeof props.rotation !== 'undefined') transforms += 'rotate(' + props.rotation + 'deg)';
+            if (typeof props.rotationX !== 'undefined') transforms += 'rotateX(' + props.rotationX + 'deg)';
+            if (typeof props.rotationY !== 'undefined') transforms += 'rotateY(' + props.rotationY + 'deg)';
+            if (typeof props.rotationZ !== 'undefined') transforms += 'rotateZ(' + props.rotationZ + 'deg)';
+            if (typeof props.skewX !== 'undefined') transforms += 'skewX(' + props.skewX + 'deg)';
+            if (typeof props.skewY !== 'undefined') transforms += 'skewY(' + props.skewY + 'deg)';
+            if (typeof props.perspective !== 'undefined') transforms += 'perspective(' + props.perspective + 'px)';
+            return transforms;
+        };
 
-    static interpolateValues(start, end, alpha, ease) {
-        const fn = Interpolation.convertEase(ease);
-        return start + (end - start) * (typeof fn === 'function' ? fn(alpha) : Interpolation.solve(fn, alpha));
+        this.interpolate = (num, alpha, ease) => {
+            const fn = Interpolation.convertEase(ease);
+            return num * (typeof fn === 'function' ? fn(alpha) : Interpolation.solve(fn, alpha));
+        };
+
+        this.interpolateValues = (start, end, alpha, ease) => {
+            const fn = Interpolation.convertEase(ease);
+            return start + (end - start) * (typeof fn === 'function' ? fn(alpha) : Interpolation.solve(fn, alpha));
+        };
     }
 }
 
