@@ -112,16 +112,15 @@ class Space extends Component {
         const self = this;
         this.object3D = new THREE.Object3D();
         const ratio = 1920 / 1080;
-        let img, texture, shader, mesh, title;
+        let texture, shader, mesh, title;
 
         World.scene.add(this.object3D);
 
         function initTextures() {
-            img = Assets.createImage('assets/images/HubblePAO_1920px.jpg');
-            return Assets.loadImage(img).then(finishSetup);
+            return Assets.loadImage('assets/images/HubblePAO_1920px.jpg').then(finishSetup);
         }
 
-        function finishSetup() {
+        function finishSetup(img) {
             texture = new THREE.Texture(img);
             texture.minFilter = THREE.LinearFilter;
             texture.needsUpdate = true;
@@ -185,7 +184,7 @@ class World extends Component {
     constructor() {
         super();
         const self = this;
-        let maskimg, mask, renderer, scene, camera, shader, effects,
+        let mask, renderer, scene, camera, shader, effects,
             opacity = 0;
 
         World.dpr = Math.min(2, Device.pixelRatio);
@@ -224,11 +223,10 @@ class World extends Component {
         }
 
         function initTextures() {
-            maskimg = Assets.createImage('assets/images/mask.jpg');
-            return Assets.loadImage(maskimg).then(finishSetup);
+            return Assets.loadImage('assets/images/mask.jpg').then(finishSetup);
         }
 
-        function finishSetup() {
+        function finishSetup(maskimg) {
             mask = new THREE.Texture(maskimg);
             mask.minFilter = THREE.LinearFilter;
             mask.needsUpdate = true;

@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Events, Stage, Interface, Canvas, Utils, AssetLoader, TweenManager } from '../alien.js/src/Alien.js';
+import { Events, Stage, Interface, Canvas, CanvasGraphics, Utils, AssetLoader, TweenManager } from '../alien.js/src/Alien.js';
 
 Config.UI_COLOR = 'white';
 
@@ -86,10 +86,11 @@ class Progress extends Interface {
         super('Progress');
         const self = this;
         const size = 90;
-        let canvas, context;
+        let canvas, circle;
 
         initHTML();
         initCanvas();
+        initCircle();
         this.startRender(loop);
 
         function initHTML() {
@@ -99,23 +100,30 @@ class Progress extends Interface {
 
         function initCanvas() {
             canvas = self.initClass(Canvas, size, true);
-            context = canvas.context;
-            context.lineWidth = 5;
+        }
+
+        function initCircle() {
+            circle = self.initClass(CanvasGraphics);
+            circle.x = size / 2;
+            circle.y = size / 2;
+            circle.radius = size * 0.4;
+            circle.lineWidth = 1.5;
+            circle.strokeStyle = Config.UI_COLOR;
+            canvas.add(circle);
+        }
+
+        function drawCircle() {
+            circle.clear();
+            const endAngle = Math.radians(-90) + Math.radians(self.progress * 360);
+            circle.beginPath();
+            circle.arc(endAngle);
+            circle.stroke();
         }
 
         function loop() {
             if (self.progress >= 1 && !self.complete) complete();
-            context.clearRect(0, 0, size, size);
-            const progress = self.progress || 0,
-                x = size / 2,
-                y = size / 2,
-                radius = size * 0.4,
-                startAngle = Math.radians(-90),
-                endAngle = Math.radians(-90) + Math.radians(progress * 360);
-            context.beginPath();
-            context.arc(x, y, radius, startAngle, endAngle, false);
-            context.strokeStyle = Config.UI_COLOR;
-            context.stroke();
+            drawCircle();
+            canvas.render();
         }
 
         function complete() {

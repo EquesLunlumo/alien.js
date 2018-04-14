@@ -170,21 +170,21 @@ class Space extends Component {
         const self = this;
         this.object3D = new THREE.Object3D();
         const ratio = 1920 / 1080;
-        let textureimg, texture, video, shader, mesh, title;
+        let video, img, texture, shader, mesh, title;
 
         World.scene.add(this.object3D);
 
         function initTextures() {
             if (Tests.shaderVideo()) video = self.initClass(VideoTexture);
-            else textureimg = Assets.createImage(Config.ASSETS['galaxy']);
-            return Promise.all([video ? video.ready() : Assets.loadImage(textureimg)]).then(finishSetup);
+            else img = Assets.createImage(Config.ASSETS['galaxy']);
+            return Promise.all([video ? video.ready() : Assets.loadImage(img)]).then(finishSetup);
         }
 
         function finishSetup() {
             if (video) {
                 texture = video.texture;
             } else {
-                texture = new THREE.Texture(textureimg);
+                texture = new THREE.Texture(img);
                 texture.minFilter = THREE.LinearFilter;
                 texture.needsUpdate = true;
             }

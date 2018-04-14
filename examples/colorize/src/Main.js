@@ -109,7 +109,7 @@ class Space extends Component {
         const self = this;
         this.object3D = new THREE.Object3D();
         const ratio = 1920 / 1080;
-        let texture, img, shader, mesh, title,
+        let texture, shader, mesh, title,
             progress = 0;
 
         World.scene.add(this.object3D);
@@ -117,11 +117,10 @@ class Space extends Component {
         initTextures();
 
         function initTextures() {
-            img = Assets.createImage('assets/images/NGC_1672_1920px.jpg');
-            Assets.loadImage(img).then(finishSetup);
+            Assets.loadImage('assets/images/NGC_1672_1920px.jpg').then(finishSetup);
         }
 
-        function finishSetup() {
+        function finishSetup(img) {
             texture = new THREE.Texture(img);
             texture.minFilter = THREE.LinearFilter;
             texture.needsUpdate = true;

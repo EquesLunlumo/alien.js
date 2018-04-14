@@ -117,7 +117,7 @@ class Space extends Component {
         const self = this;
         this.object3D = new THREE.Object3D();
         const ratio = 1920 / 1080;
-        let texture1, texture2, img1, img2, shader, mesh, title,
+        let texture1, texture2, shader, mesh, title,
             progress = 0;
 
         World.scene.add(this.object3D);
@@ -125,16 +125,17 @@ class Space extends Component {
         initTextures();
 
         function initTextures() {
-            img1 = Assets.createImage('assets/images/NGC_1672_1920px.jpg');
-            img2 = Assets.createImage('assets/images/Orion_Nebula_1920px.jpg');
-            Promise.all([Assets.loadImage(img1), Assets.loadImage(img2)]).then(finishSetup);
+            Promise.all([
+                Assets.loadImage('assets/images/NGC_1672_1920px.jpg'),
+                Assets.loadImage('assets/images/Orion_Nebula_1920px.jpg')
+            ]).then(finishSetup);
         }
 
-        function finishSetup() {
-            texture1 = new THREE.Texture(img1);
+        function finishSetup(img) {
+            texture1 = new THREE.Texture(img[0]);
             texture1.minFilter = THREE.LinearFilter;
             texture1.needsUpdate = true;
-            texture2 = new THREE.Texture(img2);
+            texture2 = new THREE.Texture(img[1]);
             texture2.minFilter = THREE.LinearFilter;
             texture2.needsUpdate = true;
             initMesh();

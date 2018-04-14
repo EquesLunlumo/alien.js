@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Events, Stage, Interface, Canvas, CanvasTexture, Utils, Assets, AssetLoader, TweenManager } from '../alien.js/src/Alien.js';
+import { Events, Stage, Interface, Canvas, CanvasGraphics, CanvasTexture, Utils, Assets, AssetLoader, TweenManager } from '../alien.js/src/Alien.js';
 
 Config.UI_COLOR = 'white';
 
@@ -18,7 +18,7 @@ class AlienKittyCanvas extends Interface {
     constructor() {
         super('AlienKittyCanvas');
         const self = this;
-        let canvas, alienkittyimg, eyelidimg, alienkitty, eyelid1, eyelid2;
+        let canvas, alienkitty, eyelid1, eyelid2;
 
         initHTML();
         initCanvas();
@@ -33,16 +33,17 @@ class AlienKittyCanvas extends Interface {
         }
 
         function initImages() {
-            alienkittyimg = Assets.createImage('assets/images/alienkitty.svg');
-            eyelidimg = Assets.createImage('assets/images/alienkitty_eyelid.svg');
-            Promise.all([Assets.loadImage(alienkittyimg), Assets.loadImage(eyelidimg)]).then(finishSetup);
+            Promise.all([
+                Assets.loadImage('assets/images/alienkitty.svg'),
+                Assets.loadImage('assets/images/alienkitty_eyelid.svg')
+            ]).then(finishSetup);
         }
 
-        function finishSetup() {
-            alienkitty = self.initClass(CanvasTexture, alienkittyimg, 90, 86);
-            eyelid1 = self.initClass(CanvasTexture, eyelidimg, 24, 14);
+        function finishSetup(img) {
+            alienkitty = self.initClass(CanvasTexture, img[0], 90, 86);
+            eyelid1 = self.initClass(CanvasTexture, img[1], 24, 14);
             eyelid1.transformPoint('50%', 0).transform({ x: 35, y: 25, scaleX: 1.5, scaleY: 0.01 });
-            eyelid2 = self.initClass(CanvasTexture, eyelidimg, 24, 14);
+            eyelid2 = self.initClass(CanvasTexture, img[1], 24, 14);
             eyelid2.transformPoint(0, 0).transform({ x: 53, y: 26, scaleX: 1, scaleY: 0.01 });
             alienkitty.add(eyelid1);
             alienkitty.add(eyelid2);
@@ -101,10 +102,11 @@ class Progress extends Interface {
         super('Progress');
         const self = this;
         const size = 90;
-        let canvas, context;
+        let canvas, circle;
 
         initHTML();
         initCanvas();
+        initCircle();
         this.startRender(loop);
 
         function initHTML() {
@@ -114,23 +116,30 @@ class Progress extends Interface {
 
         function initCanvas() {
             canvas = self.initClass(Canvas, size, true);
-            context = canvas.context;
-            context.lineWidth = 5;
+        }
+
+        function initCircle() {
+            circle = self.initClass(CanvasGraphics);
+            circle.x = size / 2;
+            circle.y = size / 2;
+            circle.radius = size * 0.4;
+            circle.lineWidth = 1.5;
+            circle.strokeStyle = Config.UI_COLOR;
+            canvas.add(circle);
+        }
+
+        function drawCircle() {
+            circle.clear();
+            const endAngle = Math.radians(-90) + Math.radians(self.progress * 360);
+            circle.beginPath();
+            circle.arc(endAngle);
+            circle.stroke();
         }
 
         function loop() {
             if (self.progress >= 1 && !self.complete) complete();
-            context.clearRect(0, 0, size, size);
-            const progress = self.progress || 0,
-                x = size / 2,
-                y = size / 2,
-                radius = size * 0.4,
-                startAngle = Math.radians(-90),
-                endAngle = Math.radians(-90) + Math.radians(progress * 360);
-            context.beginPath();
-            context.arc(x, y, radius, startAngle, endAngle, false);
-            context.strokeStyle = Config.UI_COLOR;
-            context.stroke();
+            drawCircle();
+            canvas.render();
         }
 
         function complete() {

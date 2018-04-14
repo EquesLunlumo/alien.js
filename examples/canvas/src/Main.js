@@ -18,7 +18,7 @@ class AlienKittyCanvas extends Interface {
     constructor() {
         super('AlienKittyCanvas');
         const self = this;
-        let canvas, alienkittyimg, eyelidimg, alienkitty, eyelid1, eyelid2;
+        let canvas, alienkitty, eyelid1, eyelid2;
 
         initHTML();
         initCanvas();
@@ -33,16 +33,17 @@ class AlienKittyCanvas extends Interface {
         }
 
         function initImages() {
-            alienkittyimg = Assets.createImage('assets/images/alienkitty.svg');
-            eyelidimg = Assets.createImage('assets/images/alienkitty_eyelid.svg');
-            Promise.all([Assets.loadImage(alienkittyimg), Assets.loadImage(eyelidimg)]).then(finishSetup);
+            Promise.all([
+                Assets.loadImage('assets/images/alienkitty.svg'),
+                Assets.loadImage('assets/images/alienkitty_eyelid.svg')
+            ]).then(finishSetup);
         }
 
-        function finishSetup() {
-            alienkitty = self.initClass(CanvasTexture, alienkittyimg, 90, 86);
-            eyelid1 = self.initClass(CanvasTexture, eyelidimg, 24, 14);
+        function finishSetup(img) {
+            alienkitty = self.initClass(CanvasTexture, img[0], 90, 86);
+            eyelid1 = self.initClass(CanvasTexture, img[1], 24, 14);
             eyelid1.transformPoint('50%', 0).transform({ x: 35, y: 25, scaleX: 1.5, scaleY: 0.01 });
-            eyelid2 = self.initClass(CanvasTexture, eyelidimg, 24, 14);
+            eyelid2 = self.initClass(CanvasTexture, img[1], 24, 14);
             eyelid2.transformPoint(0, 0).transform({ x: 53, y: 26, scaleX: 1, scaleY: 0.01 });
             alienkitty.add(eyelid1);
             alienkitty.add(eyelid2);
