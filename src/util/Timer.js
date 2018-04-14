@@ -59,6 +59,8 @@ class Timer {
             callbacks.push(obj);
             return obj.ref;
         };
+
+        window.defer = this.defer = callback => this.create(callback, 1);
     }
 }
 

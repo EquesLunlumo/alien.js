@@ -178,8 +178,6 @@ window.post = function (url, body, options = {}) {
     return promise;
 };
 
-window.defer = window.requestAnimationFrame;
-
 window.getURL = function (url, target = '_blank') {
     window.open(url, target);
 };
