@@ -549,7 +549,7 @@ class MuteButton extends Interface {
         }
 
         function hover(e) {
-            if (!this.enabled) return;
+            if (!self.animatedIn) return;
             TweenManager.clearTween(data);
             self.needsUpdate = true;
             if (e.action === 'over') TweenManager.tween(data, { yMultiplier: Global.SOUND ? 0.75 : 0.25 }, 275, 'easeInOutCubic', () => self.needsUpdate = false);
@@ -601,12 +601,16 @@ class MuteButton extends Interface {
             TweenManager.clearTween(data);
             data.progress = 0;
             this.needsUpdate = true;
-            TweenManager.tween(data, { progress: 1 }, 1020, 'easeInOutExpo', () => this.needsUpdate = false);
+            TweenManager.tween(data, { progress: 1 }, 1020, 'easeInOutExpo', () => {
+                this.needsUpdate = false;
+                this.animatedIn = true;
+            });
             this.tween({ opacity: 1 }, 400, 'easeOutCubic');
             this.mouseEnabled(true);
         };
 
         this.hideButton = () => {
+            this.animatedIn = false;
             this.mouseEnabled(false);
             TweenManager.clearTween(data);
             this.needsUpdate = true;
