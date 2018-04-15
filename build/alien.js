@@ -178,8 +178,6 @@ window.post = function (url, body, options = {}) {
     return promise;
 };
 
-window.defer = window.requestAnimationFrame;
-
 window.getURL = function (url, target = '_blank') {
     window.open(url, target);
 };
@@ -394,6 +392,8 @@ class Timer {
             callbacks.push(obj);
             return obj.ref;
         };
+
+        window.defer = this.defer = callback => this.create(callback, 1);
     }
 }
 
@@ -416,8 +416,8 @@ class Events {
                 this.links = [];
             }
 
-            add(event, callback, object, target) {
-                this.events.push({ event, callback, object, target });
+            add(event, callback, object) {
+                this.events.push({ event, callback, object });
             }
 
             remove(event, callback) {
@@ -434,7 +434,6 @@ class Events {
                 const clone = Utils.cloneArray(this.events);
                 for (let i = 0; i < clone.length; i++) {
                     if (clone[i].event === event && !clone[i].removed) {
-                        if (clone[i].target && object && typeof object === 'object') object.target = object.target || clone[i].target;
                         clone[i].callback(object);
                         called = true;
                     }
@@ -483,7 +482,7 @@ class Events {
                 Events.emitter.add(event, callback, this);
             } else {
                 const emitter = object.events.emitter;
-                emitter.add(event, callback, this, object);
+                emitter.add(event, callback, this);
                 emitter.link(this);
                 linked.push(emitter);
             }
@@ -592,7 +591,27 @@ class Device {
         this.phone = !this.tablet;
         this.webgl = (() => {
             try {
-                return !!window.WebGLRenderingContext && !!document.createElement('canvas').getContext('experimental-webgl');
+                const names = ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'],
+                    canvas = document.createElement('canvas');
+                let gl;
+                for (let i = 0; i < names.length; i++) {
+                    gl = canvas.getContext(names[i]);
+                    if (gl) break;
+                }
+                const info = gl.getExtension('WEBGL_debug_renderer_info'),
+                    output = {};
+                if (info) output.gpu = gl.getParameter(info.UNMASKED_RENDERER_WEBGL).toLowerCase();
+                output.renderer = gl.getParameter(gl.RENDERER).toLowerCase();
+                output.version = gl.getParameter(gl.VERSION).toLowerCase();
+                output.glsl = gl.getParameter(gl.SHADING_LANGUAGE_VERSION).toLowerCase();
+                output.extensions = gl.getSupportedExtensions();
+                output.detect = matches => {
+                    if (output.gpu && output.gpu.includes(matches)) return true;
+                    if (output.version && output.version.includes(matches)) return true;
+                    for (let i = 0; i < output.extensions.length; i++) if (output.extensions[i].toLowerCase().includes(matches)) return true;
+                    return false;
+                };
+                return output;
             } catch (e) {
                 return false;
             }
@@ -1215,90 +1234,90 @@ class TweenManager {
         this.removeMathTween = tween => {
             tweens.remove(tween);
         };
-    }
 
-    static tween(object, props, time, ease, delay, callback, update) {
-        if (typeof delay !== 'number') {
-            update = callback;
-            callback = delay;
-            delay = 0;
-        }
-        let promise = null;
-        if (typeof Promise !== 'undefined') {
-            promise = Promise.create();
-            if (callback) promise.then(callback);
-            callback = promise.resolve;
-        }
-        const tween = new MathTween(object, props, time, ease, delay, update, callback);
-        return promise || tween;
-    }
-
-    static clearTween(object) {
-        if (object.mathTween) object.mathTween.stop();
-        if (object.mathTweens) {
-            const tweens = object.mathTweens;
-            for (let i = tweens.length - 1; i >= 0; i--) {
-                const tween = tweens[i];
-                if (tween) tween.stop();
+        this.tween = (object, props, time, ease, delay, callback, update) => {
+            if (typeof delay !== 'number') {
+                update = callback;
+                callback = delay;
+                delay = 0;
             }
-            object.mathTweens = null;
-        }
-    }
+            let promise = null;
+            if (typeof Promise !== 'undefined') {
+                promise = Promise.create();
+                if (callback) promise.then(callback);
+                callback = promise.resolve;
+            }
+            const tween = new MathTween(object, props, time, ease, delay, update, callback);
+            return promise || tween;
+        };
 
-    static isTransform(key) {
-        return ~this.TRANSFORMS.indexOf(key);
-    }
+        this.clearTween = object => {
+            if (object.mathTween) object.mathTween.stop();
+            if (object.mathTweens) {
+                const tweens = object.mathTweens;
+                for (let i = tweens.length - 1; i >= 0; i--) {
+                    const tween = tweens[i];
+                    if (tween) tween.stop();
+                }
+                object.mathTweens = null;
+            }
+        };
 
-    static getEase(name) {
-        return this.CSS_EASES[name] || this.CSS_EASES.easeOutCubic;
-    }
+        this.isTransform = key => {
+            return ~this.TRANSFORMS.indexOf(key);
+        };
 
-    static getAllTransforms(object) {
-        const obj = {};
-        for (let i = 0; i < this.TRANSFORMS.length; i++) {
-            const key = this.TRANSFORMS[i],
-                val = object[key];
-            if (val !== 0 && typeof val === 'number') obj[key] = val;
-        }
-        return obj;
-    }
+        this.getEase = name => {
+            return this.CSS_EASES[name] || this.CSS_EASES.easeOutCubic;
+        };
 
-    static parseTransform(props) {
-        let transforms = '';
-        if (typeof props.x !== 'undefined' || typeof props.y !== 'undefined' || typeof props.z !== 'undefined') {
-            const x = props.x || 0,
-                y = props.y || 0,
-                z = props.z || 0;
-            let translate = '';
-            translate += x + 'px, ';
-            translate += y + 'px, ';
-            translate += z + 'px';
-            transforms += 'translate3d(' + translate + ')';
-        }
-        if (typeof props.scale !== 'undefined') {
-            transforms += 'scale(' + props.scale + ')';
-        } else {
-            if (typeof props.scaleX !== 'undefined') transforms += 'scaleX(' + props.scaleX + ')';
-            if (typeof props.scaleY !== 'undefined') transforms += 'scaleY(' + props.scaleY + ')';
-        }
-        if (typeof props.rotation !== 'undefined') transforms += 'rotate(' + props.rotation + 'deg)';
-        if (typeof props.rotationX !== 'undefined') transforms += 'rotateX(' + props.rotationX + 'deg)';
-        if (typeof props.rotationY !== 'undefined') transforms += 'rotateY(' + props.rotationY + 'deg)';
-        if (typeof props.rotationZ !== 'undefined') transforms += 'rotateZ(' + props.rotationZ + 'deg)';
-        if (typeof props.skewX !== 'undefined') transforms += 'skewX(' + props.skewX + 'deg)';
-        if (typeof props.skewY !== 'undefined') transforms += 'skewY(' + props.skewY + 'deg)';
-        if (typeof props.perspective !== 'undefined') transforms += 'perspective(' + props.perspective + 'px)';
-        return transforms;
-    }
+        this.getAllTransforms = object => {
+            const obj = {};
+            for (let i = 0; i < this.TRANSFORMS.length; i++) {
+                const key = this.TRANSFORMS[i],
+                    val = object[key];
+                if (val !== 0 && typeof val === 'number') obj[key] = val;
+            }
+            return obj;
+        };
 
-    static interpolate(num, alpha, ease) {
-        const fn = Interpolation.convertEase(ease);
-        return num * (typeof fn === 'function' ? fn(alpha) : Interpolation.solve(fn, alpha));
-    }
+        this.parseTransform = props => {
+            let transforms = '';
+            if (typeof props.x !== 'undefined' || typeof props.y !== 'undefined' || typeof props.z !== 'undefined') {
+                const x = props.x || 0,
+                    y = props.y || 0,
+                    z = props.z || 0;
+                let translate = '';
+                translate += x + 'px, ';
+                translate += y + 'px, ';
+                translate += z + 'px';
+                transforms += 'translate3d(' + translate + ')';
+            }
+            if (typeof props.scale !== 'undefined') {
+                transforms += 'scale(' + props.scale + ')';
+            } else {
+                if (typeof props.scaleX !== 'undefined') transforms += 'scaleX(' + props.scaleX + ')';
+                if (typeof props.scaleY !== 'undefined') transforms += 'scaleY(' + props.scaleY + ')';
+            }
+            if (typeof props.rotation !== 'undefined') transforms += 'rotate(' + props.rotation + 'deg)';
+            if (typeof props.rotationX !== 'undefined') transforms += 'rotateX(' + props.rotationX + 'deg)';
+            if (typeof props.rotationY !== 'undefined') transforms += 'rotateY(' + props.rotationY + 'deg)';
+            if (typeof props.rotationZ !== 'undefined') transforms += 'rotateZ(' + props.rotationZ + 'deg)';
+            if (typeof props.skewX !== 'undefined') transforms += 'skewX(' + props.skewX + 'deg)';
+            if (typeof props.skewY !== 'undefined') transforms += 'skewY(' + props.skewY + 'deg)';
+            if (typeof props.perspective !== 'undefined') transforms += 'perspective(' + props.perspective + 'px)';
+            return transforms;
+        };
 
-    static interpolateValues(start, end, alpha, ease) {
-        const fn = Interpolation.convertEase(ease);
-        return start + (end - start) * (typeof fn === 'function' ? fn(alpha) : Interpolation.solve(fn, alpha));
+        this.interpolate = (num, alpha, ease) => {
+            const fn = Interpolation.convertEase(ease);
+            return num * (typeof fn === 'function' ? fn(alpha) : Interpolation.solve(fn, alpha));
+        };
+
+        this.interpolateValues = (start, end, alpha, ease) => {
+            const fn = Interpolation.convertEase(ease);
+            return start + (end - start) * (typeof fn === 'function' ? fn(alpha) : Interpolation.solve(fn, alpha));
+        };
     }
 }
 
@@ -1546,12 +1565,16 @@ class Interface {
         return this;
     }
 
-    clearAlpha() {
+    clearOpacity() {
         this.element.style.opacity = '';
         return this;
     }
 
-    size(w, h = w) {
+    size(w, h = w, noScale) {
+        if (typeof h === 'boolean') {
+            noScale = h;
+            h = w;
+        }
         if (typeof w !== 'undefined') {
             if (typeof w === 'string' || typeof h === 'string') {
                 if (typeof w !== 'string') w = w + 'px';
@@ -1561,11 +1584,11 @@ class Interface {
             } else {
                 this.element.style.width = w + 'px';
                 this.element.style.height = h + 'px';
-                this.element.style.backgroundSize = w + 'px ' + h + 'px';
+                if (!noScale) this.element.style.backgroundSize = w + 'px ' + h + 'px';
             }
         }
-        this.width = this.element.offsetWidth;
-        this.height = this.element.offsetHeight;
+        this.width = this.element.clientWidth;
+        this.height = this.element.clientHeight;
         return this;
     }
 
@@ -1593,6 +1616,7 @@ class Interface {
             this.element.style.backgroundRepeat = repeat;
         }
         if (x === 'cover' || x === 'contain') {
+            repeat = typeof repeat === 'number' ? repeat + 'px' : repeat;
             this.element.style.backgroundSize = x;
             this.element.style.backgroundRepeat = 'no-repeat';
             this.element.style.backgroundPosition = typeof y !== 'undefined' ? y + ' ' + repeat : 'center';
@@ -1916,6 +1940,21 @@ class Interface {
         return this;
     }
 
+    preventScroll() {
+        if (!Device.mobile) return;
+        const preventScroll = e => {
+            let target = e.target;
+            if (target.nodeName === 'INPUT' || target.nodeName === 'TEXTAREA' || target.nodeName === 'SELECT' || target.nodeName === 'A') return;
+            let prevent = true;
+            while (target.parentNode && prevent) {
+                if (target.scrollParent) prevent = false;
+                target = target.parentNode;
+            }
+            if (prevent) e.preventDefault();
+        };
+        this.element.addEventListener('touchstart', preventScroll, { passive: false });
+    }
+
     overflowScroll(direction) {
         if (!Device.mobile) return;
         const x = !!direction.x,
@@ -1933,6 +1972,7 @@ class Interface {
             overflow.overflowY = 'hidden';
         }
         this.css(overflow);
+        this.element.scrollParent = true;
         this.element.preventEvent = e => e.stopPropagation();
         this.bind('touchmove', this.element.preventEvent);
     }
@@ -2168,6 +2208,58 @@ class WebAudio {
 
     static init() {
 
+        class Sound {
+
+            constructor(asset) {
+                const self = this;
+                this.asset = Assets.getPath(asset);
+                if (WebAudio.context.createStereoPanner) this.stereo = WebAudio.context.createStereoPanner();
+                this.output = WebAudio.context.createGain();
+                this.volume = 1;
+                this.rate = 1;
+                if (this.stereo) this.stereo.connect(this.output);
+                this.output.connect(WebAudio.output);
+                this.output.gain.setValueAtTime(0, WebAudio.context.currentTime);
+
+                this.gain = {
+                    set value(value) {
+                        self.volume = value;
+                        self.output.gain.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                    },
+                    get value() {
+                        return self.volume;
+                    }
+                };
+
+                this.playbackRate = {
+                    set value(value) {
+                        self.rate = value;
+                        if (self.source) self.source.playbackRate.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                    },
+                    get value() {
+                        return self.rate;
+                    }
+                };
+
+                this.stereoPan = {
+                    set value(value) {
+                        self.pan = value;
+                        if (self.stereo) self.stereo.pan.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                    },
+                    get value() {
+                        return self.pan;
+                    }
+                };
+
+                this.stop = () => {
+                    if (this.source) {
+                        this.source.stop();
+                        this.playing = false;
+                    }
+                };
+            }
+        }
+
         if (!this.active) {
             this.active = true;
 
@@ -2175,20 +2267,22 @@ class WebAudio {
             const sounds = {};
             let context;
 
-            if (window.AudioContext) context = new AudioContext();
-            if (!context) return;
-            this.globalGain = context.createGain();
-            this.globalGain.connect(context.destination);
-            this.globalGain.value = this.globalGain.gain.defaultValue;
-            this.gain = {
-                set value(value) {
-                    self.globalGain.value = value;
-                    self.globalGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
-                },
-                get value() {
-                    return self.globalGain.value;
-                }
-            };
+            if (window.AudioContext) {
+                context = new AudioContext();
+                this.output = context.createGain();
+                this.volume = 1;
+                this.output.connect(context.destination);
+                this.gain = {
+                    set value(value) {
+                        self.volume = value;
+                        self.output.gain.setTargetAtTime(value, context.currentTime, 0.01);
+                    },
+                    get value() {
+                        return self.volume;
+                    }
+                };
+                this.context = context;
+            }
 
             this.loadSound = (id, callback) => {
                 const promise = Promise.create();
@@ -2202,6 +2296,8 @@ class WebAudio {
                             sound.buffer = buffer;
                             sound.complete = true;
                             callback();
+                        }, () => {
+                            callback();
                         });
                     });
                 }).catch(() => {
@@ -2211,26 +2307,10 @@ class WebAudio {
             };
 
             this.createSound = (id, asset, callback) => {
-                const sound = {};
-                sound.asset = Assets.getPath(asset);
-                sound.audioGain = context.createGain();
-                sound.audioGain.connect(this.globalGain);
-                sound.audioGain.value = sound.audioGain.gain.defaultValue;
-                sound.gain = {
-                    set value(value) {
-                        sound.audioGain.value = value;
-                        sound.audioGain.gain.setTargetAtTime(value, context.currentTime, 0.01);
-                    },
-                    get value() {
-                        return sound.audioGain.value;
-                    }
-                };
-                sound.stop = () => {
-                    if (sound.source) sound.source.stop();
-                };
-                sounds[id] = sound;
+                sounds[id] = new Sound(asset);
                 if (Device.os === 'ios') callback();
                 else this.loadSound(id, callback);
+                return sounds[id];
             };
 
             this.getSound = id => {
@@ -2244,15 +2324,58 @@ class WebAudio {
                 if (!sound.ready) this.loadSound(id);
                 sound.ready().then(() => {
                     if (sound.complete) {
+                        if (sound.stopping && sound.loop) {
+                            sound.stopping = false;
+                            return;
+                        }
+                        sound.playing = true;
                         sound.source = context.createBufferSource();
                         sound.source.buffer = sound.buffer;
-                        sound.source.connect(sound.audioGain);
-                        sound.audioGain.gain.setValueAtTime(0, context.currentTime);
-                        sound.source.loop = !!sound.loop;
+                        sound.source.loop = sound.loop;
+                        sound.source.playbackRate.setValueAtTime(sound.rate, context.currentTime);
+                        sound.source.connect(sound.stereo ? sound.stereo : sound.output);
                         sound.source.start();
-                        sound.audioGain.gain.setTargetAtTime(sound.audioGain.value, context.currentTime, 0.01);
+                        defer(() => sound.output.gain.setTargetAtTime(sound.volume, context.currentTime, 0.01));
                     }
                 });
+            };
+
+            this.play = (id, volume = 1, loop) => {
+                if (!context) return;
+                if (typeof volume === 'boolean') {
+                    loop = volume;
+                    volume = 1;
+                }
+                const sound = this.getSound(id);
+                if (sound) {
+                    sound.volume = volume;
+                    sound.loop = !!loop;
+                    this.trigger(id);
+                }
+            };
+
+            this.fadeInAndPlay = (id, volume, loop, time, ease, delay = 0) => {
+                if (!context) return;
+                const sound = this.getSound(id);
+                if (sound) {
+                    sound.volume = 0;
+                    sound.loop = !!loop;
+                    this.trigger(id);
+                    TweenManager.tween(sound.gain, { value: volume }, time, ease, delay);
+                }
+            };
+
+            this.fadeOutAndStop = (id, time, ease, delay = 0) => {
+                if (!context) return;
+                const sound = this.getSound(id);
+                if (sound && sound.playing) {
+                    TweenManager.tween(sound.gain, { value: 0 }, time, ease, delay, () => {
+                        if (!sound.stopping) return;
+                        sound.stopping = false;
+                        sound.stop();
+                    });
+                    sound.stopping = true;
+                }
             };
 
             this.mute = () => {
@@ -2298,6 +2421,7 @@ const Stage = new (class extends Interface {
 
         function initHTML() {
             self.css({ overflow: 'hidden' });
+            self.preventScroll();
         }
 
         function addListeners() {
@@ -2391,7 +2515,7 @@ class Vector2 {
         return this;
     }
 
-    copyFrom(v) {
+    copy(v) {
         this.x = v.x || 0;
         this.y = v.y || 0;
         return this;
@@ -2584,7 +2708,6 @@ class Interaction extends Component {
         }
 
         function down(e) {
-            e.preventDefault();
             self.isTouching = true;
             self.x = e.x;
             self.y = e.y;
@@ -3396,23 +3519,31 @@ class CanvasGraphics extends CanvasObject {
 
 class Canvas {
 
-    constructor(w, h = w, whiteAlpha) {
+    constructor(w, h = w, retina, whiteAlpha) {
+
+        if (typeof h === 'boolean') {
+            retina = h;
+            h = w;
+        }
+
         const self = this;
         this.element = document.createElement('canvas');
         this.context = this.element.getContext('2d');
         this.object = new Interface(this.element);
         this.children = [];
+        this.retina = retina;
 
         size(w, h);
 
         function size(w, h) {
-            self.element.width = w * 2;
-            self.element.height = h * 2;
+            const ratio = retina ? 2 : 1;
+            self.element.width = w * ratio;
+            self.element.height = h * ratio;
             self.width = w;
             self.height = h;
-            self.scale = 2;
+            self.scale = ratio;
             self.object.size(self.width, self.height);
-            self.context.scale(2, 2);
+            self.context.scale(ratio, ratio);
             self.element.style.width = w + 'px';
             self.element.style.height = h + 'px';
             if (whiteAlpha) {
@@ -4460,7 +4591,7 @@ class SlideVideo extends Component {
         function ready() {
             self.element.addEventListener('playing', playing, true);
             self.element.addEventListener('pause', pause, true);
-            if (self.willPlay) self.play();
+            self.element.play();
         }
 
         function playing() {
@@ -4472,21 +4603,12 @@ class SlideVideo extends Component {
             self.playing = false;
         }
 
-        this.resume = () => {
-            this.play(true);
-        };
-
-        this.play = (resume = false) => {
-            this.willPlay = true;
-            if (this.element && this.element.paused && !this.playing) {
-                if (!resume) this.element.currentTime = 0;
-                this.element.play();
-            }
+        this.play = () => {
+            this.element.play();
         };
 
         this.pause = () => {
-            this.willPlay = false;
-            if (this.element && !this.element.paused && this.playing) this.element.pause();
+            this.element.pause();
         };
 
         this.ready = () => {
@@ -4494,10 +4616,15 @@ class SlideVideo extends Component {
         };
 
         this.destroy = () => {
-            this.element.removeEventListener('playing', playing, true);
-            this.element.removeEventListener('pause', pause, true);
-            this.pause();
-            this.element.src = '';
+            if (this.element) {
+                if (this.element.pause) {
+                    this.element.removeEventListener('playing', playing, true);
+                    this.element.removeEventListener('pause', pause, true);
+                    this.pause();
+                }
+                URL.revokeObjectURL(this.element.src);
+                this.element.src = '';
+            }
             return super.destroy();
         };
     }
@@ -4540,6 +4667,262 @@ class SlideLoader extends Component {
         if (!callback) callback = promise.resolve;
         promise.loader = new SlideLoader(slides, callback);
         return promise;
+    }
+}
+
+/**
+ * Webcam interface.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+if (!navigator.getUserMedia) navigator.getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+class Webcam extends Component {
+
+    constructor(width, height, audio) {
+        super();
+        const self = this;
+        this.facing = 'back';
+        const cameras = {};
+        let back = false,
+            attempts = 0;
+
+        createVideo();
+
+        function createVideo() {
+            self.element = document.createElement('video');
+            self.element.width = width;
+            self.element.height = height;
+            self.element.autoplay = true;
+            self.object = new Interface(self.element);
+            self.width = width;
+            self.height = height;
+            self.object.size(self.width, self.height);
+            if (!Device.mobile) self.object.transform({ scaleX: -1 });
+        }
+
+        function establishWebcam() {
+            if (attempts >= 2) return error();
+            lookupDevices().then(() => {
+                if (self.stream && self.config.back) self.stream.getTracks()[0].stop();
+                navigator.getUserMedia({
+                    video: self.config.back ? cameras.back : cameras.front || true,
+                    audio
+                }, success, error);
+            });
+            attempts += 1;
+        }
+
+        function lookupDevices() {
+            const promise = Promise.create();
+            if (!Device.mobile) return Promise.resolve();
+            navigator.mediaDevices.enumerateDevices().then(devices => {
+                devices.forEach(device => {
+                    if (device.label.includes('front')) {
+                        cameras.front = {
+                            deviceId: { exact: device.deviceId }
+                        };
+                    }
+                    if (device.label.includes('back')) {
+                        cameras.back = {
+                            deviceId: { exact: device.deviceId }
+                        };
+                        back = true;
+                    }
+                });
+                if (!cameras.front) {
+                    cameras.front = {
+                        facingMode: 'user'
+                    };
+                }
+                if (!cameras.back) {
+                    cameras.back = {
+                        facingMode: 'environment'
+                    };
+                    back = false;
+                }
+                promise.resolve();
+            });
+            return promise;
+        }
+
+        function success(stream) {
+            self.denied = false;
+            self.stream = stream;
+            if (self.config.back && !back) {
+                establishWebcam();
+            } else {
+                self.element.srcObject = stream;
+                self.events.fire(Events.READY, null, true);
+            }
+        }
+
+        function error() {
+            self.denied = true;
+            self.events.fire(Events.ERROR, null, true);
+        }
+
+        this.createStream = config => {
+            attempts = 0;
+            this.config = config;
+            establishWebcam();
+        };
+
+        this.flip = () => {
+            if (!back) return;
+            let direction;
+            if (this.facing === 'front') {
+                this.facing = 'back';
+                direction = cameras.back;
+            } else {
+                this.facing = 'front';
+                direction = cameras.front;
+            }
+            this.stream.getTracks()[0].stop();
+            navigator.getUserMedia({
+                video: direction || true,
+                audio
+            }, success, error);
+        };
+
+        this.size = (w, h) => {
+            this.element.width = this.width = w;
+            this.element.height = this.height = h;
+            this.object.size(this.width, this.height);
+        };
+
+        this.getPixels = (w = this.width, h = this.height) => {
+            if (!this.canvas) this.canvas = this.initClass(Canvas, w, h);
+            this.canvas.context.drawImage(this.element, 0, 0, w, h);
+            return this.canvas.context.getImageData(0, 0, w, h);
+        };
+
+        this.ready = () => {
+            return this.element.readyState > 0;
+        };
+
+        this.end = () => {
+            this.active = false;
+            this.element.pause();
+            if (this.stream) this.stream.getTracks()[0].enabled = false;
+        };
+
+        this.restart = () => {
+            this.element.play();
+            if (this.stream) this.stream.getTracks()[0].enabled = true;
+            this.active = true;
+        };
+
+        this.destroy = () => {
+            this.element.src = '';
+            this.object.destroy();
+            return super.destroy();
+        };
+    }
+}
+
+/**
+ * Webcam motion tracker.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class WebcamMotion extends Component {
+
+    constructor(webcam, width = 64, height = 48, threshold = 80, length = 50, fps = 24) {
+        super();
+        const self = this;
+        this.capturing = false;
+        const gesture = {
+                xDir: null,
+                xValue: 0,
+                yDir: null,
+                yValue: 0
+            },
+            motion = [],
+            average = {},
+            lastAverage = {},
+            event = {},
+            outputAverage = {};
+        let oldPixels, outputMotion;
+
+        this.startRender(loop, fps);
+
+        function loop() {
+            if (!self.capturing) return;
+            process();
+            track();
+        }
+
+        function process() {
+            const pixels = webcam.getPixels(width, height).data;
+            if (!oldPixels) return oldPixels = pixels;
+            motion.length = 0;
+            for (let i = 0; i < height; i++) {
+                for (let j = 0; j < width; j++) {
+                    const w = i * width + j,
+                        oldR = oldPixels[w * 4 + 0],
+                        oldG = oldPixels[w * 4 + 1],
+                        oldB = oldPixels[w * 4 + 2],
+                        newR = pixels[w * 4 + 0],
+                        newG = pixels[w * 4 + 1],
+                        newB = pixels[w * 4 + 2];
+                    if (Math.abs(newR - oldR) > threshold || Math.abs(newG - oldG) > threshold || Math.abs(newB - oldB) > threshold) motion.push([j, i]);
+                }
+            }
+            oldPixels = pixels;
+            let totalX = 0,
+                totalY = 0;
+            motion.forEach(p => {
+                totalX += p[0];
+                totalY += p[1];
+            });
+            average.x = totalX / motion.length;
+            average.y = totalY / motion.length;
+        }
+
+        function track() {
+            if (isNaN(average.x)) return;
+            if (motion.length < length) return;
+            outputAverage.x = 1 - average.x / width;
+            outputAverage.y = average.y / height;
+            outputMotion = Utils.cloneArray(motion);
+            outputMotion.forEach(p => {
+                p[0] = 1 - p[0] / width;
+                p[1] /= height;
+            });
+            event.average = outputAverage;
+            event.motion = outputMotion;
+            event.gesture = null;
+            self.events.fire(Events.UPDATE, event, true);
+            const diffX = lastAverage.x - average.x,
+                xDir = diffX < 0 ? 'left' : 'right';
+            if (xDir !== gesture.xDir) {
+                gesture.xDir = xDir;
+                gesture.xValue = Math.abs(diffX);
+            }
+            gesture.xValue += Math.abs(diffX);
+            if (gesture.xValue > 20) {
+                event.gesture = gesture.xDir;
+                self.events.fire(Events.UPDATE, event, true);
+                gesture.xValue = 0;
+            }
+            const diffY = lastAverage.y - average.y,
+                yDir = diffY < 0 ? 'down' : 'up';
+            if (yDir !== gesture.yDir) {
+                gesture.yDir = yDir;
+                gesture.yValue = Math.abs(diffY);
+            }
+            gesture.yValue += Math.abs(diffY);
+            if (gesture.yValue > 20) {
+                event.gesture = gesture.yDir;
+                self.events.fire(Events.UPDATE, event, true);
+                gesture.yValue = 0;
+            }
+            lastAverage.x = average.x;
+            lastAverage.y = average.y;
+        }
     }
 }
 
@@ -4726,7 +5109,7 @@ class Vector3 {
         return p;
     }
 
-    copyFrom(p) {
+    copy(p) {
         this.x = p.x || 0;
         this.y = p.y || 0;
         this.z = p.z || 0;
@@ -4896,8 +5279,8 @@ class Vector3 {
     solveAngle2D(a, b = this) {
         const calc = new Vector2(),
             calc2 = new Vector2();
-        calc.copyFrom(a);
-        calc2.copyFrom(b);
+        calc.copy(a);
+        calc2.copy(b);
         return calc.solveAngle(calc2);
     }
 
@@ -4911,7 +5294,7 @@ class Vector3 {
 }
 
 /**
- * 3D utilities.
+ * 3D utilities with texture promise method.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
@@ -5043,6 +5426,13 @@ class Utils3D {
         const texture = this.getTexture(src);
         texture.onload = () => texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
         return texture;
+    }
+
+    static loadTexture(src) {
+        const texture = this.getTexture(src),
+            promise = Promise.create();
+        texture.onload = () => promise.resolve(texture);
+        return promise;
     }
 }
 
@@ -5326,7 +5716,7 @@ class Shader extends Component {
         this.properties = {};
 
         initProperties();
-        initShaders();
+        initShader();
 
         function initProperties() {
             for (let key in props) {
@@ -5335,7 +5725,7 @@ class Shader extends Component {
             }
         }
 
-        function initShaders() {
+        function initShader() {
             const params = {};
             params.vertexShader = process(vertexShader, 'vs');
             params.fragmentShader = process(fragmentShader, 'fs');
@@ -5383,29 +5773,6 @@ class Shader extends Component {
         }
     }
 
-    set(key, value) {
-        TweenManager.clearTween(this.uniforms[key]);
-        this.uniforms[key].value = value;
-    }
-
-    tween(key, value, time, ease, delay, callback, update) {
-        return TweenManager.tween(this.uniforms[key], { value }, time, ease, delay, callback, update);
-    }
-
-    getValues() {
-        const out = {};
-        for (let key in this.uniforms) out[key] = this.uniforms[key].value;
-        return out;
-    }
-
-    copyUniformsTo(object) {
-        for (let key in this.uniforms) object.uniforms[key] = this.uniforms[key];
-    }
-
-    cloneUniformsTo(object) {
-        for (let key in this.uniforms) object.uniforms[key] = { type: this.uniforms[key].type, value: this.uniforms[key].value };
-    }
-
     destroy() {
         this.material.dispose();
         return super.destroy();
@@ -5431,7 +5798,7 @@ class Effects extends Component {
         this.camera = params.camera;
         this.shader = params.shader;
         this.dpr = params.dpr || 1;
-        let renderTarget, camera, scene, mesh;
+        let renderTarget, scene, camera, mesh;
 
         initEffects();
         addListeners();
@@ -5440,8 +5807,8 @@ class Effects extends Component {
             renderTarget = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
             self.texture = renderTarget.texture;
             self.texture.minFilter = THREE.LinearFilter;
-            camera = new THREE.OrthographicCamera(self.stage.width / -2, self.stage.width / 2, self.stage.height / 2, self.stage.height / -2, 1, 1000);
             scene = new THREE.Scene();
+            camera = new THREE.OrthographicCamera(self.stage.width / -2, self.stage.width / 2, self.stage.height / 2, self.stage.height / -2, 1, 1000);
             mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), self.shader.material);
             scene.add(mesh);
         }
@@ -5464,6 +5831,18 @@ class Effects extends Component {
             this.renderer.render(this.scene, this.camera, renderTarget, true);
             mesh.material.uniforms.texture.value = renderTarget.texture;
             this.renderer.render(scene, camera);
+        };
+
+        this.destroy = () => {
+            scene.remove(mesh);
+            mesh.geometry.dispose();
+            mesh.material.dispose();
+            renderTarget.dispose();
+            renderTarget = null;
+            mesh = null;
+            camera = null;
+            scene = null;
+            return super.destroy();
         };
     }
 }
