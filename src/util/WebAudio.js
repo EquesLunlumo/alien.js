@@ -195,13 +195,13 @@ class WebAudio {
             };
 
             this.stop = () => {
-                if (!context) return;
                 this.active = false;
+                if (!context) return;
                 for (let id in sounds) {
                     const sound = sounds[id];
                     if (sound) sound.stop();
                 }
-                this.context.close();
+                context.close();
             };
         }
 
