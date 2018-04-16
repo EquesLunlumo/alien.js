@@ -1,7 +1,5 @@
 // Based on https://github.com/mattdesl/three-glslify-example by mattdesl
 
-#extension GL_OES_standard_derivatives : enable
-
 uniform float time;
 uniform vec2 resolution;
 uniform sampler2D texture;
