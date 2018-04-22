@@ -114,7 +114,7 @@ class WebAudio {
 
             this.createSound = (id, asset, callback) => {
                 sounds[id] = new Sound(asset);
-                if (Device.os === 'ios') callback();
+                if (Device.os === 'ios' && callback) callback();
                 else this.loadSound(id, callback);
                 return sounds[id];
             };
