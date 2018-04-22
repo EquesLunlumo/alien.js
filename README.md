@@ -85,6 +85,8 @@ class About extends Interface {
             wrapper = self.create('.wrapper');
         }
 
+        // Event listeners
+
         function addListeners() {
             self.events.add(Events.RESIZE, resize);
             resize();
@@ -229,6 +231,7 @@ class Data {
 
     static init() {
         const self = this;
+
         this.dispatcher = new StateDispatcher(true);
 
         addListeners();

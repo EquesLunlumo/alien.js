@@ -107,9 +107,9 @@ class Title extends Component {
     constructor() {
         super();
         const self = this;
-        this.object3D = new THREE.Object3D();
         let title, texture, shader, mesh;
 
+        this.object3D = new THREE.Object3D();
         World.scene.add(this.object3D);
 
         initCanvasTexture();
@@ -172,10 +172,10 @@ class Space extends Component {
     constructor() {
         super();
         const self = this;
-        this.object3D = new THREE.Object3D();
         const ratio = 1920 / 1080;
         let texture1, texture2, shader, mesh, slide, slide1, slide2, video1, video2, playing1, playing2, title;
 
+        this.object3D = new THREE.Object3D();
         World.scene.add(this.object3D);
 
         initTextures();

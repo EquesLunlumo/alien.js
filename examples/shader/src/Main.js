@@ -88,9 +88,9 @@ class Scene extends Component {
     constructor() {
         super();
         const self = this;
-        this.object3D = new THREE.Object3D();
         let alienkitty, shader, mesh;
 
+        this.object3D = new THREE.Object3D();
         World.scene.add(this.object3D);
 
         initCanvasTexture();

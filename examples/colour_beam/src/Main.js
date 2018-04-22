@@ -61,9 +61,9 @@ class Title extends Component {
     constructor() {
         super();
         const self = this;
-        this.object3D = new THREE.Object3D();
         let title, shader, mesh;
 
+        this.object3D = new THREE.Object3D();
         World.scene.add(this.object3D);
 
         initCanvasTexture();
@@ -104,10 +104,10 @@ class ColourBeam extends Component {
     constructor() {
         super();
         const self = this;
-        this.object3D = new THREE.Object3D();
         let shader, mesh, title,
             beamWidth = 40;
 
+        this.object3D = new THREE.Object3D();
         World.scene.add(this.object3D);
 
         initMesh();
