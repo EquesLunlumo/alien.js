@@ -183,7 +183,6 @@ class AudioController {
                 case 'mouse_move':
                     if (water) {
                         TweenManager.tween(water.gain, { value: Math.clamp(params[0], 0, 1) }, 100, 'linear');
-                        //water.gain.value = Math.clamp(params[0], 0, 1);
                         water.stereoPan.value = Math.clamp(params[1], -1, 1);
                         water.playbackRate.value = Math.clamp(0.8 + params[2] / 2.5, 0.8, 1.2);
                     }
@@ -1586,8 +1585,8 @@ class Fluid extends Component {
                 frame: World.frame,
                 resolution: World.resolution,
                 mouse: { value: Mouse.inverseNormal },
-                velocity: { value: new THREE.Vector2(0, 0) },
-                strength: { value: new THREE.Vector2(50, 0) },
+                velocity: { value: new THREE.Vector2() },
+                strength: { value: new THREE.Vector2() },
                 texture: { value: buffer0.texture }
             });
             passScene = new THREE.Scene();
@@ -1629,7 +1628,7 @@ class Fluid extends Component {
         function move() {
             if (!pointer.isMove && self.animatedIn) pointer.isMove = true;
             pointer.currentX = Mouse.x;
-            pointer.currentY = -Mouse.y;
+            pointer.currentY = Stage.height - Mouse.y;
         }
 
         function up() {

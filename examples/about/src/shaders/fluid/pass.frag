@@ -23,14 +23,14 @@ void main() {
     }
 
     vec2 p = gl_FragCoord.xy;
-    vec4 color = T(p);
+    vec4 c = T(p);
 
     vec4 n = T(p + vec2(0, 1));
     vec4 e = T(p + vec2(1, 0));
     vec4 s = T(p - vec2(0, 1));
     vec4 w = T(p - vec2(1, 0));
 
-    vec4 laplacian = (n + e + s + w - 4.0 * color);
+    vec4 laplacian = (n + e + s + w - 4.0 * c);
 
     vec4 dx = (e - w) / 2.0;
     vec4 dy = (n - s) / 2.0;
@@ -39,25 +39,25 @@ void main() {
     float div = dx.x + dy.y;
 
     // mass conservation, Euler method step
-    color.z -= dt * (dx.z * color.x + dy.z * color.y + div * color.z);
+    c.z -= dt * (dx.z * c.x + dy.z * c.y + div * c.z);
 
     // semi-Langrangian advection
-    color.xyw = T(p - dt * color.xy).xyw;
+    c.xyw = T(p - dt * c.xy).xyw;
 
     // viscosity/diffusion
-    color.xyw += dt * vec3(nu, nu, kappa) * laplacian.xyw;
+    c.xyw += dt * vec3(nu, nu, kappa) * laplacian.xyw;
 
     // nullify divergence with pressure field gradient
-    color.xy -= K * vec2(dx.z, dy.z);
+    c.xy -= K * vec2(dx.z, dy.z);
 
     // external source
     vec2 m = mouse.xy * resolution.xy;
-    color.xyw += dt * exp(-length2(p - m) / strength.x) * vec3(p - m + (velocity.xy * strength.y), 1);
+    c.xyw += dt * exp(-length2(p - m) / strength.x) * vec3(p - m + (velocity.xy * strength.y), 1);
 
     // dissipation
-    color.w -= dt * 0.0005;
+    c.w -= dt * 0.0005;
 
-    color.xyzw = clamp(color.xyzw, vec4(-5, -5, 0.5, 0), vec4(5, 5, 3, 5));
+    c.xyzw = clamp(c.xyzw, vec4(-5, -5, 0.5, 0), vec4(5, 5, 3, 5));
 
-    gl_FragColor = color;
+    gl_FragColor = c;
 }
