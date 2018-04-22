@@ -184,6 +184,18 @@ class WebAudio {
                 }
             };
 
+            this.remove = id => {
+                const sound = this.getSound(id);
+                if (sound && sound.source) {
+                    sound.source.buffer = null;
+                    sound.source.stop();
+                    sound.source.disconnect();
+                    sound.source = null;
+                    sound.playing = false;
+                    delete sounds[id];
+                }
+            };
+
             this.mute = () => {
                 if (!context) return;
                 TweenManager.tween(this.gain, { value: 0 }, 300, 'easeOutSine');
