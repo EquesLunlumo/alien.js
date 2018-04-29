@@ -414,18 +414,6 @@ class Interface {
         return this;
     }
 
-    press(callback) {
-        const press = e => {
-            if (!this.element) return false;
-            e.object = this.element.className === 'hit' ? this.parent : this;
-            e.action = e.type === 'mousedown' ? 'down' : 'up';
-            if (callback) callback(e);
-        };
-        this.element.addEventListener('mousedown', press, true);
-        this.element.addEventListener('mouseup', press, true);
-        return this;
-    }
-
     bind(event, callback) {
         if (event === 'touchstart' && !Device.mobile) event = 'mousedown';
         else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';
