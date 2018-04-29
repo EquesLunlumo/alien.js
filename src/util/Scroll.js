@@ -54,7 +54,7 @@ class Scroll extends Component {
         }
 
         function addListeners() {
-            window.addEventListener('wheel', scroll, true);
+            window.addEventListener('wheel', scroll);
             if (self.hitObject) self.hitObject.bind('touchstart', e => e.preventDefault());
             const input = self.hitObject ? self.hitObject.initClass(Interaction) : Mouse.input;
             self.events.add(input, Interaction.START, down);
@@ -130,7 +130,7 @@ class Scroll extends Component {
         }
 
         this.destroy = () => {
-            window.removeEventListener('wheel', scroll, true);
+            window.removeEventListener('wheel', scroll);
             return super.destroy();
         };
     }

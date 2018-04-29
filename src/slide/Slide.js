@@ -64,7 +64,7 @@ class Slide extends Component {
         }
 
         function addListeners() {
-            window.addEventListener('wheel', scroll, true);
+            window.addEventListener('wheel', scroll);
             self.events.add(Mouse.input, Interaction.START, down);
             self.events.add(Mouse.input, Interaction.DRAG, drag);
             self.events.add(Events.KEYBOARD_DOWN, keyPress);
@@ -169,7 +169,7 @@ class Slide extends Component {
         };
 
         this.destroy = () => {
-            window.removeEventListener('wheel', scroll, true);
+            window.removeEventListener('wheel', scroll);
             return super.destroy();
         };
     }

@@ -179,11 +179,11 @@ class Video extends Component {
         };
 
         this.trackProgress = () => {
-            this.element.addEventListener('progress', handleProgress, true);
+            this.element.addEventListener('progress', handleProgress);
         };
 
         this.destroy = () => {
-            this.element.removeEventListener('progress', handleProgress, true);
+            this.element.removeEventListener('progress', handleProgress);
             this.stop();
             this.element.src = '';
             this.object.destroy();

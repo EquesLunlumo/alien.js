@@ -118,13 +118,13 @@ class Accelerometer {
                 return compassHeading * (180 / Math.PI);
             };
 
-            window.addEventListener('devicemotion', updateAccel, true);
-            window.addEventListener('deviceorientation', updateOrientation, true);
+            window.addEventListener('devicemotion', updateAccel);
+            window.addEventListener('deviceorientation', updateOrientation);
 
             this.stop = () => {
                 this.active = false;
-                window.removeEventListener('devicemotion', updateAccel, true);
-                window.removeEventListener('deviceorientation', updateOrientation, true);
+                window.removeEventListener('devicemotion', updateAccel);
+                window.removeEventListener('deviceorientation', updateOrientation);
             };
         }
     }

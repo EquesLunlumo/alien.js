@@ -26,13 +26,13 @@ const Stage = new (class extends Interface {
         }
 
         function addListeners() {
-            window.addEventListener('focus', focus, true);
-            window.addEventListener('blur', blur, true);
-            window.addEventListener('keydown', keyDown, true);
-            window.addEventListener('keyup', keyUp, true);
-            window.addEventListener('keypress', keyPress, true);
-            window.addEventListener('resize', resize, true);
-            window.addEventListener('orientationchange', resize, true);
+            window.addEventListener('focus', focus);
+            window.addEventListener('blur', blur);
+            window.addEventListener('keydown', keyDown);
+            window.addEventListener('keyup', keyUp);
+            window.addEventListener('keypress', keyPress);
+            window.addEventListener('resize', resize);
+            window.addEventListener('orientationchange', resize);
             resize();
         }
 
@@ -72,13 +72,13 @@ const Stage = new (class extends Interface {
             if (Accelerometer.active) Accelerometer.stop();
             if (Mouse.active) Mouse.stop();
             if (WebAudio.active) WebAudio.stop();
-            window.removeEventListener('focus', focus, true);
-            window.removeEventListener('blur', blur, true);
-            window.removeEventListener('keydown', keyDown, true);
-            window.removeEventListener('keyup', keyUp, true);
-            window.removeEventListener('keypress', keyPress, true);
-            window.removeEventListener('resize', resize, true);
-            window.removeEventListener('orientationchange', resize, true);
+            window.removeEventListener('focus', focus);
+            window.removeEventListener('blur', blur);
+            window.removeEventListener('keydown', keyDown);
+            window.removeEventListener('keyup', keyUp);
+            window.removeEventListener('keypress', keyPress);
+            window.removeEventListener('resize', resize);
+            window.removeEventListener('orientationchange', resize);
             return super.destroy();
         };
     }

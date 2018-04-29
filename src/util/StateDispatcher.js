@@ -20,8 +20,8 @@ class StateDispatcher extends Component {
         storePath = getPath();
 
         function createListener() {
-            if (forceHash) window.addEventListener('hashchange', hashChange, true);
-            else window.addEventListener('popstate', popState, true);
+            if (forceHash) window.addEventListener('hashchange', hashChange);
+            else window.addEventListener('popstate', popState);
         }
 
         function hashChange() {
@@ -95,8 +95,8 @@ class StateDispatcher extends Component {
         };
 
         this.destroy = () => {
-            window.removeEventListener('hashchange', hashChange, true);
-            window.removeEventListener('popstate', popState, true);
+            window.removeEventListener('hashchange', hashChange);
+            window.removeEventListener('popstate', popState);
             return super.destroy();
         };
     }

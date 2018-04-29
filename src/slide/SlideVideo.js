@@ -56,8 +56,8 @@ class SlideVideo extends Component {
         }
 
         function ready() {
-            self.element.addEventListener('playing', playing, true);
-            self.element.addEventListener('pause', pause, true);
+            self.element.addEventListener('playing', playing);
+            self.element.addEventListener('pause', pause);
             self.element.play();
         }
 
@@ -85,8 +85,8 @@ class SlideVideo extends Component {
         this.destroy = () => {
             if (this.element) {
                 if (this.element.pause) {
-                    this.element.removeEventListener('playing', playing, true);
-                    this.element.removeEventListener('pause', pause, true);
+                    this.element.removeEventListener('playing', playing);
+                    this.element.removeEventListener('pause', pause);
                     this.pause();
                 }
                 URL.revokeObjectURL(this.element.src);
