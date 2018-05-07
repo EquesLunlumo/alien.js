@@ -103,7 +103,7 @@ class Data {
             }
         };
 
-        this.next = () => {
+        this.getNext = () => {
             Global.EXAMPLE_INDEX++;
             if (Global.EXAMPLE_INDEX > Config.EXAMPLES.length - 1) Global.EXAMPLE_INDEX = 0;
             let item = Config.EXAMPLES[Global.EXAMPLE_INDEX];
@@ -194,7 +194,7 @@ class AudioController {
                     TweenManager.tween(WebAudio.gain, { value: 1 }, 500, 'linear');
                     break;
                 case 'sound_off':
-                    TweenManager.tween(WebAudio.gain, { value: 0 }, 500, 'linear');
+                    TweenManager.tween(WebAudio.gain, { value: 0 }, 300, 'linear');
                     break;
                 case 'sound_on':
                     TweenManager.tween(WebAudio.gain, { value: 1 }, 500, 'linear');
@@ -225,7 +225,7 @@ class About extends Interface {
         addListeners();
 
         function initHTML() {
-            self.size('100%').size(800, 430).center();
+            self.size(800, 430).center();
             wrapper = self.create('.wrapper');
             wrapper.size(600, 350).enable3D(2000);
             wrapper.rotationY = 0;
@@ -246,7 +246,7 @@ class About extends Interface {
                 letterSpacing: 11 * 0.03,
                 opacity: 0.35
             });
-            description.html(Config.ABOUT_COPY);
+            description.text(Config.ABOUT_COPY);
             texts.push(description);
             ['Source code', 'Inspiration'].forEach((text, i) => {
                 const link = self.create('.link');
@@ -254,15 +254,14 @@ class About extends Interface {
                 link.fontStyle('Roboto Mono', 11, Config.UI_COLOR);
                 link.css({
                     left: 350,
-                    top: 250 + i * 27,
+                    top: 240 + i * 27,
                     fontWeight: '400',
-                    lineHeight: 15,
-                    letterSpacing: 1,
-                    textTransform: 'uppercase'
+                    lineHeight: 11 * 1.7,
+                    letterSpacing: 11 * 0.03,
+                    textDecoration: 'underline'
                 });
                 link.text(text);
-                link.letters = link.split();
-                link.interact(hover, click);
+                link.interact(null, click);
                 link.hit.mouseEnabled(true);
                 link.title = text;
                 texts.push(link);
@@ -281,16 +280,6 @@ class About extends Interface {
             } else {
                 wrapper.transform({ x: 0 });
                 texts.forEach(text => text.css({ left: 350 }));
-            }
-        }
-
-        function hover(e) {
-            if (e.action === 'over') {
-                e.object.letters.forEach((letter, i) => {
-                    letter.tween({ y: -5, opacity: 0 }, 125, 'easeOutCubic', 15 * i, () => {
-                        letter.transform({ y: 5 }).tween({ y: 0, opacity: 1 }, 300, 'easeOutCubic');
-                    });
-                });
             }
         }
 
@@ -996,17 +985,9 @@ class HeaderExamplesButton extends Interface {
             self.mouseEnabled(true);
         }
 
-        function animateOut() {
-            examples.animateOut();
-            open = false;
-            self.mouseEnabled(true);
-        }
-
         this.animateIn = () => {
-            this.transform({ x: -10 }).css({ opacity: 0 }).tween({ x: 0, opacity: 1 }, 450, 'easeOutCubic', 450, () => this.animatedIn = true);
+            this.transform({ x: -10 }).css({ opacity: 0 }).tween({ x: 0, opacity: 1 }, 450, 'easeOutCubic', 450);
         };
-
-        this.animateOut = animateOut;
     }
 }
 
@@ -1392,7 +1373,7 @@ class UI extends Interface {
         super('UI');
         const self = this;
         const buttons = [];
-        let bg, nav, footer, about;
+        let nav, footer, bg, about;
 
         initHTML();
         initViews();
@@ -1515,8 +1496,7 @@ class UI extends Interface {
         }
 
         function keyUp(e) {
-            // Escape
-            if (e.keyCode === 27) closeAbout();
+            if (e.keyCode === 27) closeAbout(); // Esc
         }
 
         this.update = () => {
@@ -1631,7 +1611,8 @@ class Fluid extends Component {
         function move() {
             if (!pointer.isMove && self.animatedIn) pointer.isMove = true;
             pointer.currentX = Mouse.x;
-            pointer.currentY = Stage.height - Mouse.y;
+            //pointer.currentY = Stage.height - Mouse.y;
+            pointer.currentY = -Mouse.y;
         }
 
         function up() {
@@ -1822,7 +1803,7 @@ class Loader extends Interface {
         let alienkitty, number, title, loader;
 
         initHTML();
-        initViews();
+        initView();
         initNumber();
         initTitle();
         initLoader();
@@ -1832,7 +1813,7 @@ class Loader extends Interface {
             self.progress = 0;
         }
 
-        function initViews() {
+        function initView() {
             alienkitty = self.initClass(AlienKitty);
             alienkitty.center().css({ marginTop: -108 });
             alienkitty.ready().then(alienkitty.animateIn);
@@ -1956,7 +1937,7 @@ class Main {
         function initSound() {
             const sound = Storage.get('sound');
             Global.SOUND = typeof sound === 'boolean' ? sound : true;
-            if (!Global.SOUND) WebAudio.mute();
+            if (!Global.SOUND) WebAudio.gain.value = 0;
         }
 
         function initStage() {
@@ -2034,7 +2015,7 @@ class Main {
                 Data.dispatcher.lock();
 
                 let item = e.item;
-                if (!item) item = Data.next();
+                if (!item) item = Data.getNext();
                 UI.instance().update();
 
                 if (item.path !== '') {
@@ -2105,4 +2086,4 @@ class Main {
     }
 }
 
-window.onload = () => new Main();
+new Main();

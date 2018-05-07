@@ -300,7 +300,8 @@ class Progress extends Interface {
         }
 
         function loop() {
-            if (self.progress >= 1 && !self.complete) complete();
+            if (self.complete) return;
+            if (self.progress >= 1) complete();
             drawCircle();
             canvas.render();
         }

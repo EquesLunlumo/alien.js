@@ -63,7 +63,7 @@ glslify [shader](https://rawgit.com/pschroen/alien.js/master/examples/shader/dis
 //          │
 //          └── Public scope
 //              │
-//              ├── Functions
+//              ├── Methods
 //              └── Overrides
 //
 
