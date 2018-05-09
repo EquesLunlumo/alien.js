@@ -185,8 +185,8 @@ class Interface {
                 if (!noScale) this.element.style.backgroundSize = w + 'px ' + h + 'px';
             }
         }
-        this.width = this.element.clientWidth;
-        this.height = this.element.clientHeight;
+        this.width = this.element.offsetWidth;
+        this.height = this.element.offsetHeight;
         return this;
     }
 
