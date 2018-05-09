@@ -34,10 +34,11 @@ class Scroll extends Component {
             y: 0
         };
         this.enabled = true;
-        const scrollTarget = {
-            x: 0,
-            y: 0
-        };
+        const callbacks = [],
+            scrollTarget = {
+                x: 0,
+                y: 0
+            };
         let axes = ['x', 'y'];
 
         initParameters();
@@ -128,7 +129,20 @@ class Scroll extends Component {
                     if (axis === 'y') self.object.element.scrollTop = self.y;
                 }
             });
+            callback(self.delta);
         }
+
+        function callback(delta) {
+            for (let i = 0; i < callbacks.length; i++) callbacks[i](delta);
+        }
+
+        this.link = callback => {
+            callbacks.push(callback);
+        };
+
+        this.unlink = callback => {
+            callbacks.remove(callback);
+        };
 
         this.destroy = () => {
             window.removeEventListener('wheel', scroll);
