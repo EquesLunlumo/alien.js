@@ -49,6 +49,7 @@ class Scroll extends Component {
             self.hitObject = params.hitObject || self.object;
             self.max.y = params.height || 0;
             self.max.x = params.width || 0;
+            self.limit = params.limit !== false;
             if (Array.isArray(params.axes)) axes = params.axes;
             if (self.object) self.object.css({ overflow: 'auto' });
         }
@@ -119,7 +120,7 @@ class Scroll extends Component {
         function loop() {
             axes.forEach(axis => {
                 if (!self.max[axis]) return;
-                scrollTarget[axis] = Math.clamp(scrollTarget[axis], 0, self.max[axis]);
+                if (self.limit) scrollTarget[axis] = Math.clamp(scrollTarget[axis], 0, self.max[axis]);
                 self.delta[axis] = scrollTarget[axis] - self[axis];
                 self[axis] += self.delta[axis];
                 if (self.object) {
