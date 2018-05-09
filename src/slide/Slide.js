@@ -67,7 +67,7 @@ class Slide extends Component {
             window.addEventListener('wheel', scroll);
             self.events.add(Mouse.input, Interaction.START, down);
             self.events.add(Mouse.input, Interaction.DRAG, drag);
-            self.events.add(Events.KEYBOARD_DOWN, keyPress);
+            self.events.add(Events.KEYBOARD_DOWN, keyDown);
             self.events.add(Events.RESIZE, resize);
             resize();
         }
@@ -102,12 +102,12 @@ class Slide extends Component {
             });
         }
 
-        function keyPress(e) {
+        function keyDown(e) {
             if (!self.enabled) return;
-            if (e.keyCode === 40) self.next(); // Down
-            if (e.keyCode === 39) self.next(); // Right
-            if (e.keyCode === 38) self.prev(); // Up
-            if (e.keyCode === 37) self.prev(); // Left
+            if (e.keyCode === 40) self.next();      // Down
+            else if (e.keyCode === 39) self.next(); // Right
+            else if (e.keyCode === 38) self.prev(); // Up
+            else if (e.keyCode === 37) self.prev(); // Left
         }
 
         function resize() {
