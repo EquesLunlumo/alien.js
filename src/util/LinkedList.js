@@ -86,7 +86,7 @@ class LinkedList {
         this.start = () => {
             this.current = this.first;
             this.prev = this.current;
-            return this.current;
+            return this.current.object;
         };
 
         this.next = () => {
@@ -94,7 +94,7 @@ class LinkedList {
             if (nodes.length === 1 || this.prev.next === this.first) return;
             this.current = this.current.next;
             this.prev = this.current;
-            return this.current;
+            return this.current.object;
         };
 
         this.destroy = destroy;
