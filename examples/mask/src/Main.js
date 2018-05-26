@@ -217,9 +217,9 @@ class World extends Component {
                 renderer,
                 scene,
                 camera,
-                shader,
                 dpr: World.dpr
             });
+            effects.add(shader);
         }
 
         function initTextures() {
