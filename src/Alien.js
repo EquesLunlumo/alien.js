@@ -48,4 +48,7 @@ export { Raycaster } from './three/Raycaster.js';
 export { ScreenProjection } from './three/ScreenProjection.js';
 export { Shader } from './three/Shader.js';
 export { Effects } from './three/Effects.js';
+export { ParticlePhysics } from './particle/ParticlePhysics.js';
+export { Particle } from './particle/Particle.js';
+export { RandomEulerRotation } from './particle/RandomEulerRotation.js';
 export { Stage } from './view/Stage.js';
