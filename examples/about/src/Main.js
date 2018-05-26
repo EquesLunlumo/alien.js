@@ -243,8 +243,7 @@ class About extends Interface {
                 top: 200,
                 fontWeight: '400',
                 lineHeight: 11 * 1.7,
-                letterSpacing: 11 * 0.03,
-                opacity: 0.35
+                letterSpacing: 11 * 0.03
             });
             description.text(Config.ABOUT_COPY);
             texts.push(description);
@@ -1100,39 +1099,6 @@ class Header extends Interface {
     }
 }
 
-/*class Logo extends Interface {
-
-    constructor() {
-        super('Logo');
-        const self = this;
-        const size = Device.phone ? 40 : 64;
-        let alienkitty;
-
-        initHTML();
-        initView();
-
-        function initHTML() {
-            self.size(90, 86);
-            self.css({
-                left: Config.UI_OFFSET,
-                top: Config.UI_OFFSET
-            });
-            const ratio = size / 90;
-            if (ratio < 1) self.transformPoint(0, 0).transform({ scale: ratio });
-            self.interact(null, click);
-        }
-
-        function initView() {
-            alienkitty = self.initClass(AlienKitty);
-            alienkitty.ready().then(alienkitty.animateIn);
-        }
-
-        function click() {
-            self.events.fire(Events.OPEN_ABOUT);
-        }
-    }
-}*/
-
 class NavBackground extends Interface {
 
     constructor(size, start, end, out) {
@@ -1375,13 +1341,13 @@ class UI extends Interface {
         const buttons = [];
         let nav, footer, bg, about;
 
-        initHTML();
+        initContainer();
         initViews();
         initBackground();
         addListeners();
         this.startRender(loop);
 
-        function initHTML() {
+        function initContainer() {
             Stage.add(self);
             self.size('100%').mouseEnabled(false);
             self.css({
@@ -1531,7 +1497,7 @@ class Fluid extends Component {
             prevX: 0,
             prevY: 0
         };
-        let renderer, camera, buffer0, buffer1, pass, view, passScene, viewScene, passMesh, viewMesh;
+        let renderer, camera, buffer1, buffer2, pass, view, passScene, viewScene, passMesh, viewMesh;
 
         initRenderer();
         initFramebuffers();
@@ -1545,21 +1511,19 @@ class Fluid extends Component {
 
         function initFramebuffers() {
             const params = {
-                    minFilter: THREE.LinearFilter,
-                    magFilter: THREE.LinearFilter,
-                    wrapS: THREE.ClampToEdgeWrapping,
-                    wrapT: THREE.ClampToEdgeWrapping,
-                    format: THREE.RGBAFormat,
-                    type: Device.os === 'ios' ? THREE.HalfFloatType : THREE.FloatType,
-                    depthBuffer: false,
-                    stencilBuffer: false
-                },
-                width = Stage.width * World.dpr,
-                height = Stage.height * World.dpr;
-            if (buffer0) buffer0.dispose();
+                minFilter: THREE.LinearFilter,
+                magFilter: THREE.LinearFilter,
+                wrapS: THREE.ClampToEdgeWrapping,
+                wrapT: THREE.ClampToEdgeWrapping,
+                format: THREE.RGBAFormat,
+                type: Device.os === 'ios' ? THREE.HalfFloatType : THREE.FloatType,
+                depthBuffer: false,
+                stencilBuffer: false
+            };
             if (buffer1) buffer1.dispose();
-            buffer0 = new THREE.WebGLRenderTarget(width, height, params);
-            buffer1 = new THREE.WebGLRenderTarget(width, height, params);
+            if (buffer2) buffer2.dispose();
+            buffer1 = new THREE.WebGLRenderTarget(Stage.width * World.dpr, Stage.height * World.dpr, params);
+            buffer2 = new THREE.WebGLRenderTarget(Stage.width * World.dpr, Stage.height * World.dpr, params);
         }
 
         function initShaders() {
@@ -1570,7 +1534,7 @@ class Fluid extends Component {
                 mouse: { value: Mouse.inverseNormal },
                 velocity: { value: new THREE.Vector2() },
                 strength: { value: new THREE.Vector2() },
-                texture: { value: buffer0.texture }
+                texture: { value: buffer1.texture }
             });
             passScene = new THREE.Scene();
             passMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), pass.material);
@@ -1578,7 +1542,7 @@ class Fluid extends Component {
             view = self.initClass(Shader, vertFluidBasic, fragFluidView, {
                 time: World.time,
                 resolution: World.resolution,
-                texture: { value: buffer0.texture }
+                texture: { value: buffer1.texture }
             });
             viewScene = new THREE.Scene();
             viewMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), view.material);
@@ -1586,8 +1550,8 @@ class Fluid extends Component {
         }
 
         function updateShaders() {
-            pass.uniforms.texture.value = buffer0.texture;
-            view.uniforms.texture.value = buffer0.texture;
+            pass.uniforms.texture.value = buffer1.texture;
+            view.uniforms.texture.value = buffer1.texture;
         }
 
         function addListeners() {
@@ -1629,11 +1593,11 @@ class Fluid extends Component {
             const distance = Math.min(10, Math.sqrt(deltaX * deltaX + deltaY * deltaY)) / 10;
             pass.uniforms.strength.value.x = !pointer.isMove || pointer.isDown ? 50 : 50 * distance;
             pass.uniforms.strength.value.y = 50 * distance;
-            pass.uniforms.texture.value = buffer0.texture;
-            renderer.render(passScene, camera, buffer1);
-            const buffer = buffer0;
-            buffer0 = buffer1;
-            buffer1 = buffer;
+            pass.uniforms.texture.value = buffer1.texture;
+            renderer.render(passScene, camera, buffer2);
+            const buffer = buffer1;
+            buffer1 = buffer2;
+            buffer2 = buffer;
             renderer.render(viewScene, camera);
             AudioController.updatePosition();
             World.frame.value++;
@@ -1645,8 +1609,8 @@ class Fluid extends Component {
         };
 
         this.destroy = () => {
-            if (buffer0) buffer0.dispose();
             if (buffer1) buffer1.dispose();
+            if (buffer2) buffer2.dispose();
             viewScene.remove(viewMesh);
             viewMesh.geometry.dispose();
             viewMesh.material.dispose();

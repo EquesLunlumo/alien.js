@@ -181,11 +181,11 @@ class CanvasLayer extends Interface {
         super('CanvasLayer');
         const self = this;
 
-        initHTML();
+        initContainer();
         initCanvas();
         addListeners();
 
-        function initHTML() {
+        function initContainer() {
             self.size('100%').mouseEnabled(false);
             Stage.add(self);
         }
@@ -232,7 +232,7 @@ class Data {
     static init() {
         const self = this;
 
-        this.dispatcher = new StateDispatcher(true);
+        this.dispatcher = Stage.initClass(StateDispatcher, true);
 
         addListeners();
 

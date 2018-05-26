@@ -184,7 +184,7 @@ class World extends Component {
     constructor() {
         super();
         const self = this;
-        let renderer, scene, camera, renderTarget, buffer0, buffer1, pass, view, passScene, viewScene, passMesh, viewMesh;
+        let renderer, scene, camera, renderTarget, buffer1, buffer2, pass, view, passScene, viewScene, passMesh, viewMesh;
 
         World.dpr = Math.min(2, Device.pixelRatio);
 
@@ -211,21 +211,19 @@ class World extends Component {
 
         function initFramebuffers() {
             const params = {
-                    minFilter: THREE.LinearFilter,
-                    magFilter: THREE.LinearFilter,
-                    wrapS: THREE.ClampToEdgeWrapping,
-                    wrapT: THREE.ClampToEdgeWrapping,
-                    format: THREE.RGBAFormat,
-                    type: Device.os === 'ios' ? THREE.HalfFloatType : THREE.FloatType,
-                    depthBuffer: false,
-                    stencilBuffer: false
-                },
-                width = Stage.width * World.dpr,
-                height = Stage.height * World.dpr;
-            if (buffer0) buffer0.dispose();
+                minFilter: THREE.LinearFilter,
+                magFilter: THREE.LinearFilter,
+                wrapS: THREE.ClampToEdgeWrapping,
+                wrapT: THREE.ClampToEdgeWrapping,
+                format: THREE.RGBAFormat,
+                type: Device.os === 'ios' ? THREE.HalfFloatType : THREE.FloatType,
+                depthBuffer: false,
+                stencilBuffer: false
+            };
             if (buffer1) buffer1.dispose();
-            buffer0 = new THREE.WebGLRenderTarget(width, height, params);
-            buffer1 = new THREE.WebGLRenderTarget(width, height, params);
+            if (buffer2) buffer2.dispose();
+            buffer1 = new THREE.WebGLRenderTarget(Stage.width * World.dpr, Stage.height * World.dpr, params);
+            buffer2 = new THREE.WebGLRenderTarget(Stage.width * World.dpr, Stage.height * World.dpr, params);
         }
 
         function initShaders() {
@@ -233,7 +231,7 @@ class World extends Component {
                 time: World.time,
                 frame: World.frame,
                 resolution: World.resolution,
-                texture1: { value: buffer0.texture },
+                texture1: { value: buffer1.texture },
                 texture2: { value: renderTarget.texture }
             });
             passScene = new THREE.Scene();
@@ -243,7 +241,7 @@ class World extends Component {
             view = self.initClass(Shader, vertMeltBasic, fragMeltView, {
                 time: World.time,
                 resolution: World.resolution,
-                texture: { value: buffer0.texture }
+                texture: { value: buffer1.texture }
             });
             viewScene = new THREE.Scene();
             viewMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), view.material);
@@ -253,8 +251,8 @@ class World extends Component {
 
         function updateShaders() {
             pass.uniforms.texture2.value = renderTarget.texture;
-            pass.uniforms.texture1.value = buffer0.texture;
-            view.uniforms.texture.value = buffer0.texture;
+            pass.uniforms.texture1.value = buffer1.texture;
+            view.uniforms.texture.value = buffer1.texture;
         }
 
         function addListeners() {
@@ -282,11 +280,11 @@ class World extends Component {
             World.time.value += delta * 0.001;
             renderer.render(scene, camera, renderTarget, true);
             pass.uniforms.texture2.value = renderTarget.texture;
-            pass.uniforms.texture1.value = buffer0.texture;
-            renderer.render(passScene, camera, buffer1);
-            const buffer = buffer0;
-            buffer0 = buffer1;
-            buffer1 = buffer;
+            pass.uniforms.texture1.value = buffer1.texture;
+            renderer.render(passScene, camera, buffer2);
+            const buffer = buffer1;
+            buffer1 = buffer2;
+            buffer2 = buffer;
             renderer.render(viewScene, camera);
             World.frame.value++;
         }
@@ -296,8 +294,8 @@ class World extends Component {
         };
 
         this.destroy = () => {
-            if (buffer0) buffer0.dispose();
             if (buffer1) buffer1.dispose();
+            if (buffer2) buffer2.dispose();
             viewScene.remove(viewMesh);
             viewMesh.geometry.dispose();
             viewMesh.material.dispose();
@@ -472,8 +470,8 @@ class Main {
 
             space = Stage.initClass(Space);
             space.ready().then(() => {
-                space.animateIn();
                 World.instance().animateIn();
+                space.animateIn();
             });
         }
     }

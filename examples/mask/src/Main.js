@@ -439,8 +439,8 @@ class Main {
                 World.instance().ready(),
                 space.ready()
             ]).then(() => {
-                space.animateIn();
                 World.instance().animateIn();
+                space.animateIn();
             });
         }
     }

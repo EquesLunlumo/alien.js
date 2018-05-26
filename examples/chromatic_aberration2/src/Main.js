@@ -252,7 +252,7 @@ class World extends Component {
             shader.uniforms.distortion.value += (distortion - shader.uniforms.distortion.value) * 0.3;
         }
 
-        this.initEffects = () => {
+        this.animateIn = () => {
             shader.uniforms.distortion.value = 0;
             TweenManager.tween(shader.uniforms.distortion, { value: 100 }, 7000, 'easeOutSine');
         };
@@ -420,9 +420,8 @@ class Main {
 
             space = Stage.initClass(Space);
             space.ready().then(() => {
+                World.instance().animateIn();
                 space.animateIn();
-
-                World.instance().initEffects();
             });
         }
     }

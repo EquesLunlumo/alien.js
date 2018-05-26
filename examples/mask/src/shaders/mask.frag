@@ -5,7 +5,7 @@ uniform float opacity;
 
 varying vec2 vUv;
 
-#pragma glslify: animateLevels = require('./levelmask/levelmask')
+#pragma glslify: animateLevels = require('./modules/levelmask/levelmask')
 
 void main() {
     float levels = animateLevels(texture2D(mask, vUv), opacity);
