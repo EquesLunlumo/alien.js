@@ -72,11 +72,11 @@ class Shader extends Component {
             };
             return code.replace(/#s?chunk\(\s?(\w+)\s?\);/g, threeChunk);
         }
-    }
 
-    destroy() {
-        this.material.dispose();
-        return super.destroy();
+        this.destroy = () => {
+            this.material.dispose();
+            return super.destroy();
+        };
     }
 }
 
