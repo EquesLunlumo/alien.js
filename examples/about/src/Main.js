@@ -1490,13 +1490,12 @@ class Fluid extends Component {
         super();
         const self = this;
         const pointer = {
-            isMove: false,
-            isDown: false,
-            currentX: 0,
-            currentY: 0,
-            prevX: 0,
-            prevY: 0
-        };
+                isMove: false,
+                isDown: false
+            },
+            pos = new Vector2(),
+            last = new Vector2(),
+            delta = new Vector2();
         let renderer, camera, buffer1, buffer2, pass, view, passScene, viewScene, passMesh, viewMesh;
 
         initRenderer();
@@ -1531,7 +1530,8 @@ class Fluid extends Component {
                 time: World.time,
                 frame: World.frame,
                 resolution: World.resolution,
-                mouse: { value: Mouse.inverseNormal },
+                mouse: { value: new THREE.Vector2(Mouse.inverseNormal.x, Mouse.inverseNormal.y) },
+                last: { value: new THREE.Vector2() },
                 velocity: { value: new THREE.Vector2() },
                 strength: { value: new THREE.Vector2() },
                 texture: { value: buffer1.texture }
@@ -1574,9 +1574,9 @@ class Fluid extends Component {
 
         function move() {
             if (!pointer.isMove && self.animatedIn) pointer.isMove = true;
-            pointer.currentX = Mouse.x;
-            //pointer.currentY = Stage.height - Mouse.y;
-            pointer.currentY = -Mouse.y;
+            pos.set(Mouse.x, Stage.height - Mouse.y);
+            pass.uniforms.last.value.copy(pass.uniforms.mouse.value);
+            pass.uniforms.mouse.value.set(pos.x / Stage.width, pos.y / Stage.height);
         }
 
         function up() {
@@ -1584,15 +1584,11 @@ class Fluid extends Component {
         }
 
         function loop() {
-            const deltaX = pointer.currentX - pointer.prevX,
-                deltaY = pointer.currentY - pointer.prevY;
-            pointer.prevX = pointer.currentX;
-            pointer.prevY = pointer.currentY;
-            pass.uniforms.velocity.value.x = deltaX;
-            pass.uniforms.velocity.value.y = deltaY;
-            const distance = Math.min(10, Math.sqrt(deltaX * deltaX + deltaY * deltaY)) / 10;
-            pass.uniforms.strength.value.x = !pointer.isMove || pointer.isDown ? 50 : 50 * distance;
-            pass.uniforms.strength.value.y = 50 * distance;
+            delta.subVectors(pos, last);
+            last.copy(pos);
+            pass.uniforms.velocity.value.copy(delta);
+            const distance = Math.min(10, delta.length()) / 10;
+            pass.uniforms.strength.value.set(!pointer.isMove || pointer.isDown ? 50 : 50 * distance, 50 * distance);
             pass.uniforms.texture.value = buffer1.texture;
             renderer.render(passScene, camera, buffer2);
             const buffer = buffer1;

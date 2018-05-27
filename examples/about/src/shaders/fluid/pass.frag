@@ -4,9 +4,12 @@ uniform float time;
 uniform int frame;
 uniform vec2 resolution;
 uniform vec2 mouse;
+uniform vec2 last;
 uniform vec2 velocity;
 uniform vec2 strength;
 uniform sampler2D texture;
+
+#define MAX_ITERATIONS 5.0
 
 #define T(p) texture2D(texture, (p) / resolution.xy)
 #define length2(p) dot(p, p)
@@ -51,8 +54,14 @@ void main() {
     c.xy -= K * vec2(dx.z, dy.z);
 
     // external source
-    vec2 m = mouse.xy * resolution.xy;
-    c.xyw += dt * exp(-length2(p - m) / strength.x) * vec3(p - m + (velocity.xy * strength.y), 1);
+    vec2 pos = last.xy;
+    float iterations = clamp((length(velocity) / 40.0) * MAX_ITERATIONS, 1.0, MAX_ITERATIONS);
+    for (float i = 0.0; i < MAX_ITERATIONS; i += 1.0) {
+        if (i >= iterations) break;
+        pos += (mouse.xy - pos.xy) * ((i + 1.0) / iterations);
+        vec2 m = pos.xy * resolution.xy;
+        c.xyw += dt * exp(-length2(p - m) / strength.x) * vec3(p - m + (velocity.xy * strength.y), 1);
+    }
 
     // dissipation
     c.w -= dt * 0.0005;
