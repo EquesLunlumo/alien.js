@@ -19,7 +19,7 @@ class Effects extends Component {
         this.renderer = params.renderer;
         this.scene = params.scene;
         this.camera = params.camera;
-        this.enabled = params.enabled === false ? false : true;
+        this.enabled = params.enabled !== false;
         this.passes = params.passes || [];
         this.dpr = params.dpr || 1;
         let renderTarget1, renderTarget2, scene, camera, mesh;
@@ -65,13 +65,9 @@ class Effects extends Component {
             else this.passes.remove(pass);
         };
 
-        this.renderToTexture = (clear, rt) => {
-            this.renderer.render(this.scene, this.camera, rt || renderTarget1, typeof clear === 'boolean' ? clear : true);
-        };
-
-        this.render = () => {
+        this.render = rt => {
             if (!this.enabled || !this.passes.length) {
-                this.renderer.render(this.scene, this.camera);
+                this.renderer.render(this.scene, this.camera, rt);
                 return;
             }
             this.renderer.render(this.scene, this.camera, renderTarget1, true);
@@ -85,7 +81,7 @@ class Effects extends Component {
             }
             mesh.material = this.passes[this.passes.length - 1].material;
             mesh.material.uniforms.texture.value = renderTarget1.texture;
-            this.renderer.render(scene, camera);
+            this.renderer.render(scene, camera, rt);
         };
 
         this.destroy = () => {
