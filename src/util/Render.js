@@ -49,6 +49,11 @@ class Render {
             render.remove(callback);
         };
 
+        this.tick = () => {
+            this.TIME = performance.now();
+            step(this.TIME);
+        };
+
         this.pause = () => {
             this.paused = true;
         };
