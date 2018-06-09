@@ -25,6 +25,7 @@ export { Storage } from './util/Storage.js';
 export { WebAudio } from './util/WebAudio.js';
 export { TweenManager } from './tween/TweenManager.js';
 export { Interpolation } from './tween/Interpolation.js';
+export { MathTween } from './tween/MathTween.js';
 export { Canvas } from './canvas/Canvas.js';
 export { CanvasGraphics } from './canvas/CanvasGraphics.js';
 export { CanvasTexture } from './canvas/CanvasTexture.js';
