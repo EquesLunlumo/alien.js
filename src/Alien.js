@@ -52,4 +52,5 @@ export { Effects } from './three/Effects.js';
 export { ParticlePhysics } from './particle/ParticlePhysics.js';
 export { Particle } from './particle/Particle.js';
 export { RandomEulerRotation } from './particle/RandomEulerRotation.js';
+export { EulerIntegrator } from './particle/EulerIntegrator.js';
 export { Stage } from './view/Stage.js';
