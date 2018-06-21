@@ -30,7 +30,7 @@ class WebAudio {
                 this.gain = {
                     set value(value) {
                         self.volume = value;
-                        self.output.gain.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.25);
+                        self.output.gain.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
                     },
                     get value() {
                         return self.volume;
@@ -40,7 +40,7 @@ class WebAudio {
                 this.playbackRate = {
                     set value(value) {
                         self.rate = value;
-                        if (self.source) self.source.playbackRate.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.25);
+                        if (self.source) self.source.playbackRate.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
                     },
                     get value() {
                         return self.rate;
@@ -50,7 +50,7 @@ class WebAudio {
                 this.stereoPan = {
                     set value(value) {
                         self.pan = value;
-                        if (self.stereo) self.stereo.pan.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.25);
+                        if (self.stereo) self.stereo.pan.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
                     },
                     get value() {
                         return self.pan;
@@ -81,7 +81,7 @@ class WebAudio {
                 this.gain = {
                     set value(value) {
                         self.volume = value;
-                        self.output.gain.linearRampToValueAtTime(value, context.currentTime + 0.25);
+                        self.output.gain.linearRampToValueAtTime(value, context.currentTime + 0.015);
                     },
                     get value() {
                         return self.volume;
@@ -141,7 +141,7 @@ class WebAudio {
                         sound.source.playbackRate.setValueAtTime(sound.rate, context.currentTime);
                         sound.source.connect(sound.stereo ? sound.stereo : sound.output);
                         sound.source.start();
-                        sound.output.gain.linearRampToValueAtTime(sound.volume, context.currentTime + 0.25);
+                        sound.output.gain.linearRampToValueAtTime(sound.volume, context.currentTime + 0.015);
                     }
                 });
             };
