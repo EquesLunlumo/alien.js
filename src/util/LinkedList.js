@@ -31,6 +31,7 @@ class LinkedList {
 
         function destroy() {
             for (let i = nodes.length - 1; i >= 0; i--) {
+                if (nodes[i].object && nodes[i].object.destroy) nodes[i].object.destroy();
                 nodes[i] = null;
                 nodes.splice(i, 1);
             }
