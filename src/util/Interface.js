@@ -577,12 +577,11 @@ class Interface {
     split(by = '') {
         const style = {
                 position: 'relative',
-                display: 'block',
+                display: 'inline-block',
                 width: 'auto',
                 height: 'auto',
                 margin: 0,
-                padding: 0,
-                cssFloat: 'left'
+                padding: 0
             },
             array = [],
             split = this.text().split(by);
