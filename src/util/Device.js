@@ -38,6 +38,9 @@ class Device {
             return pre;
         })();
         this.pixelRatio = window.devicePixelRatio;
+        this.webcam = !!(navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+        this.language = navigator.userLanguage || navigator.language;
+        this.webaudio = !!window.AudioContext;
         this.os = (() => {
             if (this.detect(['iphone', 'ipad'])) return 'ios';
             if (this.detect(['android'])) return 'android';
