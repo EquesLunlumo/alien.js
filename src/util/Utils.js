@@ -54,20 +54,6 @@ class Utils {
         return array.slice(0);
     }
 
-    static shuffleArray(array) {
-        let currentIndex = array.length,
-            temporaryValue,
-            randomIndex;
-        while (0 !== currentIndex) {
-            randomIndex = Math.floor(Math.random() * currentIndex);
-            currentIndex -= 1;
-            temporaryValue = array[currentIndex];
-            array[currentIndex] = array[randomIndex];
-            array[randomIndex] = temporaryValue;
-        }
-        return array;
-    }
-
     static basename(path, ext) {
         const name = path.split('/').last();
         return !ext ? name.split('.')[0] : name;

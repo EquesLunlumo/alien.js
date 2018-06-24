@@ -58,6 +58,19 @@ Math.mod = function (value, n) {
     return (value % n + n) % n;
 };
 
+Array.prototype.shuffle = function () {
+    let i = this.length - 1,
+        temp, r;
+    while (i !== 0) {
+        r = Math.floor(Math.random() * i);
+        i -= 1;
+        temp = this[i];
+        this[i] = this[r];
+        this[r] = temp;
+    }
+    return this;
+};
+
 Array.prototype.remove = function (element) {
     const index = this.indexOf(element);
     if (~index) return this.splice(index, 1);
