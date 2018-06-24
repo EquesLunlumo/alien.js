@@ -105,6 +105,10 @@ class Events {
             Events.emitter.fire(event, object);
         };
 
+        this.bubble = (object, event) => {
+            this.add(object, event, e => this.fire(event, e));
+        };
+
         this.destroy = () => {
             Events.emitter.destroy(this);
             linked.forEach(emitter => emitter.destroy(this));
