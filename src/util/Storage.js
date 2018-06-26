@@ -10,6 +10,7 @@ class Storage {
         if (value !== null && typeof value === 'object') value = JSON.stringify(value);
         if (value === null) window.localStorage.removeItem(key);
         else window.localStorage[key] = value;
+        return value;
     }
 
     static get(key) {
