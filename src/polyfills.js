@@ -59,7 +59,7 @@ Math.mod = function (value, n) {
 };
 
 Array.prototype.shuffle = function () {
-    let i = this.length - 1,
+    let i = this.length,
         temp, r;
     while (i !== 0) {
         r = Math.floor(Math.random() * i);
@@ -76,7 +76,7 @@ Array.storeRandom = function (arr) {
 };
 
 Array.prototype.random = function (range) {
-    let value = Math.floor(Math.random() * (this.length - 1));
+    let value = Math.floor(Math.random() * this.length);
     if (range && !this.randomStore) Array.storeRandom(this);
     if (!this.randomStore) return this[value];
     if (range > this.length - 1) range = this.length;
