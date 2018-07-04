@@ -90,18 +90,20 @@ class Interface {
     }
 
     destroy() {
-        this.removed = true;
-        const parent = this.parent;
-        if (parent && !parent.removed && parent.remove) parent.remove(this);
-        for (let i = this.classes.length - 1; i >= 0; i--) {
-            const child = this.classes[i];
-            if (child && child.destroy) child.destroy();
+        if (this.classes) {
+            this.removed = true;
+            const parent = this.parent;
+            if (parent && !parent.removed && parent.remove) parent.remove(this);
+            for (let i = this.classes.length - 1; i >= 0; i--) {
+                const child = this.classes[i];
+                if (child && child.destroy) child.destroy();
+            }
+            this.classes.length = 0;
+            this.element.object = null;
+            this.clearRenders();
+            this.clearTimers();
+            this.events.destroy();
         }
-        this.classes.length = 0;
-        this.element.object = null;
-        this.clearRenders();
-        this.clearTimers();
-        this.events.destroy();
         return Utils.nullObject(this);
     }
 
