@@ -68,8 +68,8 @@ class Device {
             if (this.detect(['firefox'])) return 'firefox';
             return 'unknown';
         })();
-        this.mobile = 'ontouchstart' in window && this.detect(['iphone', 'ipad', 'android', 'blackberry']);
-        this.tablet = Math.max(screen.width, screen.height) > 800;
+        this.mobile = this.detect(['iphone', 'ipad', 'android', 'blackberry']);
+        this.tablet = Math.max(window.screen ? screen.width : window.innerWidth, window.screen ? screen.height : window.innerHeight) > 1000;
         this.phone = !this.tablet;
         this.webgl = (() => {
             try {
