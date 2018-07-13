@@ -43,7 +43,9 @@ class AssetLoader extends Component {
                 window.WebAudio.createSound(key, asset, assetLoaded);
                 return;
             }
-            window.get(Assets.getPath(asset)).then(data => {
+            window.get(Assets.getPath(asset), {
+                credentials: 'include'
+            }).then(data => {
                 if (ext === 'json') Assets.storeData(key, data);
                 if (ext === 'js') window.eval(data.replace('use strict', ''));
                 assetLoaded();
