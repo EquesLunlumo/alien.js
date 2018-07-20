@@ -69,6 +69,11 @@ class Utils {
         }));
     }
 
+    static date(str) {
+        const split = str.split(/[^0-9]/);
+        return new Date(split[0], split[1] - 1, split[2], split[3], split[4], split[5]);
+    }
+
     static timestamp() {
         return (Date.now() + this.random(0, 99999)).toString();
     }
