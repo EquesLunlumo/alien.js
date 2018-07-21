@@ -283,7 +283,7 @@ class About extends Interface {
         }
 
         function click(e) {
-            AudioController.mute();
+            if (Global.SOUND) AudioController.mute();
             setTimeout(() => {
                 const title = e.object.title.toLowerCase();
                 getURL(~title.indexOf('source') ? Config.ABOUT_GITHUB_URL : Config.ABOUT_HYDRA_URL);
@@ -1093,7 +1093,7 @@ class Header extends Interface {
         }
 
         function sourceClick() {
-            AudioController.mute();
+            if (Global.SOUND) AudioController.mute();
             setTimeout(() => getURL(Config.ABOUT_GITHUB_URL), 300);
         }
     }
@@ -1952,7 +1952,7 @@ class Main {
                 loader = loader.destroy();
                 if (e.click) {
                     fluid.animateIn();
-                    AudioController.trigger('fluid_start');
+                    if (Global.SOUND) AudioController.trigger('fluid_start');
 
                     UI.instance();
                     Stage.delayedCall(() => {
@@ -1996,9 +1996,11 @@ class Main {
 
                     if (item.path === '') {
                         initWorld();
-                        if (Global.SOUND) AudioController.unmute();
                         fluid.animateIn();
-                        AudioController.trigger('fluid_start');
+                        if (Global.SOUND) {
+                            AudioController.unmute();
+                            AudioController.trigger('fluid_start');
+                        }
                     }
 
                     Stage.destroyed = true;
