@@ -28,22 +28,22 @@ Future web framework.
 
 #### shader
 
-glslify [shader](https://rawgit.com/pschroen/alien.js/master/examples/shader/dist/)  
-[colour beam](https://rawgit.com/pschroen/alien.js/master/examples/colour_beam/dist/)  
-[dissolve](https://rawgit.com/pschroen/alien.js/master/examples/dissolve/dist/) (fade transition)  
-[colorize](https://rawgit.com/pschroen/alien.js/master/examples/colorize/dist/) (fade transition)  
-[chromatic aberration](https://rawgit.com/pschroen/alien.js/master/examples/chromatic_aberration/dist/) (simple)  
-[chromatic aberration 2](https://rawgit.com/pschroen/alien.js/master/examples/chromatic_aberration2/dist/) (barrel distortion)  
-[rotate](https://rawgit.com/pschroen/alien.js/master/examples/rotate/dist/)  
-[rotate 2](https://rawgit.com/pschroen/alien.js/master/examples/rotate2/dist/) (pinhole)  
-[mask](https://rawgit.com/pschroen/alien.js/master/examples/mask/dist/) (levels transition)  
-[noise warp](https://rawgit.com/pschroen/alien.js/master/examples/noise_warp/dist/)  
-[noise dizzy](https://rawgit.com/pschroen/alien.js/master/examples/noise_dizzy/dist/)  
-[directional warp](https://rawgit.com/pschroen/alien.js/master/examples/directional_warp/dist/)  
-[directional warp 2](https://rawgit.com/pschroen/alien.js/master/examples/directional_warp2/dist/) (scroll transition)  
-[ripple](https://rawgit.com/pschroen/alien.js/master/examples/ripple/dist/)  
-[perlin](https://rawgit.com/pschroen/alien.js/master/examples/perlin/dist/)  
-[glitch displace](https://rawgit.com/pschroen/alien.js/master/examples/glitch_displace/dist/)  
+glslify [shader](https://rawgit.com/pschroen/alien.js/master/examples/shader/dist/)
+[colour beam](https://rawgit.com/pschroen/alien.js/master/examples/colour_beam/dist/)
+[dissolve](https://rawgit.com/pschroen/alien.js/master/examples/dissolve/dist/) (fade transition)
+[colorize](https://rawgit.com/pschroen/alien.js/master/examples/colorize/dist/) (fade transition)
+[chromatic aberration](https://rawgit.com/pschroen/alien.js/master/examples/chromatic_aberration/dist/) (simple)
+[chromatic aberration 2](https://rawgit.com/pschroen/alien.js/master/examples/chromatic_aberration2/dist/) (barrel distortion)
+[rotate](https://rawgit.com/pschroen/alien.js/master/examples/rotate/dist/)
+[rotate 2](https://rawgit.com/pschroen/alien.js/master/examples/rotate2/dist/) (pinhole)
+[mask](https://rawgit.com/pschroen/alien.js/master/examples/mask/dist/) (levels transition)
+[noise warp](https://rawgit.com/pschroen/alien.js/master/examples/noise_warp/dist/)
+[noise dizzy](https://rawgit.com/pschroen/alien.js/master/examples/noise_dizzy/dist/)
+[directional warp](https://rawgit.com/pschroen/alien.js/master/examples/directional_warp/dist/)
+[directional warp 2](https://rawgit.com/pschroen/alien.js/master/examples/directional_warp2/dist/) (scroll transition)
+[ripple](https://rawgit.com/pschroen/alien.js/master/examples/ripple/dist/)
+[perlin](https://rawgit.com/pschroen/alien.js/master/examples/perlin/dist/)
+[glitch displace](https://rawgit.com/pschroen/alien.js/master/examples/glitch_displace/dist/)
 [melt](https://rawgit.com/pschroen/alien.js/master/examples/melt/dist/) (feedback buffer)
 
 ### Example Class structure
@@ -267,7 +267,7 @@ new Main();
 
 ### Quickstart
 
-To build a project, make sure you have [Node.js](https://nodejs.org/) installed (at least version 4).
+To build a project, make sure you have [Node.js](https://nodejs.org/) installed (at least version 6.9).
 
 ```
 mkdir loader

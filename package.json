@@ -36,7 +36,7 @@
     "lint": "eslint src || exit 0"
   },
   "engines": {
-    "node": ">=4"
+    "node": ">=6.9.0"
   },
   "devDependencies": {
     "concurrently": "^3.5.1",

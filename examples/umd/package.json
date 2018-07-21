@@ -11,6 +11,9 @@
     "lint": "eslint src || exit 0",
     "pngquant": "rm -rf dist/assets/images && cp -r src/images dist/assets/ && find dist/assets/images -name '**.png' -exec pngquant --strip --ext=.png --force {} \\;"
   },
+  "engines": {
+    "node": ">=6.9.0"
+  },
   "devDependencies": {
     "concurrently": "^3.5.1",
     "eslint": "^4.19.1",

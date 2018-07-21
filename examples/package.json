@@ -8,6 +8,9 @@
     "pngquant": "for x in `find . -name 'rollup.config.js' -maxdepth 2 ! -path './alien.js*' -exec dirname {} \\;`; do echo \"$x\" && cd \"$x\" && rm -rf dist/assets/images && cp -r src/images dist/assets/ && find dist/assets/images -name '**.png' -exec pngquant --strip --ext=.png --force {} \\; && cd ..; done",
     "pngquant-flat": "for x in `find . -name 'rollup.config.js' -maxdepth 2 ! -path './alien.js*' -exec dirname {} \\;`; do echo \"$x\" && cd \"$x\" && rm -f dist/assets/*.png && cp src/images/*.png dist/assets/ && find dist/assets -name '*.png' -exec pngquant --strip --ext=.png --force {} \\; && cd ..; done"
   },
+  "engines": {
+    "node": ">=6.9.0"
+  },
   "devDependencies": {
     "concurrently": "^3.5.1",
     "eslint": "^4.19.1",
