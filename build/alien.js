@@ -58,6 +58,36 @@ Math.mod = function (value, n) {
     return (value % n + n) % n;
 };
 
+Array.prototype.shuffle = function () {
+    let i = this.length,
+        temp, r;
+    while (i !== 0) {
+        r = Math.floor(Math.random() * i);
+        i -= 1;
+        temp = this[i];
+        this[i] = this[r];
+        this[r] = temp;
+    }
+    return this;
+};
+
+Array.storeRandom = function (arr) {
+    arr.randomStore = [];
+};
+
+Array.prototype.random = function (range) {
+    let value = Math.floor(Math.random() * this.length);
+    if (range && !this.randomStore) Array.storeRandom(this);
+    if (!this.randomStore) return this[value];
+    if (range > this.length - 1) range = this.length;
+    if (range > 1) {
+        while (~this.randomStore.indexOf(value)) if (value++ > this.length - 1) value = 0;
+        this.randomStore.push(value);
+        if (this.randomStore.length >= range) this.randomStore.shift();
+    }
+    return this[value];
+};
+
 Array.prototype.remove = function (element) {
     const index = this.indexOf(element);
     if (~index) return this.splice(index, 1);
@@ -256,6 +286,11 @@ class Utils {
         }));
     }
 
+    static date(str) {
+        const split = str.split(/[^0-9]/);
+        return new Date(split[0], split[1] - 1, split[2], split[3], split[4], split[5]);
+    }
+
     static timestamp() {
         return (Date.now() + this.random(0, 99999)).toString();
     }
@@ -278,7 +313,7 @@ class Utils {
 class Render {
 
     static init() {
-        let self = this;
+        const self = this;
         const render = [],
             skipLimit = 200;
         let last = performance.now();
@@ -318,6 +353,11 @@ class Render {
 
         this.stop = callback => {
             render.remove(callback);
+        };
+
+        this.tick = () => {
+            this.TIME = performance.now();
+            step(this.TIME);
         };
 
         this.pause = () => {
@@ -469,8 +509,9 @@ class Events {
             Events.initialized = true;
         }
 
-        this.emitter = new Emitter();
         const linked = [];
+
+        this.emitter = new Emitter();
 
         this.add = (object, event, callback) => {
             if (typeof object !== 'object') {
@@ -502,6 +543,10 @@ class Events {
             if (this.emitter.fire(event, object)) return;
             if (local) return;
             Events.emitter.fire(event, object);
+        };
+
+        this.bubble = (object, event) => {
+            this.add(object, event, e => this.fire(event, e));
         };
 
         this.destroy = () => {
@@ -559,6 +604,9 @@ class Device {
             return pre;
         })();
         this.pixelRatio = window.devicePixelRatio;
+        this.webcam = !!(navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+        this.language = navigator.userLanguage || navigator.language;
+        this.webaudio = !!window.AudioContext;
         this.os = (() => {
             if (this.detect(['iphone', 'ipad'])) return 'ios';
             if (this.detect(['android'])) return 'android';
@@ -586,8 +634,8 @@ class Device {
             if (this.detect(['firefox'])) return 'firefox';
             return 'unknown';
         })();
-        this.mobile = 'ontouchstart' in window && this.detect(['iphone', 'ipad', 'android', 'blackberry']);
-        this.tablet = Math.max(screen.width, screen.height) > 800;
+        this.mobile = this.detect(['iphone', 'ipad', 'android', 'blackberry']);
+        this.tablet = Math.max(window.screen ? screen.width : window.innerWidth, window.screen ? screen.height : window.innerHeight) > 1000;
         this.phone = !this.tablet;
         this.webgl = (() => {
             try {
@@ -693,17 +741,19 @@ class Component {
     }
 
     destroy() {
-        this.removed = true;
-        const parent = this.parent;
-        if (parent && !parent.removed && parent.remove) parent.remove(this);
-        for (let i = this.classes.length - 1; i >= 0; i--) {
-            const child = this.classes[i];
-            if (child && child.destroy) child.destroy();
+        if (this.classes) {
+            this.removed = true;
+            const parent = this.parent;
+            if (parent && !parent.removed && parent.remove) parent.remove(this);
+            for (let i = this.classes.length - 1; i >= 0; i--) {
+                const child = this.classes[i];
+                if (child && child.destroy) child.destroy();
+            }
+            this.classes.length = 0;
+            this.clearRenders();
+            this.clearTimers();
+            this.events.destroy();
         }
-        this.classes.length = 0;
-        this.clearRenders();
-        this.clearTimers();
-        this.events.destroy();
         return Utils.nullObject(this);
     }
 
@@ -721,10 +771,11 @@ class Component {
 class Assets {
 
     static init() {
-        this.CDN = '';
-        this.CORS = null;
         const images = {},
             json = {};
+
+        this.CDN = '';
+        this.CORS = null;
 
         this.getPath = path => {
             if (~path.indexOf('//')) return path;
@@ -735,7 +786,7 @@ class Assets {
         this.createImage = (path, store, callback) => {
             if (typeof store !== 'boolean') {
                 callback = store;
-                store = undefined;
+                store = null;
             }
             const img = new Image();
             img.crossOrigin = this.CORS;
@@ -1187,6 +1238,8 @@ class TweenManager {
 
     static init() {
         const self = this;
+        const tweens = [];
+
         this.TRANSFORMS = ['x', 'y', 'z', 'scale', 'scaleX', 'scaleY', 'rotation', 'rotationX', 'rotationY', 'rotationZ', 'skewX', 'skewY', 'perspective'];
         this.CSS_EASES = {
             easeOutCubic:   'cubic-bezier(0.215, 0.610, 0.355, 1.000)',
@@ -1215,7 +1268,6 @@ class TweenManager {
             easeInOut:      'cubic-bezier(0.420, 0.000, 0.580, 1.000)',
             linear:         'linear'
         };
-        const tweens = [];
 
         Render.start(updateTweens);
 
@@ -1492,18 +1544,20 @@ class Interface {
     }
 
     destroy() {
-        this.removed = true;
-        const parent = this.parent;
-        if (parent && !parent.removed && parent.remove) parent.remove(this);
-        for (let i = this.classes.length - 1; i >= 0; i--) {
-            const child = this.classes[i];
-            if (child && child.destroy) child.destroy();
+        if (this.classes) {
+            this.removed = true;
+            const parent = this.parent;
+            if (parent && !parent.removed && parent.remove) parent.remove(this);
+            for (let i = this.classes.length - 1; i >= 0; i--) {
+                const child = this.classes[i];
+                if (child && child.destroy) child.destroy();
+            }
+            this.classes.length = 0;
+            this.element.object = null;
+            this.clearRenders();
+            this.clearTimers();
+            this.events.destroy();
         }
-        this.classes.length = 0;
-        this.element.object = null;
-        this.clearRenders();
-        this.clearTimers();
-        this.events.destroy();
         return Utils.nullObject(this);
     }
 
@@ -1587,8 +1641,8 @@ class Interface {
                 if (!noScale) this.element.style.backgroundSize = w + 'px ' + h + 'px';
             }
         }
-        this.width = this.element.clientWidth;
-        this.height = this.element.clientHeight;
+        this.width = this.element.offsetWidth;
+        this.height = this.element.offsetHeight;
         return this;
     }
 
@@ -1816,18 +1870,6 @@ class Interface {
         return this;
     }
 
-    press(callback) {
-        const press = e => {
-            if (!this.element) return false;
-            e.object = this.element.className === 'hit' ? this.parent : this;
-            e.action = e.type === 'mousedown' ? 'down' : 'up';
-            if (callback) callback(e);
-        };
-        this.element.addEventListener('mousedown', press, true);
-        this.element.addEventListener('mouseup', press, true);
-        return this;
-    }
-
     bind(event, callback) {
         if (event === 'touchstart' && !Device.mobile) event = 'mousedown';
         else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';
@@ -1940,6 +1982,57 @@ class Interface {
         return this;
     }
 
+    touchSwipe(callback, distance = 75) {
+        const move = {};
+        let startX, startY,
+            moving = false;
+
+        const touchStart = e => {
+            const touch = this.convertTouchEvent(e);
+            if (e.touches.length === 1) {
+                startX = touch.x;
+                startY = touch.y;
+                moving = true;
+                this.element.addEventListener('touchmove', touchMove, { passive: true });
+            }
+        };
+
+        const touchMove = e => {
+            if (moving) {
+                const touch = this.convertTouchEvent(e),
+                    dx = startX - touch.x,
+                    dy = startY - touch.y;
+                move.direction = null;
+                move.moving = null;
+                move.x = null;
+                move.y = null;
+                move.evt = e;
+                if (Math.abs(dx) >= distance) {
+                    touchEnd();
+                    move.direction = dx > 0 ? 'left' : 'right';
+                } else if (Math.abs(dy) >= distance) {
+                    touchEnd();
+                    move.direction = dy > 0 ? 'up' : 'down';
+                } else {
+                    move.moving = true;
+                    move.x = dx;
+                    move.y = dy;
+                }
+                if (callback) callback(move, e);
+            }
+        };
+
+        const touchEnd = () => {
+            startX = startY = moving = false;
+            this.element.removeEventListener('touchmove', touchMove);
+        };
+
+        this.element.addEventListener('touchstart', touchStart, { passive: true });
+        this.element.addEventListener('touchend', touchEnd, { passive: true });
+        this.element.addEventListener('touchcancel', touchEnd, { passive: true });
+        return this;
+    }
+
     preventScroll() {
         if (!Device.mobile) return;
         const preventScroll = e => {
@@ -1991,12 +2084,11 @@ class Interface {
     split(by = '') {
         const style = {
                 position: 'relative',
-                display: 'block',
+                display: 'inline-block',
                 width: 'auto',
                 height: 'auto',
                 margin: 0,
-                padding: 0,
-                cssFloat: 'left'
+                padding: 0
             },
             array = [],
             split = this.text().split(by);
@@ -2129,13 +2221,13 @@ class Accelerometer {
                 return compassHeading * (180 / Math.PI);
             };
 
-            window.addEventListener('devicemotion', updateAccel, true);
-            window.addEventListener('deviceorientation', updateOrientation, true);
+            window.addEventListener('devicemotion', updateAccel);
+            window.addEventListener('deviceorientation', updateOrientation);
 
             this.stop = () => {
                 this.active = false;
-                window.removeEventListener('devicemotion', updateAccel, true);
-                window.removeEventListener('deviceorientation', updateOrientation, true);
+                window.removeEventListener('devicemotion', updateAccel);
+                window.removeEventListener('deviceorientation', updateOrientation);
             };
         }
     }
@@ -2212,6 +2304,7 @@ class WebAudio {
 
             constructor(asset) {
                 const self = this;
+
                 this.asset = Assets.getPath(asset);
                 if (WebAudio.context.createStereoPanner) this.stereo = WebAudio.context.createStereoPanner();
                 this.output = WebAudio.context.createGain();
@@ -2224,7 +2317,7 @@ class WebAudio {
                 this.gain = {
                     set value(value) {
                         self.volume = value;
-                        self.output.gain.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                        self.output.gain.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
                     },
                     get value() {
                         return self.volume;
@@ -2234,7 +2327,7 @@ class WebAudio {
                 this.playbackRate = {
                     set value(value) {
                         self.rate = value;
-                        if (self.source) self.source.playbackRate.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                        if (self.source) self.source.playbackRate.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
                     },
                     get value() {
                         return self.rate;
@@ -2244,7 +2337,7 @@ class WebAudio {
                 this.stereoPan = {
                     set value(value) {
                         self.pan = value;
-                        if (self.stereo) self.stereo.pan.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                        if (self.stereo) self.stereo.pan.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
                     },
                     get value() {
                         return self.pan;
@@ -2275,7 +2368,7 @@ class WebAudio {
                 this.gain = {
                     set value(value) {
                         self.volume = value;
-                        self.output.gain.setTargetAtTime(value, context.currentTime, 0.01);
+                        self.output.gain.linearRampToValueAtTime(value, context.currentTime + 0.015);
                     },
                     get value() {
                         return self.volume;
@@ -2308,7 +2401,7 @@ class WebAudio {
 
             this.createSound = (id, asset, callback) => {
                 sounds[id] = new Sound(asset);
-                if (Device.os === 'ios') callback();
+                if (Device.os === 'ios' && callback) callback();
                 else this.loadSound(id, callback);
                 return sounds[id];
             };
@@ -2335,7 +2428,7 @@ class WebAudio {
                         sound.source.playbackRate.setValueAtTime(sound.rate, context.currentTime);
                         sound.source.connect(sound.stereo ? sound.stereo : sound.output);
                         sound.source.start();
-                        defer(() => sound.output.gain.setTargetAtTime(sound.volume, context.currentTime, 0.01));
+                        sound.output.gain.linearRampToValueAtTime(sound.volume, context.currentTime + 0.015);
                     }
                 });
             };
@@ -2375,6 +2468,18 @@ class WebAudio {
                         sound.stop();
                     });
                     sound.stopping = true;
+                }
+            };
+
+            this.remove = id => {
+                const sound = this.getSound(id);
+                if (sound && sound.source) {
+                    sound.source.buffer = null;
+                    sound.source.stop();
+                    sound.source.disconnect();
+                    sound.source = null;
+                    sound.playing = false;
+                    delete sounds[id];
                 }
             };
 
@@ -2425,13 +2530,13 @@ const Stage = new (class extends Interface {
         }
 
         function addListeners() {
-            window.addEventListener('focus', focus, true);
-            window.addEventListener('blur', blur, true);
-            window.addEventListener('keydown', keyDown, true);
-            window.addEventListener('keyup', keyUp, true);
-            window.addEventListener('keypress', keyPress, true);
-            window.addEventListener('resize', resize, true);
-            window.addEventListener('orientationchange', resize, true);
+            window.addEventListener('focus', focus);
+            window.addEventListener('blur', blur);
+            window.addEventListener('keydown', keyDown);
+            window.addEventListener('keyup', keyUp);
+            window.addEventListener('keypress', keyPress);
+            window.addEventListener('resize', resize);
+            window.addEventListener('orientationchange', resize);
             resize();
         }
 
@@ -2471,13 +2576,13 @@ const Stage = new (class extends Interface {
             if (Accelerometer.active) Accelerometer.stop();
             if (Mouse.active) Mouse.stop();
             if (WebAudio.active) WebAudio.stop();
-            window.removeEventListener('focus', focus, true);
-            window.removeEventListener('blur', blur, true);
-            window.removeEventListener('keydown', keyDown, true);
-            window.removeEventListener('keyup', keyUp, true);
-            window.removeEventListener('keypress', keyPress, true);
-            window.removeEventListener('resize', resize, true);
-            window.removeEventListener('orientationchange', resize, true);
+            window.removeEventListener('focus', focus);
+            window.removeEventListener('blur', blur);
+            window.removeEventListener('keydown', keyDown);
+            window.removeEventListener('keyup', keyUp);
+            window.removeEventListener('keypress', keyPress);
+            window.removeEventListener('resize', resize);
+            window.removeEventListener('orientationchange', resize);
             return super.destroy();
         };
     }
@@ -2689,6 +2794,8 @@ class Interaction extends Component {
 
         super();
         const self = this;
+        let distance, timeDown, timeMove;
+
         this.x = 0;
         this.y = 0;
         this.hold = new Vector2();
@@ -2696,7 +2803,6 @@ class Interaction extends Component {
         this.delta = new Vector2();
         this.move = new Vector2();
         this.velocity = new Vector2();
-        let distance, timeDown, timeMove;
 
         addListeners();
 
@@ -2804,7 +2910,9 @@ class AssetLoader extends Component {
                 window.WebAudio.createSound(key, asset, assetLoaded);
                 return;
             }
-            window.get(Assets.getPath(asset)).then(data => {
+            window.get(Assets.getPath(asset), {
+                credentials: 'include'
+            }).then(data => {
                 if (ext === 'json') Assets.storeData(key, data);
                 if (ext === 'js') window.eval(data.replace('use strict', ''));
                 assetLoaded();
@@ -2929,16 +3037,17 @@ class StateDispatcher extends Component {
     constructor(forceHash) {
         super();
         const self = this;
-        this.locked = false;
         let storePath, storeState,
             rootPath = '/';
 
-        createListener();
+        this.locked = false;
+
         storePath = getPath();
+        createListener();
 
         function createListener() {
-            if (forceHash) window.addEventListener('hashchange', hashChange, true);
-            else window.addEventListener('popstate', popState, true);
+            if (forceHash) window.addEventListener('hashchange', hashChange);
+            else window.addEventListener('popstate', popState);
         }
 
         function hashChange() {
@@ -3012,8 +3121,8 @@ class StateDispatcher extends Component {
         };
 
         this.destroy = () => {
-            window.removeEventListener('hashchange', hashChange, true);
-            window.removeEventListener('popstate', popState, true);
+            window.removeEventListener('hashchange', hashChange);
+            window.removeEventListener('popstate', popState);
             return super.destroy();
         };
     }
@@ -3031,6 +3140,7 @@ class Storage {
         if (value !== null && typeof value === 'object') value = JSON.stringify(value);
         if (value === null) window.localStorage.removeItem(key);
         else window.localStorage[key] = value;
+        return value;
     }
 
     static get(key) {
@@ -3294,11 +3404,12 @@ class CanvasGraphics extends CanvasObject {
     constructor(w = 0, h = w) {
         super();
         const self = this;
+        let draw = [],
+            mask;
+
         this.width = w;
         this.height = h;
         this.props = {};
-        let draw = [],
-            mask;
 
         function setProperties(context) {
             for (let key in self.props) context[key] = self.props[key];
@@ -3527,6 +3638,7 @@ class Canvas {
         }
 
         const self = this;
+
         this.element = document.createElement('canvas');
         this.context = this.element.getContext('2d');
         this.object = new Interface(this.element);
@@ -3625,9 +3737,10 @@ class CanvasTexture extends CanvasObject {
     constructor(texture, w = 0, h = w) {
         super();
         const self = this;
+        let mask;
+
         this.width = w;
         this.height = h;
-        let mask;
 
         initTexture();
 
@@ -3764,6 +3877,7 @@ class Color {
 
     constructor(value) {
         const self = this;
+
         this.r = 1;
         this.g = 1;
         this.b = 1;
@@ -3948,14 +4062,15 @@ class Video extends Component {
     constructor(params) {
         super();
         const self = this;
+        const event = {};
+        let lastTime, buffering, seekTo, forceRender,
+            tick = 0;
+
         this.loaded = {
             start: 0,
             end: 0,
             percent: 0
         };
-        const event = {};
-        let lastTime, buffering, seekTo, forceRender,
-            tick = 0;
 
         createElement();
         if (params.preload !== false) preload();
@@ -4112,11 +4227,11 @@ class Video extends Component {
         };
 
         this.trackProgress = () => {
-            this.element.addEventListener('progress', handleProgress, true);
+            this.element.addEventListener('progress', handleProgress);
         };
 
         this.destroy = () => {
-            this.element.removeEventListener('progress', handleProgress, true);
+            this.element.removeEventListener('progress', handleProgress);
             this.stop();
             this.element.src = '';
             this.object.destroy();
@@ -4253,6 +4368,13 @@ class Scroll extends Component {
 
         super();
         const self = this;
+        const callbacks = [],
+            scrollTarget = {
+                x: 0,
+                y: 0
+            };
+        let axes = ['x', 'y'];
+
         this.x = 0;
         this.y = 0;
         this.max = {
@@ -4264,11 +4386,6 @@ class Scroll extends Component {
             y: 0
         };
         this.enabled = true;
-        const scrollTarget = {
-            x: 0,
-            y: 0
-        };
-        let axes = ['x', 'y'];
 
         initParameters();
         addListeners();
@@ -4279,14 +4396,15 @@ class Scroll extends Component {
             self.hitObject = params.hitObject || self.object;
             self.max.y = params.height || 0;
             self.max.x = params.width || 0;
+            self.limit = params.limit !== false;
             if (Array.isArray(params.axes)) axes = params.axes;
             if (self.object) self.object.css({ overflow: 'auto' });
         }
 
         function addListeners() {
-            window.addEventListener('wheel', scroll, true);
+            window.addEventListener('wheel', scroll);
             if (self.hitObject) self.hitObject.bind('touchstart', e => e.preventDefault());
-            const input = self.hitObject ? self.hitObject.initClass(Interaction) : Mouse.input;
+            const input = self.hitObject ? self.initClass(Interaction, self.hitObject) : Mouse.input;
             self.events.add(input, Interaction.START, down);
             self.events.add(input, Interaction.DRAG, drag);
             self.events.add(input, Interaction.END, up);
@@ -4349,7 +4467,7 @@ class Scroll extends Component {
         function loop() {
             axes.forEach(axis => {
                 if (!self.max[axis]) return;
-                scrollTarget[axis] = Math.clamp(scrollTarget[axis], 0, self.max[axis]);
+                if (self.limit) scrollTarget[axis] = Math.clamp(scrollTarget[axis], 0, self.max[axis]);
                 self.delta[axis] = scrollTarget[axis] - self[axis];
                 self[axis] += self.delta[axis];
                 if (self.object) {
@@ -4357,10 +4475,23 @@ class Scroll extends Component {
                     if (axis === 'y') self.object.element.scrollTop = self.y;
                 }
             });
+            callback(self.delta);
         }
 
+        function callback(delta) {
+            for (let i = 0; i < callbacks.length; i++) callbacks[i](delta);
+        }
+
+        this.link = callback => {
+            callbacks.push(callback);
+        };
+
+        this.unlink = callback => {
+            callbacks.remove(callback);
+        };
+
         this.destroy = () => {
-            window.removeEventListener('wheel', scroll, true);
+            window.removeEventListener('wheel', scroll);
             return super.destroy();
         };
     }
@@ -4377,6 +4508,18 @@ class Slide extends Component {
     constructor(params = {}) {
         super();
         const self = this;
+        const scrollTarget = {
+                x: 0,
+                y: 0
+            },
+            scrollInertia = {
+                x: 0,
+                y: 0
+            },
+            event = {};
+        let axes = ['x', 'y'],
+            slideIndex;
+
         this.x = 0;
         this.y = 0;
         this.max = {
@@ -4397,17 +4540,6 @@ class Slide extends Component {
         this.ceil = 0;
         this.index = 0;
         this.enabled = true;
-        const scrollTarget = {
-                x: 0,
-                y: 0
-            },
-            scrollInertia = {
-                x: 0,
-                y: 0
-            },
-            event = {};
-        let axes = ['x', 'y'],
-            slideIndex;
 
         initParameters();
         addListeners();
@@ -4425,10 +4557,10 @@ class Slide extends Component {
         }
 
         function addListeners() {
-            window.addEventListener('wheel', scroll, true);
+            window.addEventListener('wheel', scroll);
             self.events.add(Mouse.input, Interaction.START, down);
             self.events.add(Mouse.input, Interaction.DRAG, drag);
-            self.events.add(Events.KEYBOARD_DOWN, keyPress);
+            self.events.add(Events.KEYBOARD_DOWN, keyDown);
             self.events.add(Events.RESIZE, resize);
             resize();
         }
@@ -4463,12 +4595,12 @@ class Slide extends Component {
             });
         }
 
-        function keyPress(e) {
+        function keyDown(e) {
             if (!self.enabled) return;
-            if (e.keyCode === 40) self.next(); // Down
-            if (e.keyCode === 39) self.next(); // Right
-            if (e.keyCode === 38) self.prev(); // Up
-            if (e.keyCode === 37) self.prev(); // Left
+            if (e.keyCode === 40) self.next();      // Down
+            else if (e.keyCode === 39) self.next(); // Right
+            else if (e.keyCode === 38) self.prev(); // Up
+            else if (e.keyCode === 37) self.prev(); // Left
         }
 
         function resize() {
@@ -4530,7 +4662,7 @@ class Slide extends Component {
         };
 
         this.destroy = () => {
-            window.removeEventListener('wheel', scroll, true);
+            window.removeEventListener('wheel', scroll);
             return super.destroy();
         };
     }
@@ -4589,8 +4721,8 @@ class SlideVideo extends Component {
         }
 
         function ready() {
-            self.element.addEventListener('playing', playing, true);
-            self.element.addEventListener('pause', pause, true);
+            self.element.addEventListener('playing', playing);
+            self.element.addEventListener('pause', pause);
             self.element.play();
         }
 
@@ -4618,8 +4750,8 @@ class SlideVideo extends Component {
         this.destroy = () => {
             if (this.element) {
                 if (this.element.pause) {
-                    this.element.removeEventListener('playing', playing, true);
-                    this.element.removeEventListener('pause', pause, true);
+                    this.element.removeEventListener('playing', playing);
+                    this.element.removeEventListener('pause', pause);
                     this.pause();
                 }
                 URL.revokeObjectURL(this.element.src);
@@ -4641,9 +4773,10 @@ class SlideLoader extends Component {
     constructor(slides, callback) {
         super();
         const self = this;
+        let loaded = 0;
+
         this.list = [];
         this.pathList = [];
-        let loaded = 0;
 
         slides.forEach(params => {
             this.list.push(new SlideVideo(params, slideLoaded));
@@ -4935,11 +5068,12 @@ class WebcamMotion extends Component {
 class LinkedList {
 
     constructor() {
+        const nodes = [];
+
         this.first = null;
         this.last = null;
         this.current = null;
         this.prev = null;
-        const nodes = [];
 
         function add(object) {
             return nodes[nodes.push({ object, prev: null, next: null }) - 1];
@@ -4957,6 +5091,7 @@ class LinkedList {
 
         function destroy() {
             for (let i = nodes.length - 1; i >= 0; i--) {
+                if (nodes[i].object && nodes[i].object.destroy) nodes[i].object.destroy();
                 nodes[i] = null;
                 nodes.splice(i, 1);
             }
@@ -5012,7 +5147,7 @@ class LinkedList {
         this.start = () => {
             this.current = this.first;
             this.prev = this.current;
-            return this.current;
+            return this.current.object;
         };
 
         this.next = () => {
@@ -5020,7 +5155,7 @@ class LinkedList {
             if (nodes.length === 1 || this.prev.next === this.first) return;
             this.current = this.current.next;
             this.prev = this.current;
-            return this.current;
+            return this.current.object;
         };
 
         this.destroy = destroy;
@@ -5037,6 +5172,7 @@ class ObjectPool {
 
     constructor(type, number) {
         const pool = [];
+
         this.array = pool;
 
         if (type) for (let i = 0; i < number || 10; i++) pool.push(new type());
@@ -5448,10 +5584,11 @@ class Raycaster extends Component {
 
     constructor(camera) {
         super();
-        this.camera = camera;
         const calc = new THREE.Vector2(),
             raycaster = new THREE.Raycaster();
         let debug;
+
+        this.camera = camera;
 
         function ascSort(a, b) {
             return a.distance - b.distance;
@@ -5535,13 +5672,14 @@ class Interaction3D extends Component {
 
         super();
         const self = this;
+        const event = {};
+        let hoverTarget, clickTarget;
+
         this.ray = new Raycaster(camera);
         this.meshes = [];
         this.meshCallbacks = [];
         this.cursor = 'auto';
         this.enabled = true;
-        const event = {};
-        let hoverTarget, clickTarget;
 
         addListeners();
 
@@ -5712,6 +5850,7 @@ class Shader extends Component {
     constructor(vertexShader, fragmentShader, props) {
         super();
         const self = this;
+
         this.uniforms = {};
         this.properties = {};
 
@@ -5771,11 +5910,11 @@ class Shader extends Component {
             };
             return code.replace(/#s?chunk\(\s?(\w+)\s?\);/g, threeChunk);
         }
-    }
 
-    destroy() {
-        this.material.dispose();
-        return super.destroy();
+        this.destroy = () => {
+            this.material.dispose();
+            return super.destroy();
+        };
     }
 }
 
@@ -5792,24 +5931,26 @@ class Effects extends Component {
     constructor(stage, params) {
         super();
         const self = this;
+        let renderTarget1, renderTarget2, scene, camera, mesh;
+
         this.stage = stage;
         this.renderer = params.renderer;
         this.scene = params.scene;
         this.camera = params.camera;
-        this.shader = params.shader;
+        this.enabled = params.enabled !== false;
+        this.passes = params.passes || [];
         this.dpr = params.dpr || 1;
-        let renderTarget, scene, camera, mesh;
+        this.rt = params.rt;
 
         initEffects();
         addListeners();
 
         function initEffects() {
-            renderTarget = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
-            self.texture = renderTarget.texture;
-            self.texture.minFilter = THREE.LinearFilter;
+            renderTarget1 = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
+            renderTarget2 = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
             scene = new THREE.Scene();
             camera = new THREE.OrthographicCamera(self.stage.width / -2, self.stage.width / 2, self.stage.height / 2, self.stage.height / -2, 1, 1000);
-            mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), self.shader.material);
+            mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), new THREE.MeshBasicMaterial());
             scene.add(mesh);
         }
 
@@ -5818,8 +5959,10 @@ class Effects extends Component {
         }
 
         function resize() {
-            renderTarget.dispose();
-            renderTarget = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
+            renderTarget1.dispose();
+            renderTarget2.dispose();
+            renderTarget1 = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
+            renderTarget2 = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
             camera.left = self.stage.width / -2;
             camera.right = self.stage.width / 2;
             camera.top = self.stage.height / 2;
@@ -5827,22 +5970,372 @@ class Effects extends Component {
             camera.updateProjectionMatrix();
         }
 
-        this.render = () => {
-            this.renderer.render(this.scene, this.camera, renderTarget, true);
-            mesh.material.uniforms.texture.value = renderTarget.texture;
-            this.renderer.render(scene, camera);
+        this.add = (pass, index) => {
+            if (typeof index === 'number') {
+                this.passes.splice(index, 0, pass);
+                return;
+            }
+            this.passes.push(pass);
+        };
+
+        this.remove = pass => {
+            if (typeof pass === 'number') this.passes.splice(pass);
+            else this.passes.remove(pass);
+        };
+
+        this.render = rt => {
+            if (!this.enabled || !this.passes.length) {
+                this.renderer.render(this.scene, this.camera, rt || this.rt);
+                return;
+            }
+            this.renderer.render(this.scene, this.camera, renderTarget1, true);
+            for (let i = 0; i < this.passes.length - 1; i++) {
+                mesh.material = this.passes[i].material;
+                mesh.material.uniforms.texture.value = renderTarget1.texture;
+                this.renderer.render(scene, camera, renderTarget2);
+                const renderTarget = renderTarget1;
+                renderTarget1 = renderTarget2;
+                renderTarget2 = renderTarget;
+            }
+            mesh.material = this.passes[this.passes.length - 1].material;
+            mesh.material.uniforms.texture.value = renderTarget1.texture;
+            this.renderer.render(scene, camera, rt || this.rt);
         };
 
         this.destroy = () => {
             scene.remove(mesh);
             mesh.geometry.dispose();
             mesh.material.dispose();
-            renderTarget.dispose();
-            renderTarget = null;
+            renderTarget1.dispose();
+            renderTarget2.dispose();
+            renderTarget1 = null;
+            renderTarget2 = null;
             mesh = null;
             camera = null;
             scene = null;
             return super.destroy();
+        };
+    }
+}
+
+/**
+ * Euler integrator.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class EulerIntegrator {
+
+    constructor() {
+        const self = this;
+        let vel, acc;
+
+        this.useDeltaTime = false;
+
+        function createVectors() {
+            const Vector = self.type === '3D' ? Vector3 : Vector2;
+            vel = new Vector();
+            acc = new Vector();
+        }
+
+        this.integrate = (particles, dt, drag) => {
+            if (!vel) createVectors();
+            const dtSq = dt * dt;
+            let p = particles.start();
+            while (p) {
+                if (!p.fixed && p.enabled) {
+                    p.old.pos.copy(p.pos);
+                    p.acc.multiply(p.massInv);
+                    vel.copy(p.vel);
+                    acc.copy(p.acc);
+                    if (this.useDeltaTime) {
+                        p.pos.add(vel.multiply(dt)).add(acc.multiply(0.5 * dtSq));
+                        p.vel.add(p.acc.multiply(dt));
+                    } else {
+                        p.pos.add(vel).add(acc.multiply(0.5));
+                        p.vel.add(p.acc);
+                    }
+                    if (drag) p.vel.multiply(drag);
+                    p.acc.clear();
+                }
+                if (p.saveTo) p.saveTo.copy(p.pos);
+                p = particles.next();
+            }
+        };
+    }
+}
+
+/**
+ * Particle physics.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class ParticlePhysics extends Component {
+
+    constructor(integrator = new EulerIntegrator()) {
+        super();
+        const self = this;
+        const timestep = 1 / 60,
+            toDelete = [];
+        let clock = null,
+            buffer = 0;
+
+        this.friction = 1;
+        this.maxSteps = 1;
+        this.emitters = new LinkedList();
+        this.initializers = new LinkedList();
+        this.behaviors = new LinkedList();
+        this.particles = new LinkedList();
+        this.springs = new LinkedList();
+
+        function init(p) {
+            let i = self.initializers.start();
+            while (i) {
+                i(p);
+                i = self.initializers.next();
+            }
+        }
+
+        function updateSprings(dt) {
+            let s = self.springs.start();
+            while (s) {
+                s.update(dt);
+                s = self.springs.next();
+            }
+        }
+
+        function deleteParticles() {
+            for (let i = toDelete.length - 1; i >= 0; i--) {
+                const particle = toDelete[i];
+                self.particles.remove(particle);
+                particle.system = null;
+            }
+        }
+
+        function updateParticles(dt, list = self.particles) {
+            let index = 0,
+                p = list.start();
+            while (p) {
+                if (p.enabled) {
+                    let b = self.behaviors.start();
+                    while (b) {
+                        b.applyBehavior(p, dt, index);
+                        b = self.behaviors.next();
+                    }
+                    if (p.behaviors.length) p.update(dt, index);
+                    if (p.childList) updateParticles(dt, p.childList);
+                }
+                index++;
+                p = list.next();
+            }
+        }
+
+        function integrate(dt) {
+            updateParticles(dt);
+            if (self.springs.length) updateSprings(dt);
+            if (!self.skipIntegration) integrator.integrate(self.particles, dt, self.friction);
+        }
+
+        this.addEmitter = emitter => {
+            this.emitters.push(emitter);
+            emitter.parent = emitter.system = this;
+        };
+
+        this.removeEmitter = emitter => {
+            this.emitters.remove(emitter);
+            emitter.parent = emitter.system = null;
+        };
+
+        this.addInitializer = init => {
+            this.initializers.push(init);
+        };
+
+        this.removeInitializer = init => {
+            this.initializers.remove(init);
+        };
+
+        this.addBehavior = b => {
+            this.behaviors.push(b);
+            b.system = this;
+        };
+
+        this.removeBehavior = b => {
+            this.behaviors.remove(b);
+        };
+
+        this.addParticle = p => {
+            if (!integrator.type) integrator.type = typeof p.pos.z === 'number' ? '3D' : '2D';
+            p.system = this;
+            this.particles.push(p);
+            if (this.initializers.length) init(p);
+        };
+
+        this.removeParticle = p => {
+            p.system = null;
+            toDelete.push(p);
+        };
+
+        this.addSpring = s => {
+            s.system = this;
+            this.springs.push(s);
+        };
+
+        this.removeSpring = s => {
+            s.system = null;
+            this.springs.remove(s);
+        };
+
+        this.update = force => {
+            if (!clock) clock = Render.TIME;
+            let time = Render.TIME,
+                delta = time - clock;
+            if (!force && delta <= 0) return;
+            delta *= 0.001;
+            clock = time;
+            buffer += delta;
+            if (!force) {
+                let i = 0;
+                while (buffer >= timestep && i++ < this.maxSteps) {
+                    integrate(timestep);
+                    buffer -= timestep;
+                    time += timestep;
+                }
+            } else {
+                integrate(0.016);
+            }
+            if (toDelete.length) deleteParticles();
+        };
+    }
+}
+
+/**
+ * Particle.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Particle {
+
+    constructor(pos, mass = 1, radius = 1) {
+        const self = this;
+
+        this.mass = mass;
+        this.massInv = 1 / this.mass;
+        this.radius = radius;
+        this.radiusSq = this.radius * this.radius;
+        this.behaviors = new LinkedList();
+        this.fixed = false;
+        this.enabled = true;
+
+        initVectors();
+
+        function initVectors() {
+            const Vector = typeof pos.z === 'number' ? Vector3 : Vector2,
+                vel = new Vector(),
+                acc = new Vector(),
+                old = {};
+            old.pos = new Vector();
+            old.vel = new Vector();
+            old.acc = new Vector();
+            self.pos = self.position = pos;
+            self.vel = self.velocity = vel;
+            self.acc = self.acceleration = acc;
+            self.old = old;
+            self.old.pos.copy(pos);
+        }
+    }
+
+    moveTo(pos) {
+        this.pos.copy(pos);
+        this.old.pos.copy(pos);
+        this.acc.clear();
+        this.vel.clear();
+    }
+
+    setMass(mass = 1) {
+        this.mass = mass;
+        this.massInv = 1 / this.mass;
+    }
+
+    setRadius(radius) {
+        this.radius = radius;
+        this.radiusSq = this.radius * this.radius;
+    }
+
+    update(dt) {
+        if (!this.behaviors.length) return;
+        let b = this.behaviors.start();
+        while (b) {
+            b.applyBehavior(this, dt);
+            b = this.behaviors.next();
+        }
+    }
+
+    applyForce(force) {
+        this.acc.add(force);
+    }
+
+    addBehavior(behavior) {
+        this.behaviors.push(behavior);
+    }
+
+    removeBehavior(behavior) {
+        this.behaviors.remove(behavior);
+    }
+
+    addParticle(p) {
+        if (!this.children) {
+            this.children = [];
+            this.childList = new LinkedList();
+        }
+        this.children.push(p);
+        this.childList.push(p);
+    }
+}
+
+/**
+ * Random Euler rotation.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class RandomEulerRotation {
+
+    constructor(container) {
+        const euler = ['x', 'y', 'z'];
+        let rot;
+
+        this.speed = 1;
+
+        initRotation();
+
+        function initRotation() {
+            rot = {};
+            rot.x = Math.random(0, 2);
+            rot.y = Math.random(0, 2);
+            rot.z = Math.random(0, 2);
+            rot.vx = Math.random(-5, 5) * 0.0025;
+            rot.vy = Math.random(-5, 5) * 0.0025;
+            rot.vz = Math.random(-5, 5) * 0.0025;
+        }
+
+        this.update = () => {
+            const time = Render.TIME;
+            for (let i = 0; i < 3; i++) {
+                const v = euler[i];
+                switch (rot[v]) {
+                    case 0:
+                        container.rotation[v] += Math.cos(Math.sin(time * 0.25)) * rot['v' + v] * this.speed;
+                        break;
+                    case 1:
+                        container.rotation[v] += Math.cos(Math.sin(time * 0.25)) * rot['v' + v] * this.speed;
+                        break;
+                    case 2:
+                        container.rotation[v] += Math.cos(Math.cos(time * 0.25)) * rot['v' + v] * this.speed;
+                        break;
+                }
+            }
         };
     }
 }

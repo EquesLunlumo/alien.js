@@ -78,6 +78,38 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         return (value % n + n) % n;
     };
 
+    Array.prototype.shuffle = function () {
+        var i = this.length,
+            temp = void 0,
+            r = void 0;
+        while (i !== 0) {
+            r = Math.floor(Math.random() * i);
+            i -= 1;
+            temp = this[i];
+            this[i] = this[r];
+            this[r] = temp;
+        }
+        return this;
+    };
+
+    Array.storeRandom = function (arr) {
+        arr.randomStore = [];
+    };
+
+    Array.prototype.random = function (range) {
+        var value = Math.floor(Math.random() * this.length);
+        if (range && !this.randomStore) Array.storeRandom(this);
+        if (!this.randomStore) return this[value];
+        if (range > this.length - 1) range = this.length;
+        if (range > 1) {
+            while (~this.randomStore.indexOf(value)) {
+                if (value++ > this.length - 1) value = 0;
+            }this.randomStore.push(value);
+            if (this.randomStore.length >= range) this.randomStore.shift();
+        }
+        return this[value];
+    };
+
     Array.prototype.remove = function (element) {
         var index = this.indexOf(element);
         if (~index) return this.splice(index, 1);
@@ -356,6 +388,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 }));
             }
         }, {
+            key: 'date',
+            value: function date(str) {
+                var split = str.split(/[^0-9]/);
+                return new Date(split[0], split[1] - 1, split[2], split[3], split[4], split[5]);
+            }
+        }, {
             key: 'timestamp',
             value: function timestamp() {
                 return (Date.now() + this.random(0, 99999)).toString();
@@ -431,6 +469,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                 this.stop = function (callback) {
                     render.remove(callback);
+                };
+
+                this.tick = function () {
+                    _this.TIME = performance.now();
+                    step(_this.TIME);
                 };
 
                 this.pause = function () {
@@ -617,8 +660,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             Events.initialized = true;
         }
 
-        this.emitter = new Emitter();
         var linked = [];
+
+        this.emitter = new Emitter();
 
         this.add = function (object, event, callback) {
             if ((typeof object === 'undefined' ? 'undefined' : _typeof(object)) !== 'object') {
@@ -652,6 +696,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             if (_this3.emitter.fire(event, object)) return;
             if (local) return;
             Events.emitter.fire(event, object);
+        };
+
+        this.bubble = function (object, event) {
+            _this3.add(object, event, function (e) {
+                return _this3.fire(event, e);
+            });
         };
 
         this.destroy = function () {
@@ -717,6 +767,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     return pre;
                 }();
                 this.pixelRatio = window.devicePixelRatio;
+                this.webcam = !!(navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+                this.language = navigator.userLanguage || navigator.language;
+                this.webaudio = !!window.AudioContext;
                 this.os = function () {
                     if (_this4.detect(['iphone', 'ipad'])) return 'ios';
                     if (_this4.detect(['android'])) return 'android';
@@ -744,8 +797,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     if (_this4.detect(['firefox'])) return 'firefox';
                     return 'unknown';
                 }();
-                this.mobile = 'ontouchstart' in window && this.detect(['iphone', 'ipad', 'android', 'blackberry']);
-                this.tablet = Math.max(screen.width, screen.height) > 800;
+                this.mobile = this.detect(['iphone', 'ipad', 'android', 'blackberry']);
+                this.tablet = Math.max(window.screen ? screen.width : window.innerWidth, window.screen ? screen.height : window.innerHeight) > 1000;
                 this.phone = !this.tablet;
                 this.webgl = function () {
                     try {
@@ -880,17 +933,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'destroy',
             value: function destroy() {
-                this.removed = true;
-                var parent = this.parent;
-                if (parent && !parent.removed && parent.remove) parent.remove(this);
-                for (var i = this.classes.length - 1; i >= 0; i--) {
-                    var child = this.classes[i];
-                    if (child && child.destroy) child.destroy();
+                if (this.classes) {
+                    this.removed = true;
+                    var parent = this.parent;
+                    if (parent && !parent.removed && parent.remove) parent.remove(this);
+                    for (var i = this.classes.length - 1; i >= 0; i--) {
+                        var child = this.classes[i];
+                        if (child && child.destroy) child.destroy();
+                    }
+                    this.classes.length = 0;
+                    this.clearRenders();
+                    this.clearTimers();
+                    this.events.destroy();
                 }
-                this.classes.length = 0;
-                this.clearRenders();
-                this.clearTimers();
-                this.events.destroy();
                 return Utils.nullObject(this);
             }
         }, {
@@ -919,10 +974,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function init() {
                 var _this5 = this;
 
-                this.CDN = '';
-                this.CORS = null;
                 var images = {},
                     json = {};
+
+                this.CDN = '';
+                this.CORS = null;
 
                 this.getPath = function (path) {
                     if (~path.indexOf('//')) return path;
@@ -933,7 +989,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 this.createImage = function (path, store, callback) {
                     if (typeof store !== 'boolean') {
                         callback = store;
-                        store = undefined;
+                        store = null;
                     }
                     var img = new Image();
                     img.crossOrigin = _this5.CORS;
@@ -1429,6 +1485,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var _this8 = this;
 
                 var self = this;
+                var tweens = [];
+
                 this.TRANSFORMS = ['x', 'y', 'z', 'scale', 'scaleX', 'scaleY', 'rotation', 'rotationX', 'rotationY', 'rotationZ', 'skewX', 'skewY', 'perspective'];
                 this.CSS_EASES = {
                     easeOutCubic: 'cubic-bezier(0.215, 0.610, 0.355, 1.000)',
@@ -1457,7 +1515,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     easeInOut: 'cubic-bezier(0.420, 0.000, 0.580, 1.000)',
                     linear: 'linear'
                 };
-                var tweens = [];
 
                 Render.start(updateTweens);
 
@@ -1759,18 +1816,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'destroy',
             value: function destroy() {
-                this.removed = true;
-                var parent = this.parent;
-                if (parent && !parent.removed && parent.remove) parent.remove(this);
-                for (var i = this.classes.length - 1; i >= 0; i--) {
-                    var child = this.classes[i];
-                    if (child && child.destroy) child.destroy();
+                if (this.classes) {
+                    this.removed = true;
+                    var parent = this.parent;
+                    if (parent && !parent.removed && parent.remove) parent.remove(this);
+                    for (var i = this.classes.length - 1; i >= 0; i--) {
+                        var child = this.classes[i];
+                        if (child && child.destroy) child.destroy();
+                    }
+                    this.classes.length = 0;
+                    this.element.object = null;
+                    this.clearRenders();
+                    this.clearTimers();
+                    this.events.destroy();
                 }
-                this.classes.length = 0;
-                this.element.object = null;
-                this.clearRenders();
-                this.clearTimers();
-                this.events.destroy();
                 return Utils.nullObject(this);
             }
         }, {
@@ -1867,8 +1926,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                         if (!noScale) this.element.style.backgroundSize = w + 'px ' + h + 'px';
                     }
                 }
-                this.width = this.element.clientWidth;
-                this.height = this.element.clientHeight;
+                this.width = this.element.offsetWidth;
+                this.height = this.element.offsetHeight;
                 return this;
             }
         }, {
@@ -2116,24 +2175,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 return this;
             }
         }, {
-            key: 'press',
-            value: function press(callback) {
-                var _this11 = this;
-
-                var press = function press(e) {
-                    if (!_this11.element) return false;
-                    e.object = _this11.element.className === 'hit' ? _this11.parent : _this11;
-                    e.action = e.type === 'mousedown' ? 'down' : 'up';
-                    if (callback) callback(e);
-                };
-                this.element.addEventListener('mousedown', press, true);
-                this.element.addEventListener('mouseup', press, true);
-                return this;
-            }
-        }, {
             key: 'bind',
             value: function bind(event, callback) {
-                var _this12 = this;
+                var _this11 = this;
 
                 if (event === 'touchstart' && !Device.mobile) event = 'mousedown';else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';else if (event === 'touchend' && !Device.mobile) event = 'mouseup';
                 if (!this.events['bind_' + event]) this.events['bind_' + event] = [];
@@ -2141,7 +2185,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 events.push({ target: this.element, callback: callback });
 
                 var touchEvent = function touchEvent(e) {
-                    var touch = _this12.convertTouchEvent(e);
+                    var touch = _this11.convertTouchEvent(e);
                     if (!(e instanceof MouseEvent)) {
                         e.x = touch.x;
                         e.y = touch.y;
@@ -2190,7 +2234,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'touchClick',
             value: function touchClick(hover, click) {
-                var _this13 = this;
+                var _this12 = this;
 
                 var start = {};
                 var time = void 0,
@@ -2204,13 +2248,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 };
 
                 var touchMove = function touchMove(e) {
-                    if (!_this13.element) return false;
-                    touch = _this13.convertTouchEvent(e);
+                    if (!_this12.element) return false;
+                    touch = _this12.convertTouchEvent(e);
                     move = findDistance(start, touch) > 5;
                 };
 
                 var setTouch = function setTouch(e) {
-                    var touchEvent = _this13.convertTouchEvent(e);
+                    var touchEvent = _this12.convertTouchEvent(e);
                     e.touchX = touchEvent.x;
                     e.touchY = touchEvent.y;
                     start.x = e.touchX;
@@ -2218,18 +2262,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 };
 
                 var touchStart = function touchStart(e) {
-                    if (!_this13.element) return false;
+                    if (!_this12.element) return false;
                     time = performance.now();
-                    e.object = _this13.element.className === 'hit' ? _this13.parent : _this13;
+                    e.object = _this12.element.className === 'hit' ? _this12.parent : _this12;
                     e.action = 'over';
                     setTouch(e);
                     if (hover && !move) hover(e);
                 };
 
                 var touchEnd = function touchEnd(e) {
-                    if (!_this13.element) return false;
+                    if (!_this12.element) return false;
                     var t = performance.now();
-                    e.object = _this13.element.className === 'hit' ? _this13.parent : _this13;
+                    e.object = _this12.element.className === 'hit' ? _this12.parent : _this12;
                     setTouch(e);
                     if (time && t - time < 750 && click && !move) {
                         e.action = 'click';
@@ -2245,6 +2289,63 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 this.element.addEventListener('touchmove', touchMove, { passive: true });
                 this.element.addEventListener('touchstart', touchStart, { passive: true });
                 this.element.addEventListener('touchend', touchEnd, { passive: true });
+                return this;
+            }
+        }, {
+            key: 'touchSwipe',
+            value: function touchSwipe(callback) {
+                var _this13 = this;
+
+                var distance = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 75;
+
+                var move = {};
+                var startX = void 0,
+                    startY = void 0,
+                    moving = false;
+
+                var touchStart = function touchStart(e) {
+                    var touch = _this13.convertTouchEvent(e);
+                    if (e.touches.length === 1) {
+                        startX = touch.x;
+                        startY = touch.y;
+                        moving = true;
+                        _this13.element.addEventListener('touchmove', touchMove, { passive: true });
+                    }
+                };
+
+                var touchMove = function touchMove(e) {
+                    if (moving) {
+                        var touch = _this13.convertTouchEvent(e),
+                            dx = startX - touch.x,
+                            dy = startY - touch.y;
+                        move.direction = null;
+                        move.moving = null;
+                        move.x = null;
+                        move.y = null;
+                        move.evt = e;
+                        if (Math.abs(dx) >= distance) {
+                            touchEnd();
+                            move.direction = dx > 0 ? 'left' : 'right';
+                        } else if (Math.abs(dy) >= distance) {
+                            touchEnd();
+                            move.direction = dy > 0 ? 'up' : 'down';
+                        } else {
+                            move.moving = true;
+                            move.x = dx;
+                            move.y = dy;
+                        }
+                        if (callback) callback(move, e);
+                    }
+                };
+
+                var touchEnd = function touchEnd() {
+                    startX = startY = moving = false;
+                    _this13.element.removeEventListener('touchmove', touchMove);
+                };
+
+                this.element.addEventListener('touchstart', touchStart, { passive: true });
+                this.element.addEventListener('touchend', touchEnd, { passive: true });
+                this.element.addEventListener('touchcancel', touchEnd, { passive: true });
                 return this;
             }
         }, {
@@ -2307,12 +2408,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                 var style = {
                     position: 'relative',
-                    display: 'block',
+                    display: 'inline-block',
                     width: 'auto',
                     height: 'auto',
                     margin: 0,
-                    padding: 0,
-                    cssFloat: 'left'
+                    padding: 0
                 },
                     array = [],
                     split = this.text().split(by);
@@ -2454,13 +2554,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                         return compassHeading * (180 / Math.PI);
                     };
 
-                    window.addEventListener('devicemotion', updateAccel, true);
-                    window.addEventListener('deviceorientation', updateOrientation, true);
+                    window.addEventListener('devicemotion', updateAccel);
+                    window.addEventListener('deviceorientation', updateOrientation);
 
                     this.stop = function () {
                         _this14.active = false;
-                        window.removeEventListener('devicemotion', updateAccel, true);
-                        window.removeEventListener('deviceorientation', updateOrientation, true);
+                        window.removeEventListener('devicemotion', updateAccel);
+                        window.removeEventListener('deviceorientation', updateOrientation);
                     };
                 }
             }
@@ -2557,6 +2657,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     _classCallCheck(this, Sound);
 
                     var self = this;
+
                     this.asset = Assets.getPath(asset);
                     if (WebAudio.context.createStereoPanner) this.stereo = WebAudio.context.createStereoPanner();
                     this.output = WebAudio.context.createGain();
@@ -2569,7 +2670,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     this.gain = {
                         set value(value) {
                             self.volume = value;
-                            self.output.gain.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                            self.output.gain.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
                         },
                         get value() {
                             return self.volume;
@@ -2579,7 +2680,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     this.playbackRate = {
                         set value(value) {
                             self.rate = value;
-                            if (self.source) self.source.playbackRate.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                            if (self.source) self.source.playbackRate.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
                         },
                         get value() {
                             return self.rate;
@@ -2589,7 +2690,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     this.stereoPan = {
                         set value(value) {
                             self.pan = value;
-                            if (self.stereo) self.stereo.pan.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                            if (self.stereo) self.stereo.pan.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
                         },
                         get value() {
                             return self.pan;
@@ -2619,7 +2720,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                         this.gain = {
                             set value(value) {
                                 _self.volume = value;
-                                _self.output.gain.setTargetAtTime(value, context.currentTime, 0.01);
+                                _self.output.gain.linearRampToValueAtTime(value, context.currentTime + 0.015);
                             },
                             get value() {
                                 return _self.volume;
@@ -2654,7 +2755,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                     this.createSound = function (id, asset, callback) {
                         sounds[id] = new Sound(asset);
-                        if (Device.os === 'ios') callback();else _this17.loadSound(id, callback);
+                        if (Device.os === 'ios' && callback) callback();else _this17.loadSound(id, callback);
                         return sounds[id];
                     };
 
@@ -2680,9 +2781,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                                 sound.source.playbackRate.setValueAtTime(sound.rate, context.currentTime);
                                 sound.source.connect(sound.stereo ? sound.stereo : sound.output);
                                 sound.source.start();
-                                defer(function () {
-                                    return sound.output.gain.setTargetAtTime(sound.volume, context.currentTime, 0.01);
-                                });
+                                sound.output.gain.linearRampToValueAtTime(sound.volume, context.currentTime + 0.015);
                             }
                         });
                     };
@@ -2729,6 +2828,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                                 sound.stop();
                             });
                             sound.stopping = true;
+                        }
+                    };
+
+                    this.remove = function (id) {
+                        var sound = _this17.getSound(id);
+                        if (sound && sound.source) {
+                            sound.source.buffer = null;
+                            sound.source.stop();
+                            sound.source.disconnect();
+                            sound.source = null;
+                            sound.playing = false;
+                            delete sounds[id];
                         }
                     };
 
@@ -2786,13 +2897,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function addListeners() {
-                window.addEventListener('focus', focus, true);
-                window.addEventListener('blur', blur, true);
-                window.addEventListener('keydown', keyDown, true);
-                window.addEventListener('keyup', keyUp, true);
-                window.addEventListener('keypress', keyPress, true);
-                window.addEventListener('resize', resize, true);
-                window.addEventListener('orientationchange', resize, true);
+                window.addEventListener('focus', focus);
+                window.addEventListener('blur', blur);
+                window.addEventListener('keydown', keyDown);
+                window.addEventListener('keyup', keyUp);
+                window.addEventListener('keypress', keyPress);
+                window.addEventListener('resize', resize);
+                window.addEventListener('orientationchange', resize);
                 resize();
             }
 
@@ -2832,13 +2943,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 if (Accelerometer.active) Accelerometer.stop();
                 if (Mouse.active) Mouse.stop();
                 if (WebAudio.active) WebAudio.stop();
-                window.removeEventListener('focus', focus, true);
-                window.removeEventListener('blur', blur, true);
-                window.removeEventListener('keydown', keyDown, true);
-                window.removeEventListener('keyup', keyUp, true);
-                window.removeEventListener('keypress', keyPress, true);
-                window.removeEventListener('resize', resize, true);
-                window.removeEventListener('orientationchange', resize, true);
+                window.removeEventListener('focus', focus);
+                window.removeEventListener('blur', blur);
+                window.removeEventListener('keydown', keyDown);
+                window.removeEventListener('keyup', keyUp);
+                window.removeEventListener('keypress', keyPress);
+                window.removeEventListener('resize', resize);
+                window.removeEventListener('orientationchange', resize);
                 return _get(_class.prototype.__proto__ || Object.getPrototypeOf(_class.prototype), 'destroy', _this18).call(_this18);
             };
             return _this18;
@@ -3088,12 +3199,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                         return callback(e);
                     });
                 },
-                    touchMove = function touchMove(e) {
+                    _touchMove = function _touchMove(e) {
                     return events.touchmove.forEach(function (callback) {
                         return callback(e);
                     });
                 },
-                    touchEnd = function touchEnd(e) {
+                    _touchEnd = function _touchEnd(e) {
                     return events.touchend.forEach(function (callback) {
                         return callback(e);
                     });
@@ -3107,9 +3218,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 };
 
                 Stage.bind('touchstart', touchStart);
-                Stage.bind('touchmove', touchMove);
-                Stage.bind('touchend', touchEnd);
-                Stage.bind('touchcancel', touchEnd);
+                Stage.bind('touchmove', _touchMove);
+                Stage.bind('touchend', _touchEnd);
+                Stage.bind('touchcancel', _touchEnd);
 
                 Interaction.initialized = true;
             }
@@ -3117,6 +3228,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var _this19 = _possibleConstructorReturn(this, (Interaction.__proto__ || Object.getPrototypeOf(Interaction)).call(this));
 
             var self = _this19;
+            var distance = void 0,
+                timeDown = void 0,
+                timeMove = void 0;
+
             _this19.x = 0;
             _this19.y = 0;
             _this19.hold = new Vector2();
@@ -3124,9 +3239,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             _this19.delta = new Vector2();
             _this19.move = new Vector2();
             _this19.velocity = new Vector2();
-            var distance = void 0,
-                timeDown = void 0,
-                timeMove = void 0;
 
             addListeners();
 
@@ -3239,7 +3351,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     window.WebAudio.createSound(key, asset, assetLoaded);
                     return;
                 }
-                window.get(Assets.getPath(asset)).then(function (data) {
+                window.get(Assets.getPath(asset), {
+                    credentials: 'include'
+                }).then(function (data) {
                     if (ext === 'json') Assets.storeData(key, data);
                     if (ext === 'js') window.eval(data.replace('use strict', ''));
                     assetLoaded();
@@ -3393,16 +3507,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var _this23 = _possibleConstructorReturn(this, (StateDispatcher.__proto__ || Object.getPrototypeOf(StateDispatcher)).call(this));
 
             var self = _this23;
-            _this23.locked = false;
             var storePath = void 0,
                 storeState = void 0,
                 rootPath = '/';
 
-            createListener();
+            _this23.locked = false;
+
             storePath = getPath();
+            createListener();
 
             function createListener() {
-                if (forceHash) window.addEventListener('hashchange', hashChange, true);else window.addEventListener('popstate', popState, true);
+                if (forceHash) window.addEventListener('hashchange', hashChange);else window.addEventListener('popstate', popState);
             }
 
             function hashChange() {
@@ -3480,8 +3595,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             };
 
             _this23.destroy = function () {
-                window.removeEventListener('hashchange', hashChange, true);
-                window.removeEventListener('popstate', popState, true);
+                window.removeEventListener('hashchange', hashChange);
+                window.removeEventListener('popstate', popState);
                 return _get(StateDispatcher.prototype.__proto__ || Object.getPrototypeOf(StateDispatcher.prototype), 'destroy', _this23).call(_this23);
             };
             return _this23;
@@ -3506,6 +3621,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function set(key, value) {
                 if (value !== null && (typeof value === 'undefined' ? 'undefined' : _typeof(value)) === 'object') value = JSON.stringify(value);
                 if (value === null) window.localStorage.removeItem(key);else window.localStorage[key] = value;
+                return value;
             }
         }, {
             key: 'get',
@@ -3824,11 +3940,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var _this24 = _possibleConstructorReturn(this, (CanvasGraphics.__proto__ || Object.getPrototypeOf(CanvasGraphics)).call(this));
 
             var self = _this24;
+            var draw = [],
+                mask = void 0;
+
             _this24.width = w;
             _this24.height = h;
             _this24.props = {};
-            var draw = [],
-                mask = void 0;
 
             function setProperties(context) {
                 for (var key in self.props) {
@@ -4093,6 +4210,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         var self = this;
+
         this.element = document.createElement('canvas');
         this.context = this.element.getContext('2d');
         this.object = new Interface(this.element);
@@ -4205,9 +4323,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var _this26 = _possibleConstructorReturn(this, (CanvasTexture.__proto__ || Object.getPrototypeOf(CanvasTexture)).call(this));
 
             var self = _this26;
+            var mask = void 0;
+
             _this26.width = w;
             _this26.height = h;
-            var mask = void 0;
 
             initTexture();
 
@@ -4368,6 +4487,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         _classCallCheck(this, Color);
 
         var self = this;
+
         this.r = 1;
         this.g = 1;
         this.b = 1;
@@ -4551,17 +4671,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var _this28 = _possibleConstructorReturn(this, (Video.__proto__ || Object.getPrototypeOf(Video)).call(this));
 
             var self = _this28;
-            _this28.loaded = {
-                start: 0,
-                end: 0,
-                percent: 0
-            };
             var event = {};
             var lastTime = void 0,
                 buffering = void 0,
                 seekTo = void 0,
                 forceRender = void 0,
                 tick = 0;
+
+            _this28.loaded = {
+                start: 0,
+                end: 0,
+                percent: 0
+            };
 
             createElement();
             if (params.preload !== false) preload();
@@ -4720,11 +4841,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             };
 
             _this28.trackProgress = function () {
-                _this28.element.addEventListener('progress', handleProgress, true);
+                _this28.element.addEventListener('progress', handleProgress);
             };
 
             _this28.destroy = function () {
-                _this28.element.removeEventListener('progress', handleProgress, true);
+                _this28.element.removeEventListener('progress', handleProgress);
                 _this28.stop();
                 _this28.element.src = '';
                 _this28.object.destroy();
@@ -4866,6 +4987,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var _this30 = _possibleConstructorReturn(this, (Scroll.__proto__ || Object.getPrototypeOf(Scroll)).call(this));
 
             var self = _this30;
+            var callbacks = [],
+                scrollTarget = {
+                x: 0,
+                y: 0
+            };
+            var axes = ['x', 'y'];
+
             _this30.x = 0;
             _this30.y = 0;
             _this30.max = {
@@ -4877,11 +5005,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 y: 0
             };
             _this30.enabled = true;
-            var scrollTarget = {
-                x: 0,
-                y: 0
-            };
-            var axes = ['x', 'y'];
 
             initParameters();
             addListeners();
@@ -4892,16 +5015,17 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 self.hitObject = params.hitObject || self.object;
                 self.max.y = params.height || 0;
                 self.max.x = params.width || 0;
+                self.limit = params.limit !== false;
                 if (Array.isArray(params.axes)) axes = params.axes;
                 if (self.object) self.object.css({ overflow: 'auto' });
             }
 
             function addListeners() {
-                window.addEventListener('wheel', scroll, true);
+                window.addEventListener('wheel', scroll);
                 if (self.hitObject) self.hitObject.bind('touchstart', function (e) {
                     return e.preventDefault();
                 });
-                var input = self.hitObject ? self.hitObject.initClass(Interaction) : Mouse.input;
+                var input = self.hitObject ? self.initClass(Interaction, self.hitObject) : Mouse.input;
                 self.events.add(input, Interaction.START, down);
                 self.events.add(input, Interaction.DRAG, drag);
                 self.events.add(input, Interaction.END, up);
@@ -4968,7 +5092,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             function loop() {
                 axes.forEach(function (axis) {
                     if (!self.max[axis]) return;
-                    scrollTarget[axis] = Math.clamp(scrollTarget[axis], 0, self.max[axis]);
+                    if (self.limit) scrollTarget[axis] = Math.clamp(scrollTarget[axis], 0, self.max[axis]);
                     self.delta[axis] = scrollTarget[axis] - self[axis];
                     self[axis] += self.delta[axis];
                     if (self.object) {
@@ -4976,10 +5100,25 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                         if (axis === 'y') self.object.element.scrollTop = self.y;
                     }
                 });
+                callback(self.delta);
             }
 
+            function callback(delta) {
+                for (var i = 0; i < callbacks.length; i++) {
+                    callbacks[i](delta);
+                }
+            }
+
+            _this30.link = function (callback) {
+                callbacks.push(callback);
+            };
+
+            _this30.unlink = function (callback) {
+                callbacks.remove(callback);
+            };
+
             _this30.destroy = function () {
-                window.removeEventListener('wheel', scroll, true);
+                window.removeEventListener('wheel', scroll);
                 return _get(Scroll.prototype.__proto__ || Object.getPrototypeOf(Scroll.prototype), 'destroy', _this30).call(_this30);
             };
             return _this30;
@@ -5005,6 +5144,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var _this31 = _possibleConstructorReturn(this, (Slide.__proto__ || Object.getPrototypeOf(Slide)).call(this));
 
             var self = _this31;
+            var scrollTarget = {
+                x: 0,
+                y: 0
+            },
+                scrollInertia = {
+                x: 0,
+                y: 0
+            },
+                event = {};
+            var axes = ['x', 'y'],
+                slideIndex = void 0;
+
             _this31.x = 0;
             _this31.y = 0;
             _this31.max = {
@@ -5025,17 +5176,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             _this31.ceil = 0;
             _this31.index = 0;
             _this31.enabled = true;
-            var scrollTarget = {
-                x: 0,
-                y: 0
-            },
-                scrollInertia = {
-                x: 0,
-                y: 0
-            },
-                event = {};
-            var axes = ['x', 'y'],
-                slideIndex = void 0;
 
             initParameters();
             addListeners();
@@ -5053,10 +5193,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function addListeners() {
-                window.addEventListener('wheel', scroll, true);
+                window.addEventListener('wheel', scroll);
                 self.events.add(Mouse.input, Interaction.START, down);
                 self.events.add(Mouse.input, Interaction.DRAG, drag);
-                self.events.add(Events.KEYBOARD_DOWN, keyPress);
+                self.events.add(Events.KEYBOARD_DOWN, keyDown);
                 self.events.add(Events.RESIZE, resize);
                 resize();
             }
@@ -5091,12 +5231,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 });
             }
 
-            function keyPress(e) {
+            function keyDown(e) {
                 if (!self.enabled) return;
                 if (e.keyCode === 40) self.next(); // Down
-                if (e.keyCode === 39) self.next(); // Right
-                if (e.keyCode === 38) self.prev(); // Up
-                if (e.keyCode === 37) self.prev(); // Left
+                else if (e.keyCode === 39) self.next(); // Right
+                    else if (e.keyCode === 38) self.prev(); // Up
+                        else if (e.keyCode === 37) self.prev(); // Left
             }
 
             function resize() {
@@ -5157,7 +5297,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             };
 
             _this31.destroy = function () {
-                window.removeEventListener('wheel', scroll, true);
+                window.removeEventListener('wheel', scroll);
                 return _get(Slide.prototype.__proto__ || Object.getPrototypeOf(Slide.prototype), 'destroy', _this31).call(_this31);
             };
             return _this31;
@@ -5222,8 +5362,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function ready() {
-                self.element.addEventListener('playing', playing, true);
-                self.element.addEventListener('pause', pause, true);
+                self.element.addEventListener('playing', playing);
+                self.element.addEventListener('pause', pause);
                 self.element.play();
             }
 
@@ -5251,8 +5391,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             _this32.destroy = function () {
                 if (_this32.element) {
                     if (_this32.element.pause) {
-                        _this32.element.removeEventListener('playing', playing, true);
-                        _this32.element.removeEventListener('pause', pause, true);
+                        _this32.element.removeEventListener('playing', playing);
+                        _this32.element.removeEventListener('pause', pause);
                         _this32.pause();
                     }
                     URL.revokeObjectURL(_this32.element.src);
@@ -5281,9 +5421,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var _this33 = _possibleConstructorReturn(this, (SlideLoader.__proto__ || Object.getPrototypeOf(SlideLoader)).call(this));
 
             var self = _this33;
+            var loaded = 0;
+
             _this33.list = [];
             _this33.pathList = [];
-            var loaded = 0;
 
             slides.forEach(function (params) {
                 _this33.list.push(new SlideVideo(params, slideLoaded));
@@ -5607,11 +5748,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         _classCallCheck(this, LinkedList);
 
+        var nodes = [];
+
         this.first = null;
         this.last = null;
         this.current = null;
         this.prev = null;
-        var nodes = [];
 
         function add(object) {
             return nodes[nodes.push({ object: object, prev: null, next: null }) - 1];
@@ -5629,6 +5771,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         function destroy() {
             for (var i = nodes.length - 1; i >= 0; i--) {
+                if (nodes[i].object && nodes[i].object.destroy) nodes[i].object.destroy();
                 nodes[i] = null;
                 nodes.splice(i, 1);
             }
@@ -5685,7 +5828,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         this.start = function () {
             _this36.current = _this36.first;
             _this36.prev = _this36.current;
-            return _this36.current;
+            return _this36.current.object;
         };
 
         this.next = function () {
@@ -5693,7 +5836,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             if (nodes.length === 1 || _this36.prev.next === _this36.first) return;
             _this36.current = _this36.current.next;
             _this36.prev = _this36.current;
-            return _this36.current;
+            return _this36.current.object;
         };
 
         this.destroy = destroy;
@@ -5711,6 +5854,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         _classCallCheck(this, ObjectPool);
 
         var pool = [];
+
         this.array = pool;
 
         if (type) for (var i = 0; i < number || 10; i++) {
@@ -6213,10 +6357,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
             var _this39 = _possibleConstructorReturn(this, (Raycaster.__proto__ || Object.getPrototypeOf(Raycaster)).call(this));
 
-            _this39.camera = camera;
             var calc = new THREE.Vector2(),
                 raycaster = new THREE.Raycaster();
             var debug = void 0;
+
+            _this39.camera = camera;
 
             function ascSort(a, b) {
                 return a.distance - b.distance;
@@ -6312,14 +6457,15 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var _this40 = _possibleConstructorReturn(this, (Interaction3D.__proto__ || Object.getPrototypeOf(Interaction3D)).call(this));
 
             var self = _this40;
+            var event = {};
+            var hoverTarget = void 0,
+                clickTarget = void 0;
+
             _this40.ray = new Raycaster(camera);
             _this40.meshes = [];
             _this40.meshCallbacks = [];
             _this40.cursor = 'auto';
             _this40.enabled = true;
-            var event = {};
-            var hoverTarget = void 0,
-                clickTarget = void 0;
 
             addListeners();
 
@@ -6507,6 +6653,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var _this42 = _possibleConstructorReturn(this, (Shader.__proto__ || Object.getPrototypeOf(Shader)).call(this));
 
             var self = _this42;
+
             _this42.uniforms = {};
             _this42.properties = {};
 
@@ -6544,16 +6691,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 };
                 return code.replace(/#s?chunk\(\s?(\w+)\s?\);/g, threeChunk);
             }
+
+            _this42.destroy = function () {
+                _this42.material.dispose();
+                return _get(Shader.prototype.__proto__ || Object.getPrototypeOf(Shader.prototype), 'destroy', _this42).call(_this42);
+            };
             return _this42;
         }
-
-        _createClass(Shader, [{
-            key: 'destroy',
-            value: function destroy() {
-                this.material.dispose();
-                return _get(Shader.prototype.__proto__ || Object.getPrototypeOf(Shader.prototype), 'destroy', this).call(this);
-            }
-        }]);
 
         return Shader;
     }(Component);
@@ -6575,27 +6719,30 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var _this43 = _possibleConstructorReturn(this, (Effects.__proto__ || Object.getPrototypeOf(Effects)).call(this));
 
             var self = _this43;
+            var renderTarget1 = void 0,
+                renderTarget2 = void 0,
+                scene = void 0,
+                camera = void 0,
+                mesh = void 0;
+
             _this43.stage = stage;
             _this43.renderer = params.renderer;
             _this43.scene = params.scene;
             _this43.camera = params.camera;
-            _this43.shader = params.shader;
+            _this43.enabled = params.enabled !== false;
+            _this43.passes = params.passes || [];
             _this43.dpr = params.dpr || 1;
-            var renderTarget = void 0,
-                scene = void 0,
-                camera = void 0,
-                mesh = void 0;
+            _this43.rt = params.rt;
 
             initEffects();
             addListeners();
 
             function initEffects() {
-                renderTarget = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
-                self.texture = renderTarget.texture;
-                self.texture.minFilter = THREE.LinearFilter;
+                renderTarget1 = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
+                renderTarget2 = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
                 scene = new THREE.Scene();
                 camera = new THREE.OrthographicCamera(self.stage.width / -2, self.stage.width / 2, self.stage.height / 2, self.stage.height / -2, 1, 1000);
-                mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), self.shader.material);
+                mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), new THREE.MeshBasicMaterial());
                 scene.add(mesh);
             }
 
@@ -6604,8 +6751,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function resize() {
-                renderTarget.dispose();
-                renderTarget = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
+                renderTarget1.dispose();
+                renderTarget2.dispose();
+                renderTarget1 = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
+                renderTarget2 = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
                 camera.left = self.stage.width / -2;
                 camera.right = self.stage.width / 2;
                 camera.top = self.stage.height / 2;
@@ -6613,18 +6762,45 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 camera.updateProjectionMatrix();
             }
 
-            _this43.render = function () {
-                _this43.renderer.render(_this43.scene, _this43.camera, renderTarget, true);
-                mesh.material.uniforms.texture.value = renderTarget.texture;
-                _this43.renderer.render(scene, camera);
+            _this43.add = function (pass, index) {
+                if (typeof index === 'number') {
+                    _this43.passes.splice(index, 0, pass);
+                    return;
+                }
+                _this43.passes.push(pass);
+            };
+
+            _this43.remove = function (pass) {
+                if (typeof pass === 'number') _this43.passes.splice(pass);else _this43.passes.remove(pass);
+            };
+
+            _this43.render = function (rt) {
+                if (!_this43.enabled || !_this43.passes.length) {
+                    _this43.renderer.render(_this43.scene, _this43.camera, rt || _this43.rt);
+                    return;
+                }
+                _this43.renderer.render(_this43.scene, _this43.camera, renderTarget1, true);
+                for (var i = 0; i < _this43.passes.length - 1; i++) {
+                    mesh.material = _this43.passes[i].material;
+                    mesh.material.uniforms.texture.value = renderTarget1.texture;
+                    _this43.renderer.render(scene, camera, renderTarget2);
+                    var renderTarget = renderTarget1;
+                    renderTarget1 = renderTarget2;
+                    renderTarget2 = renderTarget;
+                }
+                mesh.material = _this43.passes[_this43.passes.length - 1].material;
+                mesh.material.uniforms.texture.value = renderTarget1.texture;
+                _this43.renderer.render(scene, camera, rt || _this43.rt);
             };
 
             _this43.destroy = function () {
                 scene.remove(mesh);
                 mesh.geometry.dispose();
                 mesh.material.dispose();
-                renderTarget.dispose();
-                renderTarget = null;
+                renderTarget1.dispose();
+                renderTarget2.dispose();
+                renderTarget1 = null;
+                renderTarget2 = null;
                 mesh = null;
                 camera = null;
                 scene = null;
@@ -6635,6 +6811,360 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         return Effects;
     }(Component);
+
+    /**
+     * Euler integrator.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    var EulerIntegrator = function EulerIntegrator() {
+        var _this44 = this;
+
+        _classCallCheck(this, EulerIntegrator);
+
+        var self = this;
+        var vel = void 0,
+            acc = void 0;
+
+        this.useDeltaTime = false;
+
+        function createVectors() {
+            var Vector = self.type === '3D' ? Vector3 : Vector2;
+            vel = new Vector();
+            acc = new Vector();
+        }
+
+        this.integrate = function (particles, dt, drag) {
+            if (!vel) createVectors();
+            var dtSq = dt * dt;
+            var p = particles.start();
+            while (p) {
+                if (!p.fixed && p.enabled) {
+                    p.old.pos.copy(p.pos);
+                    p.acc.multiply(p.massInv);
+                    vel.copy(p.vel);
+                    acc.copy(p.acc);
+                    if (_this44.useDeltaTime) {
+                        p.pos.add(vel.multiply(dt)).add(acc.multiply(0.5 * dtSq));
+                        p.vel.add(p.acc.multiply(dt));
+                    } else {
+                        p.pos.add(vel).add(acc.multiply(0.5));
+                        p.vel.add(p.acc);
+                    }
+                    if (drag) p.vel.multiply(drag);
+                    p.acc.clear();
+                }
+                if (p.saveTo) p.saveTo.copy(p.pos);
+                p = particles.next();
+            }
+        };
+    };
+
+    /**
+     * Particle physics.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    var ParticlePhysics = function (_Component18) {
+        _inherits(ParticlePhysics, _Component18);
+
+        function ParticlePhysics() {
+            var integrator = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : new EulerIntegrator();
+
+            _classCallCheck(this, ParticlePhysics);
+
+            var _this45 = _possibleConstructorReturn(this, (ParticlePhysics.__proto__ || Object.getPrototypeOf(ParticlePhysics)).call(this));
+
+            var self = _this45;
+            var timestep = 1 / 60,
+                toDelete = [];
+            var clock = null,
+                buffer = 0;
+
+            _this45.friction = 1;
+            _this45.maxSteps = 1;
+            _this45.emitters = new LinkedList();
+            _this45.initializers = new LinkedList();
+            _this45.behaviors = new LinkedList();
+            _this45.particles = new LinkedList();
+            _this45.springs = new LinkedList();
+
+            function init(p) {
+                var i = self.initializers.start();
+                while (i) {
+                    i(p);
+                    i = self.initializers.next();
+                }
+            }
+
+            function updateSprings(dt) {
+                var s = self.springs.start();
+                while (s) {
+                    s.update(dt);
+                    s = self.springs.next();
+                }
+            }
+
+            function deleteParticles() {
+                for (var i = toDelete.length - 1; i >= 0; i--) {
+                    var particle = toDelete[i];
+                    self.particles.remove(particle);
+                    particle.system = null;
+                }
+            }
+
+            function updateParticles(dt) {
+                var list = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : self.particles;
+
+                var index = 0,
+                    p = list.start();
+                while (p) {
+                    if (p.enabled) {
+                        var b = self.behaviors.start();
+                        while (b) {
+                            b.applyBehavior(p, dt, index);
+                            b = self.behaviors.next();
+                        }
+                        if (p.behaviors.length) p.update(dt, index);
+                        if (p.childList) updateParticles(dt, p.childList);
+                    }
+                    index++;
+                    p = list.next();
+                }
+            }
+
+            function integrate(dt) {
+                updateParticles(dt);
+                if (self.springs.length) updateSprings(dt);
+                if (!self.skipIntegration) integrator.integrate(self.particles, dt, self.friction);
+            }
+
+            _this45.addEmitter = function (emitter) {
+                _this45.emitters.push(emitter);
+                emitter.parent = emitter.system = _this45;
+            };
+
+            _this45.removeEmitter = function (emitter) {
+                _this45.emitters.remove(emitter);
+                emitter.parent = emitter.system = null;
+            };
+
+            _this45.addInitializer = function (init) {
+                _this45.initializers.push(init);
+            };
+
+            _this45.removeInitializer = function (init) {
+                _this45.initializers.remove(init);
+            };
+
+            _this45.addBehavior = function (b) {
+                _this45.behaviors.push(b);
+                b.system = _this45;
+            };
+
+            _this45.removeBehavior = function (b) {
+                _this45.behaviors.remove(b);
+            };
+
+            _this45.addParticle = function (p) {
+                if (!integrator.type) integrator.type = typeof p.pos.z === 'number' ? '3D' : '2D';
+                p.system = _this45;
+                _this45.particles.push(p);
+                if (_this45.initializers.length) init(p);
+            };
+
+            _this45.removeParticle = function (p) {
+                p.system = null;
+                toDelete.push(p);
+            };
+
+            _this45.addSpring = function (s) {
+                s.system = _this45;
+                _this45.springs.push(s);
+            };
+
+            _this45.removeSpring = function (s) {
+                s.system = null;
+                _this45.springs.remove(s);
+            };
+
+            _this45.update = function (force) {
+                if (!clock) clock = Render.TIME;
+                var time = Render.TIME,
+                    delta = time - clock;
+                if (!force && delta <= 0) return;
+                delta *= 0.001;
+                clock = time;
+                buffer += delta;
+                if (!force) {
+                    var i = 0;
+                    while (buffer >= timestep && i++ < _this45.maxSteps) {
+                        integrate(timestep);
+                        buffer -= timestep;
+                        time += timestep;
+                    }
+                } else {
+                    integrate(0.016);
+                }
+                if (toDelete.length) deleteParticles();
+            };
+            return _this45;
+        }
+
+        return ParticlePhysics;
+    }(Component);
+
+    /**
+     * Particle.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    var Particle = function () {
+        function Particle(pos) {
+            var mass = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
+            var radius = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
+
+            _classCallCheck(this, Particle);
+
+            var self = this;
+
+            this.mass = mass;
+            this.massInv = 1 / this.mass;
+            this.radius = radius;
+            this.radiusSq = this.radius * this.radius;
+            this.behaviors = new LinkedList();
+            this.fixed = false;
+            this.enabled = true;
+
+            initVectors();
+
+            function initVectors() {
+                var Vector = typeof pos.z === 'number' ? Vector3 : Vector2,
+                    vel = new Vector(),
+                    acc = new Vector(),
+                    old = {};
+                old.pos = new Vector();
+                old.vel = new Vector();
+                old.acc = new Vector();
+                self.pos = self.position = pos;
+                self.vel = self.velocity = vel;
+                self.acc = self.acceleration = acc;
+                self.old = old;
+                self.old.pos.copy(pos);
+            }
+        }
+
+        _createClass(Particle, [{
+            key: 'moveTo',
+            value: function moveTo(pos) {
+                this.pos.copy(pos);
+                this.old.pos.copy(pos);
+                this.acc.clear();
+                this.vel.clear();
+            }
+        }, {
+            key: 'setMass',
+            value: function setMass() {
+                var mass = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+
+                this.mass = mass;
+                this.massInv = 1 / this.mass;
+            }
+        }, {
+            key: 'setRadius',
+            value: function setRadius(radius) {
+                this.radius = radius;
+                this.radiusSq = this.radius * this.radius;
+            }
+        }, {
+            key: 'update',
+            value: function update(dt) {
+                if (!this.behaviors.length) return;
+                var b = this.behaviors.start();
+                while (b) {
+                    b.applyBehavior(this, dt);
+                    b = this.behaviors.next();
+                }
+            }
+        }, {
+            key: 'applyForce',
+            value: function applyForce(force) {
+                this.acc.add(force);
+            }
+        }, {
+            key: 'addBehavior',
+            value: function addBehavior(behavior) {
+                this.behaviors.push(behavior);
+            }
+        }, {
+            key: 'removeBehavior',
+            value: function removeBehavior(behavior) {
+                this.behaviors.remove(behavior);
+            }
+        }, {
+            key: 'addParticle',
+            value: function addParticle(p) {
+                if (!this.children) {
+                    this.children = [];
+                    this.childList = new LinkedList();
+                }
+                this.children.push(p);
+                this.childList.push(p);
+            }
+        }]);
+
+        return Particle;
+    }();
+
+    /**
+     * Random Euler rotation.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    var RandomEulerRotation = function RandomEulerRotation(container) {
+        var _this46 = this;
+
+        _classCallCheck(this, RandomEulerRotation);
+
+        var euler = ['x', 'y', 'z'];
+        var rot = void 0;
+
+        this.speed = 1;
+
+        initRotation();
+
+        function initRotation() {
+            rot = {};
+            rot.x = Math.random(0, 2);
+            rot.y = Math.random(0, 2);
+            rot.z = Math.random(0, 2);
+            rot.vx = Math.random(-5, 5) * 0.0025;
+            rot.vy = Math.random(-5, 5) * 0.0025;
+            rot.vz = Math.random(-5, 5) * 0.0025;
+        }
+
+        this.update = function () {
+            var time = Render.TIME;
+            for (var i = 0; i < 3; i++) {
+                var v = euler[i];
+                switch (rot[v]) {
+                    case 0:
+                        container.rotation[v] += Math.cos(Math.sin(time * 0.25)) * rot['v' + v] * _this46.speed;
+                        break;
+                    case 1:
+                        container.rotation[v] += Math.cos(Math.sin(time * 0.25)) * rot['v' + v] * _this46.speed;
+                        break;
+                    case 2:
+                        container.rotation[v] += Math.cos(Math.cos(time * 0.25)) * rot['v' + v] * _this46.speed;
+                        break;
+                }
+            }
+        };
+    };
 
     /**
      * Alien abduction point.
@@ -6661,6 +7191,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     exports.WebAudio = WebAudio;
     exports.TweenManager = TweenManager;
     exports.Interpolation = Interpolation;
+    exports.MathTween = MathTween;
     exports.Canvas = Canvas;
     exports.CanvasGraphics = CanvasGraphics;
     exports.CanvasTexture = CanvasTexture;
@@ -6684,6 +7215,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     exports.ScreenProjection = ScreenProjection;
     exports.Shader = Shader;
     exports.Effects = Effects;
+    exports.ParticlePhysics = ParticlePhysics;
+    exports.Particle = Particle;
+    exports.RandomEulerRotation = RandomEulerRotation;
+    exports.EulerIntegrator = EulerIntegrator;
     exports.Stage = Stage;
 
     Object.defineProperty(exports, '__esModule', { value: true });

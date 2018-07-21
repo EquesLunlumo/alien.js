@@ -78,6 +78,38 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         return (value % n + n) % n;
     };
 
+    Array.prototype.shuffle = function () {
+        var i = this.length,
+            temp = void 0,
+            r = void 0;
+        while (i !== 0) {
+            r = Math.floor(Math.random() * i);
+            i -= 1;
+            temp = this[i];
+            this[i] = this[r];
+            this[r] = temp;
+        }
+        return this;
+    };
+
+    Array.storeRandom = function (arr) {
+        arr.randomStore = [];
+    };
+
+    Array.prototype.random = function (range) {
+        var value = Math.floor(Math.random() * this.length);
+        if (range && !this.randomStore) Array.storeRandom(this);
+        if (!this.randomStore) return this[value];
+        if (range > this.length - 1) range = this.length;
+        if (range > 1) {
+            while (~this.randomStore.indexOf(value)) {
+                if (value++ > this.length - 1) value = 0;
+            }this.randomStore.push(value);
+            if (this.randomStore.length >= range) this.randomStore.shift();
+        }
+        return this[value];
+    };
+
     Array.prototype.remove = function (element) {
         var index = this.indexOf(element);
         if (~index) return this.splice(index, 1);
@@ -356,6 +388,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 }));
             }
         }, {
+            key: 'date',
+            value: function date(str) {
+                var split = str.split(/[^0-9]/);
+                return new Date(split[0], split[1] - 1, split[2], split[3], split[4], split[5]);
+            }
+        }, {
             key: 'timestamp',
             value: function timestamp() {
                 return (Date.now() + this.random(0, 99999)).toString();
@@ -431,6 +469,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                 this.stop = function (callback) {
                     render.remove(callback);
+                };
+
+                this.tick = function () {
+                    _this.TIME = performance.now();
+                    step(_this.TIME);
                 };
 
                 this.pause = function () {
@@ -617,8 +660,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             Events.initialized = true;
         }
 
-        this.emitter = new Emitter();
         var linked = [];
+
+        this.emitter = new Emitter();
 
         this.add = function (object, event, callback) {
             if ((typeof object === 'undefined' ? 'undefined' : _typeof(object)) !== 'object') {
@@ -652,6 +696,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             if (_this3.emitter.fire(event, object)) return;
             if (local) return;
             Events.emitter.fire(event, object);
+        };
+
+        this.bubble = function (object, event) {
+            _this3.add(object, event, function (e) {
+                return _this3.fire(event, e);
+            });
         };
 
         this.destroy = function () {
@@ -717,6 +767,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     return pre;
                 }();
                 this.pixelRatio = window.devicePixelRatio;
+                this.webcam = !!(navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+                this.language = navigator.userLanguage || navigator.language;
+                this.webaudio = !!window.AudioContext;
                 this.os = function () {
                     if (_this4.detect(['iphone', 'ipad'])) return 'ios';
                     if (_this4.detect(['android'])) return 'android';
@@ -744,8 +797,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     if (_this4.detect(['firefox'])) return 'firefox';
                     return 'unknown';
                 }();
-                this.mobile = 'ontouchstart' in window && this.detect(['iphone', 'ipad', 'android', 'blackberry']);
-                this.tablet = Math.max(screen.width, screen.height) > 800;
+                this.mobile = this.detect(['iphone', 'ipad', 'android', 'blackberry']);
+                this.tablet = Math.max(window.screen ? screen.width : window.innerWidth, window.screen ? screen.height : window.innerHeight) > 1000;
                 this.phone = !this.tablet;
                 this.webgl = function () {
                     try {
@@ -880,17 +933,19 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'destroy',
             value: function destroy() {
-                this.removed = true;
-                var parent = this.parent;
-                if (parent && !parent.removed && parent.remove) parent.remove(this);
-                for (var i = this.classes.length - 1; i >= 0; i--) {
-                    var child = this.classes[i];
-                    if (child && child.destroy) child.destroy();
+                if (this.classes) {
+                    this.removed = true;
+                    var parent = this.parent;
+                    if (parent && !parent.removed && parent.remove) parent.remove(this);
+                    for (var i = this.classes.length - 1; i >= 0; i--) {
+                        var child = this.classes[i];
+                        if (child && child.destroy) child.destroy();
+                    }
+                    this.classes.length = 0;
+                    this.clearRenders();
+                    this.clearTimers();
+                    this.events.destroy();
                 }
-                this.classes.length = 0;
-                this.clearRenders();
-                this.clearTimers();
-                this.events.destroy();
                 return Utils.nullObject(this);
             }
         }, {
@@ -919,10 +974,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             value: function init() {
                 var _this5 = this;
 
-                this.CDN = '';
-                this.CORS = null;
                 var images = {},
                     json = {};
+
+                this.CDN = '';
+                this.CORS = null;
 
                 this.getPath = function (path) {
                     if (~path.indexOf('//')) return path;
@@ -933,7 +989,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 this.createImage = function (path, store, callback) {
                     if (typeof store !== 'boolean') {
                         callback = store;
-                        store = undefined;
+                        store = null;
                     }
                     var img = new Image();
                     img.crossOrigin = _this5.CORS;
@@ -1429,6 +1485,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 var _this8 = this;
 
                 var self = this;
+                var tweens = [];
+
                 this.TRANSFORMS = ['x', 'y', 'z', 'scale', 'scaleX', 'scaleY', 'rotation', 'rotationX', 'rotationY', 'rotationZ', 'skewX', 'skewY', 'perspective'];
                 this.CSS_EASES = {
                     easeOutCubic: 'cubic-bezier(0.215, 0.610, 0.355, 1.000)',
@@ -1457,7 +1515,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     easeInOut: 'cubic-bezier(0.420, 0.000, 0.580, 1.000)',
                     linear: 'linear'
                 };
-                var tweens = [];
 
                 Render.start(updateTweens);
 
@@ -1759,18 +1816,20 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'destroy',
             value: function destroy() {
-                this.removed = true;
-                var parent = this.parent;
-                if (parent && !parent.removed && parent.remove) parent.remove(this);
-                for (var i = this.classes.length - 1; i >= 0; i--) {
-                    var child = this.classes[i];
-                    if (child && child.destroy) child.destroy();
+                if (this.classes) {
+                    this.removed = true;
+                    var parent = this.parent;
+                    if (parent && !parent.removed && parent.remove) parent.remove(this);
+                    for (var i = this.classes.length - 1; i >= 0; i--) {
+                        var child = this.classes[i];
+                        if (child && child.destroy) child.destroy();
+                    }
+                    this.classes.length = 0;
+                    this.element.object = null;
+                    this.clearRenders();
+                    this.clearTimers();
+                    this.events.destroy();
                 }
-                this.classes.length = 0;
-                this.element.object = null;
-                this.clearRenders();
-                this.clearTimers();
-                this.events.destroy();
                 return Utils.nullObject(this);
             }
         }, {
@@ -1867,8 +1926,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                         if (!noScale) this.element.style.backgroundSize = w + 'px ' + h + 'px';
                     }
                 }
-                this.width = this.element.clientWidth;
-                this.height = this.element.clientHeight;
+                this.width = this.element.offsetWidth;
+                this.height = this.element.offsetHeight;
                 return this;
             }
         }, {
@@ -2116,24 +2175,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 return this;
             }
         }, {
-            key: 'press',
-            value: function press(callback) {
-                var _this11 = this;
-
-                var press = function press(e) {
-                    if (!_this11.element) return false;
-                    e.object = _this11.element.className === 'hit' ? _this11.parent : _this11;
-                    e.action = e.type === 'mousedown' ? 'down' : 'up';
-                    if (callback) callback(e);
-                };
-                this.element.addEventListener('mousedown', press, true);
-                this.element.addEventListener('mouseup', press, true);
-                return this;
-            }
-        }, {
             key: 'bind',
             value: function bind(event, callback) {
-                var _this12 = this;
+                var _this11 = this;
 
                 if (event === 'touchstart' && !Device.mobile) event = 'mousedown';else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';else if (event === 'touchend' && !Device.mobile) event = 'mouseup';
                 if (!this.events['bind_' + event]) this.events['bind_' + event] = [];
@@ -2141,7 +2185,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 events.push({ target: this.element, callback: callback });
 
                 var touchEvent = function touchEvent(e) {
-                    var touch = _this12.convertTouchEvent(e);
+                    var touch = _this11.convertTouchEvent(e);
                     if (!(e instanceof MouseEvent)) {
                         e.x = touch.x;
                         e.y = touch.y;
@@ -2190,7 +2234,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }, {
             key: 'touchClick',
             value: function touchClick(hover, click) {
-                var _this13 = this;
+                var _this12 = this;
 
                 var start = {};
                 var time = void 0,
@@ -2204,13 +2248,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 };
 
                 var touchMove = function touchMove(e) {
-                    if (!_this13.element) return false;
-                    touch = _this13.convertTouchEvent(e);
+                    if (!_this12.element) return false;
+                    touch = _this12.convertTouchEvent(e);
                     move = findDistance(start, touch) > 5;
                 };
 
                 var setTouch = function setTouch(e) {
-                    var touchEvent = _this13.convertTouchEvent(e);
+                    var touchEvent = _this12.convertTouchEvent(e);
                     e.touchX = touchEvent.x;
                     e.touchY = touchEvent.y;
                     start.x = e.touchX;
@@ -2218,18 +2262,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 };
 
                 var touchStart = function touchStart(e) {
-                    if (!_this13.element) return false;
+                    if (!_this12.element) return false;
                     time = performance.now();
-                    e.object = _this13.element.className === 'hit' ? _this13.parent : _this13;
+                    e.object = _this12.element.className === 'hit' ? _this12.parent : _this12;
                     e.action = 'over';
                     setTouch(e);
                     if (hover && !move) hover(e);
                 };
 
                 var touchEnd = function touchEnd(e) {
-                    if (!_this13.element) return false;
+                    if (!_this12.element) return false;
                     var t = performance.now();
-                    e.object = _this13.element.className === 'hit' ? _this13.parent : _this13;
+                    e.object = _this12.element.className === 'hit' ? _this12.parent : _this12;
                     setTouch(e);
                     if (time && t - time < 750 && click && !move) {
                         e.action = 'click';
@@ -2245,6 +2289,63 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 this.element.addEventListener('touchmove', touchMove, { passive: true });
                 this.element.addEventListener('touchstart', touchStart, { passive: true });
                 this.element.addEventListener('touchend', touchEnd, { passive: true });
+                return this;
+            }
+        }, {
+            key: 'touchSwipe',
+            value: function touchSwipe(callback) {
+                var _this13 = this;
+
+                var distance = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 75;
+
+                var move = {};
+                var startX = void 0,
+                    startY = void 0,
+                    moving = false;
+
+                var touchStart = function touchStart(e) {
+                    var touch = _this13.convertTouchEvent(e);
+                    if (e.touches.length === 1) {
+                        startX = touch.x;
+                        startY = touch.y;
+                        moving = true;
+                        _this13.element.addEventListener('touchmove', touchMove, { passive: true });
+                    }
+                };
+
+                var touchMove = function touchMove(e) {
+                    if (moving) {
+                        var touch = _this13.convertTouchEvent(e),
+                            dx = startX - touch.x,
+                            dy = startY - touch.y;
+                        move.direction = null;
+                        move.moving = null;
+                        move.x = null;
+                        move.y = null;
+                        move.evt = e;
+                        if (Math.abs(dx) >= distance) {
+                            touchEnd();
+                            move.direction = dx > 0 ? 'left' : 'right';
+                        } else if (Math.abs(dy) >= distance) {
+                            touchEnd();
+                            move.direction = dy > 0 ? 'up' : 'down';
+                        } else {
+                            move.moving = true;
+                            move.x = dx;
+                            move.y = dy;
+                        }
+                        if (callback) callback(move, e);
+                    }
+                };
+
+                var touchEnd = function touchEnd() {
+                    startX = startY = moving = false;
+                    _this13.element.removeEventListener('touchmove', touchMove);
+                };
+
+                this.element.addEventListener('touchstart', touchStart, { passive: true });
+                this.element.addEventListener('touchend', touchEnd, { passive: true });
+                this.element.addEventListener('touchcancel', touchEnd, { passive: true });
                 return this;
             }
         }, {
@@ -2307,12 +2408,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                 var style = {
                     position: 'relative',
-                    display: 'block',
+                    display: 'inline-block',
                     width: 'auto',
                     height: 'auto',
                     margin: 0,
-                    padding: 0,
-                    cssFloat: 'left'
+                    padding: 0
                 },
                     array = [],
                     split = this.text().split(by);
@@ -2454,13 +2554,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                         return compassHeading * (180 / Math.PI);
                     };
 
-                    window.addEventListener('devicemotion', updateAccel, true);
-                    window.addEventListener('deviceorientation', updateOrientation, true);
+                    window.addEventListener('devicemotion', updateAccel);
+                    window.addEventListener('deviceorientation', updateOrientation);
 
                     this.stop = function () {
                         _this14.active = false;
-                        window.removeEventListener('devicemotion', updateAccel, true);
-                        window.removeEventListener('deviceorientation', updateOrientation, true);
+                        window.removeEventListener('devicemotion', updateAccel);
+                        window.removeEventListener('deviceorientation', updateOrientation);
                     };
                 }
             }
@@ -2557,6 +2657,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     _classCallCheck(this, Sound);
 
                     var self = this;
+
                     this.asset = Assets.getPath(asset);
                     if (WebAudio.context.createStereoPanner) this.stereo = WebAudio.context.createStereoPanner();
                     this.output = WebAudio.context.createGain();
@@ -2569,7 +2670,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     this.gain = {
                         set value(value) {
                             self.volume = value;
-                            self.output.gain.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                            self.output.gain.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
                         },
                         get value() {
                             return self.volume;
@@ -2579,7 +2680,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     this.playbackRate = {
                         set value(value) {
                             self.rate = value;
-                            if (self.source) self.source.playbackRate.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                            if (self.source) self.source.playbackRate.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
                         },
                         get value() {
                             return self.rate;
@@ -2589,7 +2690,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     this.stereoPan = {
                         set value(value) {
                             self.pan = value;
-                            if (self.stereo) self.stereo.pan.setTargetAtTime(value, WebAudio.context.currentTime, 0.01);
+                            if (self.stereo) self.stereo.pan.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
                         },
                         get value() {
                             return self.pan;
@@ -2619,7 +2720,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                         this.gain = {
                             set value(value) {
                                 _self.volume = value;
-                                _self.output.gain.setTargetAtTime(value, context.currentTime, 0.01);
+                                _self.output.gain.linearRampToValueAtTime(value, context.currentTime + 0.015);
                             },
                             get value() {
                                 return _self.volume;
@@ -2654,7 +2755,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
                     this.createSound = function (id, asset, callback) {
                         sounds[id] = new Sound(asset);
-                        if (Device.os === 'ios') callback();else _this17.loadSound(id, callback);
+                        if (Device.os === 'ios' && callback) callback();else _this17.loadSound(id, callback);
                         return sounds[id];
                     };
 
@@ -2680,9 +2781,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                                 sound.source.playbackRate.setValueAtTime(sound.rate, context.currentTime);
                                 sound.source.connect(sound.stereo ? sound.stereo : sound.output);
                                 sound.source.start();
-                                defer(function () {
-                                    return sound.output.gain.setTargetAtTime(sound.volume, context.currentTime, 0.01);
-                                });
+                                sound.output.gain.linearRampToValueAtTime(sound.volume, context.currentTime + 0.015);
                             }
                         });
                     };
@@ -2729,6 +2828,18 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                                 sound.stop();
                             });
                             sound.stopping = true;
+                        }
+                    };
+
+                    this.remove = function (id) {
+                        var sound = _this17.getSound(id);
+                        if (sound && sound.source) {
+                            sound.source.buffer = null;
+                            sound.source.stop();
+                            sound.source.disconnect();
+                            sound.source = null;
+                            sound.playing = false;
+                            delete sounds[id];
                         }
                     };
 
@@ -2786,13 +2897,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function addListeners() {
-                window.addEventListener('focus', focus, true);
-                window.addEventListener('blur', blur, true);
-                window.addEventListener('keydown', keyDown, true);
-                window.addEventListener('keyup', keyUp, true);
-                window.addEventListener('keypress', keyPress, true);
-                window.addEventListener('resize', resize, true);
-                window.addEventListener('orientationchange', resize, true);
+                window.addEventListener('focus', focus);
+                window.addEventListener('blur', blur);
+                window.addEventListener('keydown', keyDown);
+                window.addEventListener('keyup', keyUp);
+                window.addEventListener('keypress', keyPress);
+                window.addEventListener('resize', resize);
+                window.addEventListener('orientationchange', resize);
                 resize();
             }
 
@@ -2832,13 +2943,13 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 if (Accelerometer.active) Accelerometer.stop();
                 if (Mouse.active) Mouse.stop();
                 if (WebAudio.active) WebAudio.stop();
-                window.removeEventListener('focus', focus, true);
-                window.removeEventListener('blur', blur, true);
-                window.removeEventListener('keydown', keyDown, true);
-                window.removeEventListener('keyup', keyUp, true);
-                window.removeEventListener('keypress', keyPress, true);
-                window.removeEventListener('resize', resize, true);
-                window.removeEventListener('orientationchange', resize, true);
+                window.removeEventListener('focus', focus);
+                window.removeEventListener('blur', blur);
+                window.removeEventListener('keydown', keyDown);
+                window.removeEventListener('keyup', keyUp);
+                window.removeEventListener('keypress', keyPress);
+                window.removeEventListener('resize', resize);
+                window.removeEventListener('orientationchange', resize);
                 return _get(_class.prototype.__proto__ || Object.getPrototypeOf(_class.prototype), 'destroy', _this18).call(_this18);
             };
             return _this18;
@@ -3088,12 +3199,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                         return callback(e);
                     });
                 },
-                    touchMove = function touchMove(e) {
+                    _touchMove = function _touchMove(e) {
                     return events.touchmove.forEach(function (callback) {
                         return callback(e);
                     });
                 },
-                    touchEnd = function touchEnd(e) {
+                    _touchEnd = function _touchEnd(e) {
                     return events.touchend.forEach(function (callback) {
                         return callback(e);
                     });
@@ -3107,9 +3218,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 };
 
                 Stage.bind('touchstart', touchStart);
-                Stage.bind('touchmove', touchMove);
-                Stage.bind('touchend', touchEnd);
-                Stage.bind('touchcancel', touchEnd);
+                Stage.bind('touchmove', _touchMove);
+                Stage.bind('touchend', _touchEnd);
+                Stage.bind('touchcancel', _touchEnd);
 
                 Interaction.initialized = true;
             }
@@ -3117,6 +3228,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var _this19 = _possibleConstructorReturn(this, (Interaction.__proto__ || Object.getPrototypeOf(Interaction)).call(this));
 
             var self = _this19;
+            var distance = void 0,
+                timeDown = void 0,
+                timeMove = void 0;
+
             _this19.x = 0;
             _this19.y = 0;
             _this19.hold = new Vector2();
@@ -3124,9 +3239,6 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             _this19.delta = new Vector2();
             _this19.move = new Vector2();
             _this19.velocity = new Vector2();
-            var distance = void 0,
-                timeDown = void 0,
-                timeMove = void 0;
 
             addListeners();
 
@@ -3239,7 +3351,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                     window.WebAudio.createSound(key, asset, assetLoaded);
                     return;
                 }
-                window.get(Assets.getPath(asset)).then(function (data) {
+                window.get(Assets.getPath(asset), {
+                    credentials: 'include'
+                }).then(function (data) {
                     if (ext === 'json') Assets.storeData(key, data);
                     if (ext === 'js') window.eval(data.replace('use strict', ''));
                     assetLoaded();
@@ -3598,11 +3712,12 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var _this21 = _possibleConstructorReturn(this, (CanvasGraphics.__proto__ || Object.getPrototypeOf(CanvasGraphics)).call(this));
 
             var self = _this21;
+            var draw = [],
+                mask = void 0;
+
             _this21.width = w;
             _this21.height = h;
             _this21.props = {};
-            var draw = [],
-                mask = void 0;
 
             function setProperties(context) {
                 for (var key in self.props) {
@@ -3867,6 +3982,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         var self = this;
+
         this.element = document.createElement('canvas');
         this.context = this.element.getContext('2d');
         this.object = new Interface(this.element);
@@ -3979,9 +4095,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             var _this23 = _possibleConstructorReturn(this, (CanvasTexture.__proto__ || Object.getPrototypeOf(CanvasTexture)).call(this));
 
             var self = _this23;
+            var mask = void 0;
+
             _this23.width = w;
             _this23.height = h;
-            var mask = void 0;
 
             initTexture();
 
@@ -4158,6 +4275,30 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
     /* global THREE */
 
     /**
+     * Euler integrator.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * Particle physics.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * Particle.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
+     * Random Euler rotation.
+     *
+     * @author Patrick Schroen / https://github.com/pschroen
+     */
+
+    /**
      * Alien abduction point.
      *
      * @author Patrick Schroen / https://github.com/pschroen
@@ -4309,7 +4450,8 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
 
             function loop() {
-                if (self.progress >= 1 && !self.complete) complete();
+                if (self.complete) return;
+                if (self.progress >= 1) complete();
                 drawCircle();
                 canvas.render();
             }
