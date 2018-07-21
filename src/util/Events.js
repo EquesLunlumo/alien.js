@@ -70,8 +70,9 @@ class Events {
             Events.initialized = true;
         }
 
-        this.emitter = new Emitter();
         const linked = [];
+
+        this.emitter = new Emitter();
 
         this.add = (object, event, callback) => {
             if (typeof object !== 'object') {

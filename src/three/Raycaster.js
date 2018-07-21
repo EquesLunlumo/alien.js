@@ -14,10 +14,11 @@ class Raycaster extends Component {
 
     constructor(camera) {
         super();
-        this.camera = camera;
         const calc = new THREE.Vector2(),
             raycaster = new THREE.Raycaster();
         let debug;
+
+        this.camera = camera;
 
         function ascSort(a, b) {
             return a.distance - b.distance;

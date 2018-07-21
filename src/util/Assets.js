@@ -7,10 +7,11 @@
 class Assets {
 
     static init() {
-        this.CDN = '';
-        this.CORS = null;
         const images = {},
             json = {};
+
+        this.CDN = '';
+        this.CORS = null;
 
         this.getPath = path => {
             if (~path.indexOf('//')) return path;

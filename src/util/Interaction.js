@@ -42,6 +42,8 @@ class Interaction extends Component {
 
         super();
         const self = this;
+        let distance, timeDown, timeMove;
+
         this.x = 0;
         this.y = 0;
         this.hold = new Vector2();
@@ -49,7 +51,6 @@ class Interaction extends Component {
         this.delta = new Vector2();
         this.move = new Vector2();
         this.velocity = new Vector2();
-        let distance, timeDown, timeMove;
 
         addListeners();
 

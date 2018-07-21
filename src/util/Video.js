@@ -15,14 +15,15 @@ class Video extends Component {
     constructor(params) {
         super();
         const self = this;
+        const event = {};
+        let lastTime, buffering, seekTo, forceRender,
+            tick = 0;
+
         this.loaded = {
             start: 0,
             end: 0,
             percent: 0
         };
-        const event = {};
-        let lastTime, buffering, seekTo, forceRender,
-            tick = 0;
 
         createElement();
         if (params.preload !== false) preload();

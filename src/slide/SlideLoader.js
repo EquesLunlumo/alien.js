@@ -13,9 +13,10 @@ class SlideLoader extends Component {
     constructor(slides, callback) {
         super();
         const self = this;
+        let loaded = 0;
+
         this.list = [];
         this.pathList = [];
-        let loaded = 0;
 
         slides.forEach(params => {
             this.list.push(new SlideVideo(params, slideLoaded));

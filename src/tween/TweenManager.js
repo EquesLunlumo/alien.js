@@ -12,6 +12,8 @@ class TweenManager {
 
     static init() {
         const self = this;
+        const tweens = [];
+
         this.TRANSFORMS = ['x', 'y', 'z', 'scale', 'scaleX', 'scaleY', 'rotation', 'rotationX', 'rotationY', 'rotationZ', 'skewX', 'skewY', 'perspective'];
         this.CSS_EASES = {
             easeOutCubic:   'cubic-bezier(0.215, 0.610, 0.355, 1.000)',
@@ -40,7 +42,6 @@ class TweenManager {
             easeInOut:      'cubic-bezier(0.420, 0.000, 0.580, 1.000)',
             linear:         'linear'
         };
-        const tweens = [];
 
         Render.start(updateTweens);
 

@@ -23,6 +23,13 @@ class Scroll extends Component {
 
         super();
         const self = this;
+        const callbacks = [],
+            scrollTarget = {
+                x: 0,
+                y: 0
+            };
+        let axes = ['x', 'y'];
+
         this.x = 0;
         this.y = 0;
         this.max = {
@@ -34,12 +41,6 @@ class Scroll extends Component {
             y: 0
         };
         this.enabled = true;
-        const callbacks = [],
-            scrollTarget = {
-                x: 0,
-                y: 0
-            };
-        let axes = ['x', 'y'];
 
         initParameters();
         addListeners();

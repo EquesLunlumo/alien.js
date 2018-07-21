@@ -14,6 +14,11 @@ class ParticlePhysics extends Component {
     constructor(integrator = new EulerIntegrator()) {
         super();
         const self = this;
+        const timestep = 1 / 60,
+            toDelete = [];
+        let clock = null,
+            buffer = 0;
+
         this.friction = 1;
         this.maxSteps = 1;
         this.emitters = new LinkedList();
@@ -21,10 +26,6 @@ class ParticlePhysics extends Component {
         this.behaviors = new LinkedList();
         this.particles = new LinkedList();
         this.springs = new LinkedList();
-        const timestep = 1 / 60,
-            toDelete = [];
-        let clock = null,
-            buffer = 0;
 
         function init(p) {
             let i = self.initializers.start();

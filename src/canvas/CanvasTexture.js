@@ -12,9 +12,10 @@ class CanvasTexture extends CanvasObject {
     constructor(texture, w = 0, h = w) {
         super();
         const self = this;
+        let mask;
+
         this.width = w;
         this.height = h;
-        let mask;
 
         initTexture();
 

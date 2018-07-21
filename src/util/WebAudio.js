@@ -18,6 +18,7 @@ class WebAudio {
 
             constructor(asset) {
                 const self = this;
+
                 this.asset = Assets.getPath(asset);
                 if (WebAudio.context.createStereoPanner) this.stereo = WebAudio.context.createStereoPanner();
                 this.output = WebAudio.context.createGain();

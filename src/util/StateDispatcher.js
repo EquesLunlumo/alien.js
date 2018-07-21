@@ -12,12 +12,13 @@ class StateDispatcher extends Component {
     constructor(forceHash) {
         super();
         const self = this;
-        this.locked = false;
         let storePath, storeState,
             rootPath = '/';
 
-        createListener();
+        this.locked = false;
+
         storePath = getPath();
+        createListener();
 
         function createListener() {
             if (forceHash) window.addEventListener('hashchange', hashChange);

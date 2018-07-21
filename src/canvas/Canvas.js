@@ -18,6 +18,7 @@ class Canvas {
         }
 
         const self = this;
+
         this.element = document.createElement('canvas');
         this.context = this.element.getContext('2d');
         this.object = new Interface(this.element);

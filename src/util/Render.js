@@ -7,7 +7,7 @@
 class Render {
 
     static init() {
-        let self = this;
+        const self = this;
         const render = [],
             skipLimit = 200;
         let last = performance.now();

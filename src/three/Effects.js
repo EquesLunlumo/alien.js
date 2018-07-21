@@ -15,6 +15,8 @@ class Effects extends Component {
     constructor(stage, params) {
         super();
         const self = this;
+        let renderTarget1, renderTarget2, scene, camera, mesh;
+
         this.stage = stage;
         this.renderer = params.renderer;
         this.scene = params.scene;
@@ -23,7 +25,6 @@ class Effects extends Component {
         this.passes = params.passes || [];
         this.dpr = params.dpr || 1;
         this.rt = params.rt;
-        let renderTarget1, renderTarget2, scene, camera, mesh;
 
         initEffects();
         addListeners();

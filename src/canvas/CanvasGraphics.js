@@ -12,11 +12,12 @@ class CanvasGraphics extends CanvasObject {
     constructor(w = 0, h = w) {
         super();
         const self = this;
+        let draw = [],
+            mask;
+
         this.width = w;
         this.height = h;
         this.props = {};
-        let draw = [],
-            mask;
 
         function setProperties(context) {
             for (let key in self.props) context[key] = self.props[key];

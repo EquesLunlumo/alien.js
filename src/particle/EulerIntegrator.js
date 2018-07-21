@@ -11,8 +11,9 @@ class EulerIntegrator {
 
     constructor() {
         const self = this;
-        this.useDeltaTime = false;
         let vel, acc;
+
+        this.useDeltaTime = false;
 
         function createVectors() {
             const Vector = self.type === '3D' ? Vector3 : Vector2;

@@ -16,6 +16,18 @@ class Slide extends Component {
     constructor(params = {}) {
         super();
         const self = this;
+        const scrollTarget = {
+                x: 0,
+                y: 0
+            },
+            scrollInertia = {
+                x: 0,
+                y: 0
+            },
+            event = {};
+        let axes = ['x', 'y'],
+            slideIndex;
+
         this.x = 0;
         this.y = 0;
         this.max = {
@@ -36,17 +48,6 @@ class Slide extends Component {
         this.ceil = 0;
         this.index = 0;
         this.enabled = true;
-        const scrollTarget = {
-                x: 0,
-                y: 0
-            },
-            scrollInertia = {
-                x: 0,
-                y: 0
-            },
-            event = {};
-        let axes = ['x', 'y'],
-            slideIndex;
 
         initParameters();
         addListeners();

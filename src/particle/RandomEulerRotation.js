@@ -9,9 +9,10 @@ import { Render } from '../util/Render.js';
 class RandomEulerRotation {
 
     constructor(container) {
-        this.speed = 1;
         const euler = ['x', 'y', 'z'];
         let rot;
+
+        this.speed = 1;
 
         initRotation();
 

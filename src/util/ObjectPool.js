@@ -10,6 +10,7 @@ class ObjectPool {
 
     constructor(type, number) {
         const pool = [];
+
         this.array = pool;
 
         if (type) for (let i = 0; i < number || 10; i++) pool.push(new type());

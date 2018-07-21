@@ -12,6 +12,7 @@ class Particle {
 
     constructor(pos, mass = 1, radius = 1) {
         const self = this;
+
         this.mass = mass;
         this.massInv = 1 / this.mass;
         this.radius = radius;

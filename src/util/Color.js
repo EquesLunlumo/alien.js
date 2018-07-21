@@ -8,6 +8,7 @@ class Color {
 
     constructor(value) {
         const self = this;
+
         this.r = 1;
         this.g = 1;
         this.b = 1;

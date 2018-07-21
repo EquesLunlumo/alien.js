@@ -24,13 +24,14 @@ class Interaction3D extends Component {
 
         super();
         const self = this;
+        const event = {};
+        let hoverTarget, clickTarget;
+
         this.ray = new Raycaster(camera);
         this.meshes = [];
         this.meshCallbacks = [];
         this.cursor = 'auto';
         this.enabled = true;
-        const event = {};
-        let hoverTarget, clickTarget;
 
         addListeners();
 

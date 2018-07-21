@@ -13,6 +13,7 @@ class Shader extends Component {
     constructor(vertexShader, fragmentShader, props) {
         super();
         const self = this;
+
         this.uniforms = {};
         this.properties = {};
 

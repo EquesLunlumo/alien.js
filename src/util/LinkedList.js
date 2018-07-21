@@ -9,11 +9,12 @@ import { Utils } from './Utils.js';
 class LinkedList {
 
     constructor() {
+        const nodes = [];
+
         this.first = null;
         this.last = null;
         this.current = null;
         this.prev = null;
-        const nodes = [];
 
         function add(object) {
             return nodes[nodes.push({ object, prev: null, next: null }) - 1];
