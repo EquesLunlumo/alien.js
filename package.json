@@ -31,7 +31,7 @@
     "build-babel-uglify": "rollup -c --environment babel,uglify",
     "build-examples": "for x in `find examples -name 'rollup.config.js' -maxdepth 2 ! -path './alien.js*' -exec dirname {} \\;`; do cd \"$x\" && ln -sfn ../.. alien.js && rollup -c && rm -rf alien.js && cd ../..; done",
     "build-world": "npm run build && npm run build-examples",
-    "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"serve --port 8080\" || exit 0",
+    "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"serve -l 8080\" || exit 0",
     "start": "npm run dev",
     "lint": "eslint src || exit 0"
   },
@@ -39,14 +39,14 @@
     "node": ">=6.9.0"
   },
   "devDependencies": {
-    "concurrently": "^3.5.1",
-    "eslint": "^4.19.1",
-    "replace": "^0.3.0",
+    "concurrently": "^3.6.0",
+    "eslint": "^5.2.0",
+    "replace": "^1.0.0",
     "rollup": "0.55.3",
-    "rollup-plugin-bundleutils": "^1.0.5",
-    "rollup-plugin-eslint": "^4.0.0",
-    "rollup-plugin-glslify": "^1.0.3",
+    "rollup-plugin-bundleutils": "^1.0.6",
+    "rollup-plugin-eslint": "^5.0.0",
+    "rollup-plugin-glslify": "^1.0.5",
     "rollup-watch": "^4.3.1",
-    "serve": "6.5.3"
+    "serve": "^9.3.0"
   }
 }

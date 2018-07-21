@@ -1,7 +1,7 @@
 import { babel } from 'rollup-plugin-bundleutils';
 
 import glslify from 'rollup-plugin-glslify';
-import eslint from 'rollup-plugin-eslint';
+import { eslint } from 'rollup-plugin-eslint';
 
 export default {
     input: 'src/Main.js',
