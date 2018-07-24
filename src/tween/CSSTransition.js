@@ -15,6 +15,8 @@ class CSSTransition {
         const self = this;
         let transformProps, transitionProps;
 
+        this.playing = true;
+
         initProperties();
         initCSSTween();
 
@@ -77,15 +79,23 @@ class CSSTransition {
 
         function clearCSSTween() {
             if (killed()) return;
-            self.kill = true;
-            object.element.style[Device.vendor('Transition')] = '';
+            self.playing = false;
             object.willChange(null);
             object.cssTween = null;
             object = props = null;
             Utils.nullObject(self);
         }
 
-        this.stop = clearCSSTween;
+        this.stop = () => {
+            if (!this.playing) return;
+            this.kill = true;
+            this.playing = false;
+            object.element.style[Device.vendor('Transition')] = '';
+            object.willChange(null);
+            object.cssTween = null;
+            object = props = null;
+            Utils.nullObject(this);
+        };
     }
 }
 
