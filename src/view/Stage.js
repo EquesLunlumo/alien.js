@@ -62,10 +62,10 @@ const Stage = new (class extends Interface {
             Events.emitter.fire(Events.KEYBOARD_PRESS, e);
         }
 
-        function resize() {
+        function resize(e) {
             self.size();
             self.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
-            Events.emitter.fire(Events.RESIZE);
+            Events.emitter.fire(Events.RESIZE, e);
         }
 
         this.destroy = () => {
