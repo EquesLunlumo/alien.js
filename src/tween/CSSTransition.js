@@ -57,7 +57,7 @@ class CSSTransition {
                     if (killed()) return;
                     clearCSSTween();
                     if (callback) callback();
-                }, time + delay + 100);
+                }, time + delay + 250);
             }, 35);
         }
 
