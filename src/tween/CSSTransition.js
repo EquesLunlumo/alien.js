@@ -15,6 +15,8 @@ class CSSTransition {
         const self = this;
         let transformProps, transitionProps;
 
+        this.playing = true;
+
         initProperties();
         initCSSTween();
 
@@ -51,6 +53,7 @@ class CSSTransition {
             Timer.create(() => {
                 if (killed()) return;
                 object.element.style[Device.vendor('Transition')] = strings.transition;
+                object.element.addEventListener('transitionend', tweenComplete);
                 if (Device.browser === 'safari') {
                     Timer.create(() => {
                         if (killed()) return;
@@ -61,11 +64,6 @@ class CSSTransition {
                     object.css(props);
                     object.transform(transformProps);
                 }
-                Timer.create(() => {
-                    if (killed()) return;
-                    clearCSSTween();
-                    if (callback) callback();
-                }, time + delay + 250);
             }, 35);
         }
 
@@ -83,17 +81,29 @@ class CSSTransition {
             };
         }
 
-        function clearCSSTween() {
+        function tweenComplete() {
             if (killed()) return;
-            self.kill = true;
-            object.element.style[Device.vendor('Transition')] = '';
+            self.playing = false;
+            object.element.removeEventListener('transitionend', tweenComplete);
             object.willChange(null);
             object.cssTween = null;
             object = props = null;
             Utils.nullObject(self);
+            if (callback) callback();
         }
 
-        this.stop = clearCSSTween;
+        this.stop = () => {
+            if (!this.playing) return;
+            this.kill = true;
+            this.playing = false;
+            object.element.style[Device.vendor('Transition')] = '';
+            object.element.removeEventListener('transitionend', tweenComplete);
+            object.willChange(null);
+            object.cssTween = null;
+            object = props = null;
+            Utils.nullObject(this);
+            if (callback) callback();
+        };
     }
 }
 
