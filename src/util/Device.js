@@ -1,5 +1,5 @@
 /**
- * Browser detection and vendor prefixes.
+ * Browser detection and helper functions.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
@@ -8,35 +8,6 @@ class Device {
 
     static init() {
         this.agent = navigator.userAgent.toLowerCase();
-        this.prefix = (() => {
-            const styles = window.getComputedStyle(document.documentElement, ''),
-                pre = (Array.prototype.slice.call(styles).join('').match(/-(webkit|moz|ms)-/) || styles.OLink === '' && ['', 'o'])[1];
-            return {
-                lowercase: pre,
-                js: pre[0].toUpperCase() + pre.substr(1)
-            };
-        })();
-        this.transformProperty = (() => {
-            let pre;
-            switch (this.prefix.lowercase) {
-                case 'webkit':
-                    pre = '-webkit-transform';
-                    break;
-                case 'moz':
-                    pre = '-moz-transform';
-                    break;
-                case 'ms':
-                    pre = '-ms-transform';
-                    break;
-                case 'o':
-                    pre = '-o-transform';
-                    break;
-                default:
-                    pre = 'transform';
-                    break;
-            }
-            return pre;
-        })();
         this.pixelRatio = window.devicePixelRatio;
         this.webcam = !!(navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
         this.language = navigator.userLanguage || navigator.language;
@@ -102,10 +73,6 @@ class Device {
 
     static detect(matches) {
         return this.agent.includes(matches);
-    }
-
-    static vendor(style) {
-        return this.prefix.js + style;
     }
 
     static vibrate(time) {

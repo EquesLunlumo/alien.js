@@ -250,8 +250,8 @@ class Interface {
     }
 
     mask(src) {
-        this.element.style[Device.vendor('Mask')] = (~src.indexOf('.') ? 'url(' + src + ')' : src) + ' no-repeat';
-        this.element.style[Device.vendor('MaskSize')] = 'contain';
+        this.element.style.mask = (~src.indexOf('.') ? 'url(' + src + ')' : src) + ' no-repeat';
+        this.element.style.maskSize = 'contain';
         return this;
     }
 
@@ -286,35 +286,36 @@ class Interface {
     transform(props) {
         if (!props) props = this;
         else for (let key in props) if (typeof props[key] === 'number') this[key] = props[key];
-        this.element.style[Device.vendor('Transform')] = TweenManager.parseTransform(props);
+        this.element.style.transform = TweenManager.parseTransform(props);
         return this;
     }
 
     willChange(props) {
         const string = typeof props === 'string';
-        if (props) this.element.style['will-change'] = string ? props : Device.transformProperty + ', opacity';
+        if (props) this.element.style['will-change'] = string ? props : 'transform, opacity';
         else this.element.style['will-change'] = '';
     }
 
     backfaceVisibility(visible) {
-        if (visible) this.element.style[Device.vendor('BackfaceVisibility')] = 'visible';
-        else this.element.style[Device.vendor('BackfaceVisibility')] = 'hidden';
+        if (visible) this.element.style.backfaceVisibility = 'visible';
+        else this.element.style.backfaceVisibility = 'hidden';
+        return this;
     }
 
     enable3D(perspective, x, y) {
-        this.element.style[Device.vendor('TransformStyle')] = 'preserve-3d';
-        if (perspective) this.element.style[Device.vendor('Perspective')] = perspective + 'px';
+        this.element.style.transformStyle = 'preserve-3d';
+        if (perspective) this.element.style.perspective = perspective + 'px';
         if (typeof x !== 'undefined') {
             x = typeof x === 'number' ? x + 'px' : x;
             y = typeof y === 'number' ? y + 'px' : y;
-            this.element.style[Device.vendor('PerspectiveOrigin')] = x + ' ' + y;
+            this.element.style.perspectiveOrigin = x + ' ' + y;
         }
         return this;
     }
 
     disable3D() {
-        this.element.style[Device.vendor('TransformStyle')] = '';
-        this.element.style[Device.vendor('Perspective')] = '';
+        this.element.style.transformStyle = '';
+        this.element.style.perspective = '';
         return this;
     }
 
@@ -323,7 +324,7 @@ class Interface {
         if (typeof x !== 'undefined') origin += typeof x === 'number' ? x + 'px' : x;
         if (typeof y !== 'undefined') origin += typeof y === 'number' ? ' ' + y + 'px' : ' ' + y;
         if (typeof z !== 'undefined') origin += typeof z === 'number' ? ' ' + z + 'px' : ' ' + z;
-        this.element.style[Device.vendor('TransformOrigin')] = origin;
+        this.element.style.transformOrigin = origin;
         return this;
     }
 
@@ -355,7 +356,7 @@ class Interface {
         if (typeof this.rotationZ === 'number') this.rotationZ = 0;
         if (typeof this.skewX === 'number') this.skewX = 0;
         if (typeof this.skewY === 'number') this.skewY = 0;
-        this.element.style[Device.transformProperty] = '';
+        this.element.style.transform = '';
         return this;
     }
 

@@ -37,7 +37,7 @@ class CSSTransition {
                 }
             }
             if (transform.use) {
-                properties.push(Device.transformProperty);
+                properties.push('transform');
                 delete transform.use;
             }
             transformProps = transform;
@@ -52,7 +52,7 @@ class CSSTransition {
             object.willChange(strings.props);
             Timer.create(() => {
                 if (killed()) return;
-                object.element.style[Device.vendor('Transition')] = strings.transition;
+                object.element.style.transition = strings.transition;
                 object.element.addEventListener('transitionend', tweenComplete);
                 if (Device.browser === 'safari') {
                     Timer.create(() => {
@@ -96,7 +96,7 @@ class CSSTransition {
             if (!this.playing) return;
             this.kill = true;
             this.playing = false;
-            object.element.style[Device.vendor('Transition')] = '';
+            object.element.style.transition = '';
             object.element.removeEventListener('transitionend', tweenComplete);
             object.willChange(null);
             object.cssTween = null;
