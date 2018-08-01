@@ -51,8 +51,16 @@ class CSSTransition {
             Timer.create(() => {
                 if (killed()) return;
                 object.element.style[Device.vendor('Transition')] = strings.transition;
-                object.css(props);
-                object.transform(transformProps);
+                if (Device.browser === 'safari') {
+                    Timer.create(() => {
+                        if (killed()) return;
+                        object.css(props);
+                        object.transform(transformProps);
+                    }, 16);
+                } else {
+                    object.css(props);
+                    object.transform(transformProps);
+                }
                 Timer.create(() => {
                     if (killed()) return;
                     clearCSSTween();
