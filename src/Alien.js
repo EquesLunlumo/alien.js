@@ -34,6 +34,7 @@ export { Color } from './util/Color.js';
 export { Video } from './util/Video.js';
 export { SVG } from './svg/SVG.js';
 export { Scroll } from './util/Scroll.js';
+export { ScrollLock } from './util/ScrollLock.js';
 export { Slide } from './slide/Slide.js';
 export { SlideLoader } from './slide/SlideLoader.js';
 export { SlideVideo } from './slide/SlideVideo.js';
