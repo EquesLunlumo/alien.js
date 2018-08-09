@@ -26,9 +26,9 @@ class Assets {
             }
             const img = new Image();
             img.crossOrigin = this.CORS;
-            img.src = this.getPath(path);
             img.onload = callback;
             img.onerror = callback;
+            img.src = this.getPath(path);
             if (store) images[path] = img;
             return img;
         };
