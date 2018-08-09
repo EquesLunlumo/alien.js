@@ -292,8 +292,8 @@ class Interface {
 
     willChange(props) {
         const string = typeof props === 'string';
-        if (props) this.element.style['will-change'] = string ? props : 'transform, opacity';
-        else this.element.style['will-change'] = '';
+        if (props) this.element.style.willChange = string ? props : 'transform, opacity';
+        else this.element.style.willChange = '';
     }
 
     backfaceVisibility(visible) {
