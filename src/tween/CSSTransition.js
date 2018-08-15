@@ -51,7 +51,7 @@ class CSSTransition {
             Timer.create(() => {
                 if (killed()) return;
                 object.element.style.transition = strings.transition;
-                object.element.addEventListener('transitionend', tweenComplete);
+                object.element.addEventListener('transitionend', clearCSSTween);
                 if (Device.browser === 'safari') {
                     Timer.create(() => {
                         if (killed()) return;
@@ -79,20 +79,11 @@ class CSSTransition {
             };
         }
 
-        function tweenComplete() {
-            if (killed()) return;
-            Timer.create(() => {
-                if (killed()) return;
-                clearCSSTween();
-                if (callback) callback();
-            }, 250);
-        }
-
         function clearCSSTween() {
             if (killed()) return;
             self.kill = true;
             object.element.style.transition = '';
-            object.element.removeEventListener('transitionend', tweenComplete);
+            object.element.removeEventListener('transitionend', clearCSSTween);
             object.willChange(null);
             object.cssTween = null;
             object = props = null;
