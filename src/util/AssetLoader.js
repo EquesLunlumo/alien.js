@@ -44,7 +44,7 @@ class AssetLoader extends Component {
                 return;
             }
             window.get(Assets.getPath(asset), {
-                credentials: 'include'
+                credentials: Assets.CORS ? 'include' : undefined
             }).then(data => {
                 if (ext === 'json') Assets.storeData(key, data);
                 if (ext === 'js') window.eval(data.replace('use strict', ''));
