@@ -48,9 +48,9 @@ class Timer {
             return true;
         };
 
-        this.create = (callback, time, ...args) => {
+        this.create = (callback, time = 1, ...args) => {
             const obj = {
-                time: Math.max(1, time || 1),
+                time: Math.max(1, time),
                 current: 0,
                 ref: Utils.timestamp(),
                 callback,
