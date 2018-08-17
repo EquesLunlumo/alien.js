@@ -25,7 +25,12 @@ Global.SLIDE_INDEX = 0;
 Events.START = 'start';
 Events.SLIDE_CHANGE = 'slide_change';
 
-Assets.CORS = 'Anonymous';
+//Assets.CDN = Config.CDN;
+Assets.CORS = 'anonymous';
+Assets.OPTIONS = {
+    mode: 'cors',
+//    credentials: 'include'
+};
 
 
 class Data {

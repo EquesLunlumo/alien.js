@@ -40,7 +40,12 @@ Events.CLOSE_NAV = 'close_nav';
 Events.OPEN_ABOUT = 'open_about';
 Events.CLOSE_ABOUT = 'close_about';
 
-Assets.CORS = 'Anonymous';
+//Assets.CDN = Config.CDN;
+Assets.CORS = 'anonymous';
+Assets.OPTIONS = {
+    mode: 'cors',
+//    credentials: 'include'
+};
 
 
 class Cursor {

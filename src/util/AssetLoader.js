@@ -32,20 +32,18 @@ class AssetLoader extends Component {
 
         for (let key in assets) loadAsset(key, assets[key]);
 
-        function loadAsset(key, asset) {
-            const ext = Utils.extension(asset);
+        function loadAsset(key, path) {
+            const ext = Utils.extension(path);
             if (ext.includes(['jpg', 'jpeg', 'png', 'gif', 'svg'])) {
-                Assets.createImage(asset, assetLoaded);
+                Assets.createImage(path, assetLoaded);
                 return;
             }
             if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
                 if (!window.AudioContext || !window.WebAudio) return assetLoaded();
-                window.WebAudio.createSound(key, asset, assetLoaded);
+                window.WebAudio.createSound(key, path, assetLoaded);
                 return;
             }
-            window.get(Assets.getPath(asset), {
-                credentials: Assets.CORS ? 'include' : undefined
-            }).then(data => {
+            window.get(Assets.getPath(path), Assets.OPTIONS).then(data => {
                 if (ext === 'json') Assets.storeData(key, data);
                 if (ext === 'js') window.eval(data.replace('use strict', ''));
                 assetLoaded();

@@ -20,7 +20,12 @@ Config.ASSETS = {
     'three': 'assets/js/lib/three.min.js'
 };
 
-Assets.CORS = 'Anonymous';
+//Assets.CDN = Config.CDN;
+Assets.CORS = 'anonymous';
+Assets.OPTIONS = {
+    mode: 'cors',
+//    credentials: 'include'
+};
 
 
 class Tests {

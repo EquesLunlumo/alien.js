@@ -22,7 +22,12 @@ Config.ASSETS = [
     'assets/images/mask.jpg'
 ];
 
-Assets.CORS = 'Anonymous';
+//Assets.CDN = Config.CDN;
+Assets.CORS = 'anonymous';
+Assets.OPTIONS = {
+    mode: 'cors',
+//    credentials: 'include'
+};
 
 
 class TitleTexture extends Component {
