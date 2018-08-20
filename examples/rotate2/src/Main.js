@@ -6,8 +6,8 @@
 
 /* global THREE */
 
-import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Interaction, Mouse, Video, Utils,
-    Assets, AssetLoader, FontLoader, TweenManager, Shader, Effects } from '../alien.js/src/Alien.js';
+import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Interaction, Mouse, Utils,
+    Assets, Video, AssetLoader, FontLoader, TweenManager, Shader, Effects } from '../alien.js/src/Alien.js';
 
 import vertBasicShader from './shaders/basic_shader.vert';
 import fragBasicShader from './shaders/basic_shader.frag';
@@ -30,7 +30,7 @@ Assets.OPTIONS = {
 
 class Tests {
 
-    static shaderVideo() {
+    static useVideoTextures() {
         return !Device.mobile && Device.browser !== 'safari' && !Device.detect('trident');
     }
 }
@@ -134,7 +134,7 @@ class VideoTexture extends Component {
                 loop: true
             });
             video.object.mouseEnabled(false);
-            video.object.element.setAttribute('crossorigin', 'anonymous');
+            video.object.attr('crossorigin', 'anonymous');
             if (Device.mobile) Stage.bind('touchend', start);
             texture = new THREE.Texture(video.element);
             texture.minFilter = THREE.LinearFilter;
@@ -180,7 +180,7 @@ class Space extends Component {
         World.scene.add(this.object3D);
 
         function initTextures() {
-            if (Tests.shaderVideo()) video = self.initClass(VideoTexture);
+            if (Tests.useVideoTextures()) video = self.initClass(VideoTexture);
             else img = Assets.createImage(Config.ASSETS['galaxy']);
             return Promise.all([video ? video.ready() : Assets.loadImage(img)]).then(finishSetup);
         }
@@ -471,7 +471,7 @@ class Main {
         }
 
         function initLoader() {
-            Config.ASSETS['galaxy'] = Tests.shaderVideo() ? 'assets/video/galaxy.mp4' : 'assets/images/shot/galaxy.jpg';
+            Config.ASSETS['galaxy'] = Tests.useVideoTextures() ? 'assets/videos/galaxy.mp4' : 'assets/videos/galaxy.jpg';
 
             FontLoader.loadFonts(['Oswald', 'Karla']).then(() => {
                 loader = Stage.initClass(Loader);

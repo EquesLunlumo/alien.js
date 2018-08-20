@@ -6,8 +6,8 @@
 
 /* global THREE */
 
-import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Mouse, Utils, Assets, Slide, SlideLoader, SlideVideo,
-    MultiLoader, AssetLoader, FontLoader, StateDispatcher, TweenManager, Shader } from '../alien.js/src/Alien.js';
+import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Mouse, Utils,
+    Assets, Slide, SlideLoader, SlideVideo, MultiLoader, AssetLoader, FontLoader, StateDispatcher, TweenManager, Shader } from '../alien.js/src/Alien.js';
 
 import vertRipple from './shaders/ripple.vert';
 import fragRipple from './shaders/ripple.frag';
@@ -551,8 +551,8 @@ class Work {
         this.title = item.title;
         this.pageTitle = `${this.title} / Alien.js Example Project`;
         this.description = item.description;
-        this.src = `assets/video/${this.slug}.mp4`;
-        this.img = `assets/images/shot/${this.slug}.jpg`;
+        this.src = `assets/videos/${this.slug}.mp4`;
+        this.img = `assets/videos/${this.slug}.jpg`;
     }
 }
 
