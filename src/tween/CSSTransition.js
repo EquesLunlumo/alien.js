@@ -81,9 +81,10 @@ class CSSTransition {
 
         function tweenComplete() {
             if (killed()) return;
+            object.cssTween = null;
             Timer.create(() => {
                 if (killed()) return;
-                clearCSSTween();
+                if (!object.cssTween) clearCSSTween();
             }, 1000);
             if (callback) callback();
         }
