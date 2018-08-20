@@ -19,14 +19,12 @@ class Video extends Component {
         let lastTime, buffering, seekTo, forceRender,
             tick = 0;
 
-        this.loaded = {
-            start: 0,
-            end: 0,
-            percent: 0
-        };
+        this.playing = false;
+        this.loaded = { start: 0, end: 0, percent: 0 };
 
         createElement();
         if (params.preload !== false) preload();
+        else self.object.attr('preload', 'none');
 
         function createElement() {
             const src = params.src;
@@ -37,6 +35,7 @@ class Video extends Component {
             self.element.width = params.width;
             self.element.height = params.height;
             self.element.loop = params.loop;
+            self.element.muted = true;
             self.object = new Interface(self.element);
             self.width = params.width;
             self.height = params.height;
@@ -71,9 +70,11 @@ class Video extends Component {
             }
             lastTime = self.element.currentTime;
             if (self.element.currentTime >= (self.duration || self.element.duration) - 0.001) {
-                if (!self.loop) {
+                if (!self.element.loop) {
                     if (!forceRender) self.stopRender(step);
                     self.events.fire(Events.COMPLETE, null, true);
+                } else {
+                    self.element.currentTime = 0;
                 }
             }
             event.time = self.element.currentTime;
@@ -122,29 +123,23 @@ class Video extends Component {
 
         this.pause = () => {
             this.playing = false;
-            this.element.pause();
             this.stopRender(step);
+            this.element.pause();
         };
 
         this.stop = () => {
-            this.playing = false;
-            this.element.pause();
-            this.stopRender(step);
+            this.pause();
             if (this.ready()) this.element.currentTime = 0;
         };
 
         this.volume = v => {
             this.element.volume = v;
-            if (this.muted) {
-                this.muted = false;
-                this.object.attr('muted', '');
-            }
+            if (this.element.muted) this.element.muted = false;
         };
 
         this.mute = () => {
             this.volume(0);
-            this.muted = true;
-            this.object.attr('muted', true);
+            this.element.muted = true;
         };
 
         this.seek = t => {
@@ -165,13 +160,13 @@ class Video extends Component {
         };
 
         this.ready = () => {
-            return this.element.readyState > this.element.HAVE_CURRENT_DATA;
+            return this.element.readyState >= 2;
         };
 
         this.size = (w, h) => {
             this.element.width = this.width = w;
             this.element.height = this.height = h;
-            this.object.size(this.width, this.height);
+            this.object.size(w, h);
         };
 
         this.forceRender = () => {
