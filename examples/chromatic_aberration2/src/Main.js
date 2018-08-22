@@ -26,7 +26,7 @@ Config.ASSETS = [
 Assets.CORS = 'anonymous';
 Assets.OPTIONS = {
     mode: 'cors',
-//    credentials: 'include'
+    //credentials: 'include'
 };
 
 

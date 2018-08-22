@@ -29,7 +29,7 @@ Events.SLIDE_CHANGE = 'slide_change';
 Assets.CORS = 'anonymous';
 Assets.OPTIONS = {
     mode: 'cors',
-//    credentials: 'include'
+    //credentials: 'include'
 };
 
 

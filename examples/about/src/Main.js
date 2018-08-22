@@ -44,7 +44,7 @@ Events.CLOSE_ABOUT = 'close_about';
 Assets.CORS = 'anonymous';
 Assets.OPTIONS = {
     mode: 'cors',
-//    credentials: 'include'
+    //credentials: 'include'
 };
 
 
