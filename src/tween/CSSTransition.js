@@ -81,6 +81,8 @@ class CSSTransition {
 
         function tweenComplete() {
             if (killed()) return;
+            object.element.removeEventListener('transitionend', tweenComplete);
+            object.willChange(null);
             object.cssTween = null;
             Timer.create(() => {
                 if (killed()) return;
