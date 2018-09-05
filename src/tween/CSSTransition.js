@@ -6,7 +6,6 @@
 
 import { Utils } from '../util/Utils.js';
 import { Timer } from '../util/Timer.js';
-import { Device } from '../util/Device.js';
 import { TweenManager } from './TweenManager.js';
 
 class CSSTransition {
@@ -52,16 +51,8 @@ class CSSTransition {
                 if (killed()) return;
                 object.element.style.transition = strings.transition;
                 object.element.addEventListener('transitionend', tweenComplete);
-                if (Device.browser === 'safari') {
-                    Timer.create(() => {
-                        if (killed()) return;
-                        object.css(props);
-                        object.transform(transformProps);
-                    }, 16);
-                } else {
-                    object.css(props);
-                    object.transform(transformProps);
-                }
+                object.css(props);
+                object.transform(transformProps);
             }, 35);
         }
 
@@ -79,7 +70,8 @@ class CSSTransition {
             };
         }
 
-        function tweenComplete() {
+        function tweenComplete(e) {
+            if (!e.propertyName.includes(transitionProps)) return;
             if (killed()) return;
             object.element.removeEventListener('transitionend', tweenComplete);
             object.willChange(null);
