@@ -27,18 +27,18 @@ class RandomEulerRotation {
         }
 
         this.update = () => {
-            const time = Render.TIME;
+            const t = Render.TIME;
             for (let i = 0; i < 3; i++) {
                 const v = euler[i];
                 switch (rot[v]) {
                     case 0:
-                        container.rotation[v] += Math.cos(Math.sin(time * 0.25)) * rot['v' + v] * this.speed;
+                        container.rotation[v] += Math.cos(Math.sin(t * 0.25)) * rot['v' + v] * this.speed;
                         break;
                     case 1:
-                        container.rotation[v] += Math.cos(Math.sin(time * 0.25)) * rot['v' + v] * this.speed;
+                        container.rotation[v] += Math.cos(Math.sin(t * 0.25)) * rot['v' + v] * this.speed;
                         break;
                     case 2:
-                        container.rotation[v] += Math.cos(Math.cos(time * 0.25)) * rot['v' + v] * this.speed;
+                        container.rotation[v] += Math.cos(Math.cos(t * 0.25)) * rot['v' + v] * this.speed;
                         break;
                 }
             }
