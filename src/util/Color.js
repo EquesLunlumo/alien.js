@@ -136,30 +136,63 @@ class Color {
             this.r += color.r;
             this.g += color.g;
             this.b += color.b;
+            return this;
         };
 
         this.mix = (color, percent) => {
             this.r *= (1 - percent) + color.r * percent;
             this.g *= (1 - percent) + color.g * percent;
             this.b *= (1 - percent) + color.b * percent;
+            return this;
         };
 
         this.addScalar = s => {
             this.r += s;
             this.g += s;
             this.b += s;
+            return this;
+        };
+
+        this.sub = color => {
+            this.r -= color.r;
+            this.g -= color.g;
+            this.b -= color.b;
+            return this;
+        };
+
+        this.subScalar = s => {
+            this.r -= s;
+            this.g -= s;
+            this.b -= s;
+            return this;
         };
 
         this.multiply = color => {
             this.r *= color.r;
             this.g *= color.g;
             this.b *= color.b;
+            return this;
         };
 
         this.multiplyScalar = s => {
             this.r *= s;
             this.g *= s;
             this.b *= s;
+            return this;
+        };
+
+        this.divide = color => {
+            this.r /= color.r;
+            this.g /= color.g;
+            this.b /= color.b;
+            return this;
+        };
+
+        this.divideScalar = s => {
+            this.r /= s;
+            this.g /= s;
+            this.b /= s;
+            return this;
         };
 
         this.clone = () => {

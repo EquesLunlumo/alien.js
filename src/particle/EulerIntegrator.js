@@ -28,17 +28,17 @@ class EulerIntegrator {
             while (p) {
                 if (!p.fixed && p.enabled) {
                     p.old.pos.copy(p.pos);
-                    p.acc.multiply(p.massInv);
+                    p.acc.multiplyScalar(p.massInv);
                     vel.copy(p.vel);
                     acc.copy(p.acc);
                     if (this.useDeltaTime) {
-                        p.pos.add(vel.multiply(dt)).add(acc.multiply(0.5 * dtSq));
-                        p.vel.add(p.acc.multiply(dt));
+                        p.pos.add(vel.multiplyScalar(dt)).add(acc.multiplyScalar(0.5 * dtSq));
+                        p.vel.add(p.acc.multiplyScalar(dt));
                     } else {
-                        p.pos.add(vel).add(acc.multiply(0.5));
+                        p.pos.add(vel).add(acc.multiplyScalar(0.5));
                         p.vel.add(p.acc);
                     }
-                    if (drag) p.vel.multiply(drag);
+                    if (drag) p.vel.multiplyScalar(drag);
                     p.acc.clear();
                 }
                 if (p.saveTo) p.saveTo.copy(p.pos);

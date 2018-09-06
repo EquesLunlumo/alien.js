@@ -64,28 +64,7 @@ class Vector3 {
     }
 
     setLength(length) {
-        this.normalize().multiply(length);
-        return this;
-    }
-
-    addVectors(a, b) {
-        this.x = a.x + b.x;
-        this.y = a.y + b.y;
-        this.z = a.z + b.z;
-        return this;
-    }
-
-    subVectors(a, b) {
-        this.x = a.x - b.x;
-        this.y = a.y - b.y;
-        this.z = a.z - b.z;
-        return this;
-    }
-
-    multiplyVectors(a, b) {
-        this.x = a.x * b.x;
-        this.y = a.y * b.y;
-        this.z = a.z * b.z;
+        this.normalize().multiplyScalar(length);
         return this;
     }
 
@@ -96,6 +75,20 @@ class Vector3 {
         return this;
     }
 
+    addScalar(s) {
+        this.x += s;
+        this.y += s;
+        this.z += s;
+        return this;
+    }
+
+    addVectors(a, b) {
+        this.x = a.x + b.x;
+        this.y = a.y + b.y;
+        this.z = a.z + b.z;
+        return this;
+    }
+
     sub(v) {
         this.x -= v.x;
         this.y -= v.y;
@@ -103,24 +96,59 @@ class Vector3 {
         return this;
     }
 
+    subScalar(s) {
+        this.x -= s;
+        this.y -= s;
+        this.z -= s;
+        return this;
+    }
+
+    subVectors(a, b) {
+        this.x = a.x - b.x;
+        this.y = a.y - b.y;
+        this.z = a.z - b.z;
+        return this;
+    }
+
     multiply(v) {
-        this.x *= v;
-        this.y *= v;
-        this.z *= v;
+        this.x *= v.x;
+        this.y *= v.y;
+        this.z *= v.z;
+        return this;
+    }
+
+    multiplyScalar(s) {
+        this.x *= s;
+        this.y *= s;
+        this.z *= s;
+        return this;
+    }
+
+    multiplyVectors(a, b) {
+        this.x = a.x * b.x;
+        this.y = a.y * b.y;
+        this.z = a.z * b.z;
         return this;
     }
 
     divide(v) {
-        this.x /= v;
-        this.y /= v;
-        this.z /= v;
+        this.x /= v.x;
+        this.y /= v.y;
+        this.z /= v.z;
+        return this;
+    }
+
+    divideScalar(s) {
+        this.x /= s;
+        this.y /= s;
+        this.z /= s;
         return this;
     }
 
     limit(max) {
         if (this.length() > max) {
             this.normalize();
-            this.multiply(max);
+            this.multiplyScalar(max);
         }
     }
 

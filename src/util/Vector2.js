@@ -54,25 +54,7 @@ class Vector2 {
     }
 
     setLength(length) {
-        this.normalize().multiply(length);
-        return this;
-    }
-
-    addVectors(a, b) {
-        this.x = a.x + b.x;
-        this.y = a.y + b.y;
-        return this;
-    }
-
-    subVectors(a, b) {
-        this.x = a.x - b.x;
-        this.y = a.y - b.y;
-        return this;
-    }
-
-    multiplyVectors(a, b) {
-        this.x = a.x * b.x;
-        this.y = a.y * b.y;
+        this.normalize().multiplyScalar(length);
         return this;
     }
 
@@ -82,21 +64,63 @@ class Vector2 {
         return this;
     }
 
+    addScalar(s) {
+        this.x += s;
+        this.y += s;
+        return this;
+    }
+
+    addVectors(a, b) {
+        this.x = a.x + b.x;
+        this.y = a.y + b.y;
+        return this;
+    }
+
     sub(v) {
         this.x -= v.x;
         this.y -= v.y;
         return this;
     }
 
+    subScalar(s) {
+        this.x -= s;
+        this.y -= s;
+        return this;
+    }
+
+    subVectors(a, b) {
+        this.x = a.x - b.x;
+        this.y = a.y - b.y;
+        return this;
+    }
+
     multiply(v) {
-        this.x *= v;
-        this.y *= v;
+        this.x *= v.x;
+        this.y *= v.y;
+        return this;
+    }
+
+    multiplyScalar(s) {
+        this.x *= s;
+        this.y *= s;
+        return this;
+    }
+
+    multiplyVectors(a, b) {
+        this.x = a.x * b.x;
+        this.y = a.y * b.y;
         return this;
     }
 
     divide(v) {
-        this.x /= v;
-        this.y /= v;
+        this.x /= v.x;
+        this.y /= v.y;
+        return this;
+    }
+
+    divideScalar(s) {
+        this.x /= s;
+        this.y /= s;
         return this;
     }
 

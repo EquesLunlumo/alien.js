@@ -31,7 +31,7 @@ class WiggleBehavior {
             wobble.x *= Math.cos(angle + t * (0.00075 * this.speed)) * 1.1;
             wobble.y *= Math.sin(angle + t * (0.00025 * this.speed)) * 1.15;
             wobble.z = Math.sin(angle + wobble.x * 0.0025) * (100 * this.zMove);
-            wobble.multiply(this.scale * 0.1);
+            wobble.multiplyScalar(this.scale * 0.1);
             wobble.add(origin);
             if (position) {
                 if (this.ease) position.interp(wobble, this.alpha, this.ease);
