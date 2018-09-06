@@ -51,6 +51,7 @@ class Main extends Interface {
         }
 
         function loadComplete() {
+            self.loaded = true;
             alienkitty.bg('assets/alienkitty.svg');
             eyelid1.bg('assets/alienkitty_eyelid.svg');
             eyelid2.bg('assets/alienkitty_eyelid.svg');
