@@ -225,6 +225,8 @@ class About extends Interface {
         const texts = [];
         let wrapper, alienkitty, description;
 
+        this.alpha = 0.07;
+
         initHTML();
         initText();
         addListeners();
@@ -297,11 +299,11 @@ class About extends Interface {
 
         this.update = () => {
             if (Device.mobile) {
-                wrapper.rotationY += (Accelerometer.x - wrapper.rotationY) * 0.07;
-                wrapper.rotationX += (-Accelerometer.y - wrapper.rotationX) * 0.07;
+                wrapper.rotationY += (Accelerometer.x - wrapper.rotationY) * this.alpha;
+                wrapper.rotationX += (-Accelerometer.y - wrapper.rotationX) * this.alpha;
             } else {
-                wrapper.rotationY += (Math.range(Mouse.x, 0, Stage.width, -5, 5) - wrapper.rotationY) * 0.07;
-                wrapper.rotationX += (-Math.range(Mouse.y, 0, Stage.height, -10, 10) - wrapper.rotationX) * 0.07;
+                wrapper.rotationY += (Math.range(Mouse.x, 0, Stage.width, -5, 5) - wrapper.rotationY) * this.alpha;
+                wrapper.rotationX += (-Math.range(Mouse.y, 0, Stage.height, -10, 10) - wrapper.rotationX) * this.alpha;
             }
             wrapper.transform();
         };
