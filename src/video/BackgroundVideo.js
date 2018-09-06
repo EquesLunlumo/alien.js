@@ -12,13 +12,20 @@ import { Video } from './Video.js';
 class BackgroundVideo extends Interface {
 
     constructor(params) {
+
+        if (!BackgroundVideo.initialized) {
+            BackgroundVideo.test = BackgroundVideo.test || !Device.mobile;
+
+            BackgroundVideo.initialized = true;
+        }
+
         super('BackgroundVideo');
         const self = this;
         let cover, wrapper, video,
             tick = 0;
 
         initHTML();
-        if (!Device.mobile) {
+        if (BackgroundVideo.test) {
             initVideo();
             addListeners();
         }
