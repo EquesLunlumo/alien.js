@@ -43,16 +43,20 @@ class CSSTransition {
 
         function initCSSTween() {
             if (killed()) return;
-            if (object.cssTween) object.cssTween.kill = true;
+            if (object.cssTween) object.cssTween.stop();
             object.cssTween = self;
             const strings = buildStrings(time, ease, delay);
             object.willChange(strings.props);
             Timer.create(() => {
                 if (killed()) return;
                 object.element.style.transition = strings.transition;
-                object.element.addEventListener('transitionend', tweenComplete);
                 object.css(props);
                 object.transform(transformProps);
+                Timer.create(() => {
+                    if (killed()) return;
+                    clearCSSTween();
+                    if (callback) callback();
+                }, time + delay);
             }, 35);
         }
 
@@ -70,24 +74,10 @@ class CSSTransition {
             };
         }
 
-        function tweenComplete(e) {
-            if (!e.propertyName.includes(transitionProps)) return;
-            if (killed()) return;
-            object.element.removeEventListener('transitionend', tweenComplete);
-            object.willChange(null);
-            object.cssTween = null;
-            Timer.create(() => {
-                if (killed()) return;
-                if (!object.cssTween) clearCSSTween();
-            }, 1000);
-            if (callback) callback();
-        }
-
         function clearCSSTween() {
             if (killed()) return;
             self.kill = true;
             object.element.style.transition = '';
-            object.element.removeEventListener('transitionend', tweenComplete);
             object.willChange(null);
             object.cssTween = null;
             object = props = null;
