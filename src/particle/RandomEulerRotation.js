@@ -4,6 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+import { Utils } from '../util/Utils.js';
 import { Render } from '../util/Render.js';
 
 class RandomEulerRotation {
@@ -18,12 +19,12 @@ class RandomEulerRotation {
 
         function initRotation() {
             rot = {};
-            rot.x = Math.random(0, 2);
-            rot.y = Math.random(0, 2);
-            rot.z = Math.random(0, 2);
-            rot.vx = Math.random(-5, 5) * 0.0025;
-            rot.vy = Math.random(-5, 5) * 0.0025;
-            rot.vz = Math.random(-5, 5) * 0.0025;
+            rot.x = Utils.random(0, 2);
+            rot.y = Utils.random(0, 2);
+            rot.z = Utils.random(0, 2);
+            rot.vx = Utils.random(-5, 5) * 0.0025;
+            rot.vy = Utils.random(-5, 5) * 0.0025;
+            rot.vz = Utils.random(-5, 5) * 0.0025;
         }
 
         this.update = () => {
