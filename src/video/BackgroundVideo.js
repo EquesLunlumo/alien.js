@@ -24,10 +24,12 @@ class BackgroundVideo extends Interface {
         let cover, wrapper, video,
             tick = 0;
 
+        this.fade = params.fade !== false;
+
         initHTML();
         if (BackgroundVideo.test) {
             initVideo();
-            addListeners();
+            if (this.fade) addListeners();
         }
 
         function initHTML() {
@@ -38,7 +40,8 @@ class BackgroundVideo extends Interface {
 
         function initVideo() {
             wrapper = self.create('.wrapper');
-            wrapper.size('100%').css({ opacity: 0 });
+            wrapper.size('100%');
+            if (self.fade) wrapper.css({ opacity: 0 });
             video = wrapper.initClass(Video, {
                 src: params.src,
                 loop: params.loop !== false,
