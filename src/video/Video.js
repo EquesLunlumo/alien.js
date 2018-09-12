@@ -5,7 +5,6 @@
  */
 
 import { Events } from '../util/Events.js';
-import { Device } from '../util/Device.js';
 import { Component } from '../util/Component.js';
 import { Interface } from '../util/Interface.js';
 import { Assets } from '../util/Assets.js';
@@ -24,7 +23,7 @@ class Video extends Component {
 
         createElement();
         if (params.preload !== false) preload();
-        else self.object.attr('preload', 'none');
+        else this.element.preload = 'none';
 
         function createElement() {
             const src = params.src;
@@ -36,14 +35,11 @@ class Video extends Component {
             self.element.height = params.height;
             self.element.loop = params.loop;
             self.element.muted = true;
+            self.element.playsinline = true;
             self.object = new Interface(self.element);
             self.width = params.width;
             self.height = params.height;
             self.object.size(self.width, self.height);
-            if (Device.mobile) {
-                self.object.attr('webkit-playsinline', true);
-                self.object.attr('playsinline', true);
-            }
         }
 
         function preload() {
