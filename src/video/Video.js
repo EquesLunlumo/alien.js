@@ -15,7 +15,7 @@ class Video extends Component {
         super();
         const self = this;
         const event = {};
-        let lastTime, buffering, seekTo, forceRender,
+        let lastTime, buffering,
             tick = 0;
 
         this.playing = false;
@@ -67,7 +67,7 @@ class Video extends Component {
             lastTime = self.element.currentTime;
             if (self.element.currentTime >= (self.duration || self.element.duration) - 0.001) {
                 if (!self.element.loop) {
-                    if (!forceRender) self.stopRender(step);
+                    self.stopRender(step);
                     self.events.fire(Events.COMPLETE, null, true);
                 } else {
                     self.element.currentTime = 0;
@@ -77,26 +77,6 @@ class Video extends Component {
             event.duration = self.element.duration;
             event.loaded = self.loaded;
             self.events.fire(Events.UPDATE, event, true);
-        }
-
-        function checkReady() {
-            if (!self.element) return false;
-            if (!seekTo) {
-                self.buffered = self.element.readyState === self.element.HAVE_ENOUGH_DATA;
-            } else {
-                const seekable = self.element.seekable;
-                let max = -1;
-                if (seekable) {
-                    for (let i = 0; i < seekable.length; i++) if (seekable.start(i) < seekTo) max = seekable.end(i) - 0.5;
-                    if (max >= seekTo) self.buffered = true;
-                } else {
-                    self.buffered = true;
-                }
-            }
-            if (self.buffered) {
-                self.stopRender(checkReady);
-                self.events.fire(Events.READY, null, true);
-            }
         }
 
         function handleProgress() {
@@ -134,40 +114,21 @@ class Video extends Component {
         };
 
         this.mute = () => {
-            this.volume(0);
             this.element.muted = true;
         };
 
-        this.seek = t => {
-            if (this.element.readyState <= 1) {
-                this.delayedCall(() => {
-                    if (this.seek) this.seek(t);
-                }, 32);
-                return;
-            }
-            this.element.currentTime = t;
-        };
-
-        this.canPlayTo = t => {
-            seekTo = null;
-            if (t) seekTo = t;
-            if (!this.buffered) this.startRender(checkReady);
-            return this.buffered;
+        this.unmute = () => {
+            this.element.muted = false;
         };
 
         this.ready = () => {
-            return this.element.readyState >= 2;
+            return this.element.readyState > this.element.HAVE_CURRENT_DATA;
         };
 
         this.size = (w, h) => {
             this.element.width = this.width = w;
             this.element.height = this.height = h;
             this.object.size(w, h);
-        };
-
-        this.forceRender = () => {
-            forceRender = true;
-            this.startRender(step);
         };
 
         this.trackProgress = () => {
@@ -181,22 +142,6 @@ class Video extends Component {
             this.object.destroy();
             return super.destroy();
         };
-    }
-
-    set loop(bool) {
-        this.element.loop = bool;
-    }
-
-    get loop() {
-        return this.element.loop;
-    }
-
-    set src(src) {
-        this.element.src = Assets.getPath(src);
-    }
-
-    get src() {
-        return this.element.src;
     }
 }
 
