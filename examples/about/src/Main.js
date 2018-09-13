@@ -1889,7 +1889,8 @@ class Main {
 
     constructor() {
 
-        if (!Device.webgl) window.location = 'fallback.html';
+        if (!window.Promise || !window.fetch) return window.location = 'unsupported.html';
+        if (!Device.webgl) return window.location = 'fallback.html';
 
         let loader, fluid, example,
             orientation = Stage.orientation;
