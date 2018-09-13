@@ -255,7 +255,7 @@ class Space extends Component {
         }
 
         function slideChange(e) {
-            slide.goto(e);
+            slide.moveTo(e);
         }
 
         function resize() {

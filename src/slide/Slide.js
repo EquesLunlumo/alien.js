@@ -120,8 +120,8 @@ class Slide extends Component {
             axes.forEach(axis => {
                 if (!self.max[axis]) return;
                 const progress = self[axis] / self.max[axis],
-                    i = Math.round(progress);
-                if (scrollTarget[axis] === i * self.max[axis]) return;
+                    slide = Math.round(progress);
+                if (scrollTarget[axis] === slide * self.max[axis]) return;
                 if (scrollInertia[axis] !== 0) {
                     scrollInertia[axis] *= 0.9;
                     if (Math.abs(scrollInertia[axis]) < 0.001) scrollInertia[axis] = 0;
@@ -130,7 +130,7 @@ class Slide extends Component {
                 const limit = self.max[axis] * 0.035;
                 scrollTarget[axis] += Interpolation.Sine.Out(Math.round(self.progress) - self.progress) * limit;
                 if (Math.abs(scrollTarget[axis] - self[axis]) > limit) scrollTarget[axis] -= (scrollTarget[axis] - self[axis]) * 0.5;
-                else if (Math.abs(scrollTarget[axis] - self[axis]) < 0.001) scrollTarget[axis] = i * self.max[axis];
+                else if (Math.abs(scrollTarget[axis] - self[axis]) < 0.001) scrollTarget[axis] = slide * self.max[axis];
                 self.delta[axis] = scrollTarget[axis] - self[axis];
                 self.delta[axis] = self.delta[axis] < 0 ? Math.max(self.delta[axis], -limit) : Math.min(self.delta[axis], limit);
                 self[axis] += self.delta[axis];
@@ -150,23 +150,23 @@ class Slide extends Component {
             }
         }
 
-        this.goto = i => {
+        this.moveTo = slide => {
             const obj = {};
-            obj.x = i * this.max.x;
-            obj.y = i * this.max.y;
+            obj.x = slide * this.max.x;
+            obj.y = slide * this.max.y;
             TweenManager.tween(scrollTarget, obj, 2500, 'easeOutQuint');
         };
 
         this.next = () => {
             const progress = (this.x + this.y) / (this.max.x + this.max.y),
-                i = Math.round(progress);
-            this.goto(i + 1);
+                slide = Math.round(progress);
+            this.moveTo(slide + 1);
         };
 
         this.prev = () => {
             const progress = (this.x + this.y) / (this.max.x + this.max.y),
-                i = Math.round(progress);
-            this.goto(i - 1);
+                slide = Math.round(progress);
+            this.moveTo(slide - 1);
         };
 
         this.destroy = () => {
