@@ -2,7 +2,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-if (typeof Promise !== 'undefined') Promise.create = function () {
+Promise.create = function () {
     let resolve, reject;
     const promise = new Promise(function (res, rej) {
         resolve = res;
@@ -119,48 +119,6 @@ Date.prototype.addDays = function (days) {
     const date = new Date(this.valueOf());
     date.setDate(date.getDate() + days);
     return date;
-};
-
-if (!window.fetch) window.fetch = function (url, options = {}) {
-    const promise = Promise.create(),
-        request = new XMLHttpRequest();
-    request.open(options.method || 'GET', url);
-    for (let i in options.headers) request.setRequestHeader(i, options.headers[i]);
-    request.onload = () => promise.resolve(response());
-    request.onerror = promise.reject;
-    request.send(options.body);
-
-    function response() {
-        const keys = [],
-            all = [],
-            headers = {};
-        let header;
-        request.getAllResponseHeaders().replace(/^(.*?):\s*([\s\S]*?)$/gm, function (m, key, value) {
-            keys.push(key = key.toLowerCase());
-            all.push([key, value]);
-            header = headers[key];
-            headers[key] = header ? `${header},${value}` : value;
-        });
-        return {
-            ok: (request.status / 200 | 0) == 1,
-            status: request.status,
-            statusText: request.statusText,
-            url: request.responseURL,
-            clone: response,
-            text() { return Promise.resolve(request.responseText); },
-            json() { return Promise.resolve(request.responseText).then(JSON.parse); },
-            xml() { return Promise.resolve(request.responseXML); },
-            blob() { return Promise.resolve(new Blob([request.response])); },
-            arrayBuffer() { return Promise.resolve(new ArrayBuffer([request.response])); },
-            headers: {
-                keys() { return keys; },
-                entries() { return all; },
-                get(n) { return headers[n.toLowerCase()]; },
-                has(n) { return n.toLowerCase() in headers; }
-            }
-        };
-    }
-    return promise;
 };
 
 window.get = function (url, options = {}) {
