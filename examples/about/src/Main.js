@@ -238,7 +238,7 @@ class About extends Interface {
             wrapper.rotationY = 0;
             wrapper.rotationX = 0;
             alienkitty = wrapper.initClass(AlienKitty);
-            alienkitty.center().transform({ z: -20 }).css({ marginTop: -88 });
+            alienkitty.center().css({ marginTop: -88 }).transform({ z: -20 });
         }
 
         function initText() {
@@ -862,11 +862,11 @@ class HeaderExamples extends Interface {
         addListeners();
 
         function initHTML() {
+            self.mouseEnabled(false);
             self.css({
                 left: 0,
                 top: 0
             });
-            self.mouseEnabled(false);
         }
 
         function initViews() {
@@ -1183,7 +1183,6 @@ class NavBackground extends Interface {
             self.events.add(Mouse.input, Interaction.START, down);
             self.events.add(Mouse.input, Interaction.DRAG, drag);
             self.events.add(Mouse.input, Interaction.END, up);
-            up();
         }
 
         function stopInertia() {
