@@ -1,4 +1,4 @@
-import { timestamp, babel, uglify } from 'rollup-plugin-bundleutils';
+import { timestamp, uglify } from 'rollup-plugin-bundleutils';
 
 import glslify from 'rollup-plugin-glslify';
 import { eslint } from 'rollup-plugin-eslint';
@@ -10,8 +10,8 @@ const pkg = require('./alien.js/package.json'),
     project = path.basename(__dirname);
 
 replace({
-    regex: `"assets/js/.*\.js.*"`,
-    replacement: `"assets/js/${project}.js?v=${Date.now()}"`,
+    regex: `'assets/js/.*\.js.*'`,
+    replacement: `'assets/js/${project}.js?v=${Date.now()}'`,
     paths: ['dist/index.html'],
     recursive: false,
     silent: true
@@ -26,7 +26,6 @@ export default {
     plugins: [
         glslify({ basedir: 'src/shaders' }),
         eslint(),
-        babel(),
         uglify({
             output: {
                 preamble: `//   _  /._  _  r${pkg.version.split('.')[1]}.${project} ${timestamp()}\n//  /_|///_'/ /`

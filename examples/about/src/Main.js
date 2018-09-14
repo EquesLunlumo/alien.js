@@ -1888,7 +1888,6 @@ class Main {
 
     constructor() {
 
-        if (!window.Promise || !window.fetch) return window.location = 'unsupported.html';
         if (!Device.webgl) return window.location = 'fallback.html';
 
         let loader, fluid, example,

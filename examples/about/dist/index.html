@@ -18,6 +18,19 @@
     <link rel="stylesheet" href="assets/css/style.css">
 </head>
 <body>
-<script src="assets/js/about.js?v=1532204962657"></script>
+<script>
+    (function() {
+        // ES6 only
+        try {
+            eval('async () => {};');
+        } catch (e) {
+            return window.location = 'unsupported.html';
+        }
+        var s = document.createElement('script');
+        s.src = 'assets/js/about.js?v=1532204962657';
+        s.async = false;
+        document.body.appendChild(s);
+    })();
+</script>
 </body>
 </html>
