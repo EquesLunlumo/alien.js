@@ -1,1403 +1,1095 @@
-var _get = function get(object, property, receiver) { if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { return get(parent, property, receiver); } } else if ("value" in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } };
-
-var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-function _possibleConstructorReturn(self, call) { if (!self) { throw new ReferenceError("this hasn't been initialised - super() hasn't been called"); } return call && (typeof call === "object" || typeof call === "function") ? call : self; }
-
-function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
-
 (function (global, factory) {
-    (typeof exports === 'undefined' ? 'undefined' : _typeof(exports)) === 'object' && typeof module !== 'undefined' ? module.exports = factory() : typeof define === 'function' && define.amd ? define(factory) : global.Project = factory();
-})(this, function () {
-    'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+	typeof define === 'function' && define.amd ? define(factory) :
+	(global.Project = factory());
+}(this, (function () { 'use strict';
 
-    /**
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
+/**
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
-    if (typeof Promise !== 'undefined') Promise.create = function () {
-        var resolve = void 0,
-            reject = void 0;
-        var promise = new Promise(function (res, rej) {
-            resolve = res;
-            reject = rej;
-        });
-        promise.resolve = resolve;
-        promise.reject = reject;
-        return promise;
-    };
+Promise.create = function () {
+    let resolve, reject;
+    const promise = new Promise(function (res, rej) {
+        resolve = res;
+        reject = rej;
+    });
+    promise.resolve = resolve;
+    promise.reject = reject;
+    return promise;
+};
 
-    Math.sign = function (x) {
-        x = +x;
-        if (x === 0 || isNaN(x)) return Number(x);
-        return x > 0 ? 1 : -1;
-    };
+Math.sign = function (x) {
+    x = +x;
+    if (x === 0 || isNaN(x)) return Number(x);
+    return x > 0 ? 1 : -1;
+};
 
-    Math.degrees = function (radians) {
-        return radians * (180 / Math.PI);
-    };
+Math.degrees = function (radians) {
+    return radians * (180 / Math.PI);
+};
 
-    Math.radians = function (degrees) {
-        return degrees * (Math.PI / 180);
-    };
+Math.radians = function (degrees) {
+    return degrees * (Math.PI / 180);
+};
 
-    Math.clamp = function (value, min, max) {
-        return Math.min(Math.max(value, Math.min(min, max)), Math.max(min, max));
-    };
+Math.clamp = function (value, min, max) {
+    return Math.min(Math.max(value, Math.min(min, max)), Math.max(min, max));
+};
 
-    Math.range = function (value, oldMin, oldMax, newMin, newMax, isClamp) {
-        var newValue = (value - oldMin) * (newMax - newMin) / (oldMax - oldMin) + newMin;
-        if (isClamp) return Math.clamp(newValue, newMin, newMax);
-        return newValue;
-    };
+Math.range = function (value, oldMin, oldMax, newMin, newMax, isClamp) {
+    const newValue = (value - oldMin) * (newMax - newMin) / (oldMax - oldMin) + newMin;
+    if (isClamp) return Math.clamp(newValue, newMin, newMax);
+    return newValue;
+};
 
-    Math.mix = function (a, b, alpha) {
-        return a * (1 - alpha) + b * alpha;
-    };
+Math.mix = function (a, b, alpha) {
+    return a * (1 - alpha) + b * alpha;
+};
 
-    Math.step = function (edge, value) {
-        return value < edge ? 0 : 1;
-    };
+Math.step = function (edge, value) {
+    return value < edge ? 0 : 1;
+};
 
-    Math.smoothStep = function (min, max, value) {
-        var x = Math.max(0, Math.min(1, (value - min) / (max - min)));
-        return x * x * (3 - 2 * x);
-    };
+Math.smoothStep = function (min, max, value) {
+    const x = Math.max(0, Math.min(1, (value - min) / (max - min)));
+    return x * x * (3 - 2 * x);
+};
 
-    Math.fract = function (value) {
-        return value - Math.floor(value);
-    };
+Math.fract = function (value) {
+    return value - Math.floor(value);
+};
 
-    Math.mod = function (value, n) {
-        return (value % n + n) % n;
-    };
+Math.mod = function (value, n) {
+    return (value % n + n) % n;
+};
 
-    Array.prototype.shuffle = function () {
-        var i = this.length,
-            temp = void 0,
-            r = void 0;
-        while (i !== 0) {
-            r = Math.floor(Math.random() * i);
-            i -= 1;
-            temp = this[i];
-            this[i] = this[r];
-            this[r] = temp;
-        }
-        return this;
-    };
+Array.prototype.shuffle = function () {
+    let i = this.length,
+        temp, r;
+    while (i !== 0) {
+        r = Math.floor(Math.random() * i);
+        i -= 1;
+        temp = this[i];
+        this[i] = this[r];
+        this[r] = temp;
+    }
+    return this;
+};
 
-    Array.storeRandom = function (arr) {
-        arr.randomStore = [];
-    };
+Array.storeRandom = function (arr) {
+    arr.randomStore = [];
+};
 
-    Array.prototype.random = function (range) {
-        var value = Math.floor(Math.random() * this.length);
-        if (range && !this.randomStore) Array.storeRandom(this);
-        if (!this.randomStore) return this[value];
-        if (range > this.length - 1) range = this.length;
-        if (range > 1) {
-            while (~this.randomStore.indexOf(value)) {
-                if (value++ > this.length - 1) value = 0;
-            }this.randomStore.push(value);
-            if (this.randomStore.length >= range) this.randomStore.shift();
-        }
-        return this[value];
-    };
+Array.prototype.random = function (range) {
+    let value = Math.floor(Math.random() * this.length);
+    if (range && !this.randomStore) Array.storeRandom(this);
+    if (!this.randomStore) return this[value];
+    if (range > this.length - 1) range = this.length;
+    if (range > 1) {
+        while (~this.randomStore.indexOf(value)) if (value++ > this.length - 1) value = 0;
+        this.randomStore.push(value);
+        if (this.randomStore.length >= range) this.randomStore.shift();
+    }
+    return this[value];
+};
 
-    Array.prototype.remove = function (element) {
-        var index = this.indexOf(element);
-        if (~index) return this.splice(index, 1);
-    };
+Array.prototype.remove = function (element) {
+    const index = this.indexOf(element);
+    if (~index) return this.splice(index, 1);
+};
 
-    Array.prototype.last = function () {
-        return this[this.length - 1];
-    };
+Array.prototype.last = function () {
+    return this[this.length - 1];
+};
 
-    String.prototype.includes = function (str) {
-        if (!Array.isArray(str)) return ~this.indexOf(str);
-        for (var i = 0; i < str.length; i++) {
-            if (~this.indexOf(str[i])) return true;
-        }return false;
-    };
+String.prototype.includes = function (str) {
+    if (!Array.isArray(str)) return ~this.indexOf(str);
+    for (let i = 0; i < str.length; i++) if (~this.indexOf(str[i])) return true;
+    return false;
+};
 
-    String.prototype.clip = function (num, end) {
-        return this.length > num ? this.slice(0, num) + end : this;
-    };
+String.prototype.clip = function (num, end) {
+    return this.length > num ? this.slice(0, num) + end : this;
+};
 
-    String.prototype.capitalize = function () {
-        return this.charAt(0).toUpperCase() + this.slice(1);
-    };
+String.prototype.capitalize = function () {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+};
 
-    String.prototype.replaceAll = function (find, replace) {
-        return this.split(find).join(replace);
-    };
+String.prototype.replaceAll = function (find, replace) {
+    return this.split(find).join(replace);
+};
 
-    Date.prototype.addDays = function (days) {
-        var date = new Date(this.valueOf());
-        date.setDate(date.getDate() + days);
-        return date;
-    };
+Date.prototype.addDays = function (days) {
+    const date = new Date(this.valueOf());
+    date.setDate(date.getDate() + days);
+    return date;
+};
 
-    if (!window.fetch) window.fetch = function (url) {
-        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+window.get = function (url, options = {}) {
+    const promise = Promise.create();
+    options.method = 'GET';
+    window.fetch(url, options).then(handleResponse).catch(promise.reject);
 
-        var promise = Promise.create(),
-            request = new XMLHttpRequest();
-        request.open(options.method || 'GET', url);
-        for (var i in options.headers) {
-            request.setRequestHeader(i, options.headers[i]);
-        }request.onload = function () {
-            return promise.resolve(response());
-        };
-        request.onerror = promise.reject;
-        request.send(options.body);
-
-        function response() {
-            var _keys = [],
-                all = [],
-                headers = {};
-            var header = void 0;
-            request.getAllResponseHeaders().replace(/^(.*?):\s*([\s\S]*?)$/gm, function (m, key, value) {
-                _keys.push(key = key.toLowerCase());
-                all.push([key, value]);
-                header = headers[key];
-                headers[key] = header ? header + ',' + value : value;
-            });
-            return {
-                ok: (request.status / 200 | 0) == 1,
-                status: request.status,
-                statusText: request.statusText,
-                url: request.responseURL,
-                clone: response,
-                text: function text() {
-                    return Promise.resolve(request.responseText);
-                },
-                json: function json() {
-                    return Promise.resolve(request.responseText).then(JSON.parse);
-                },
-                xml: function xml() {
-                    return Promise.resolve(request.responseXML);
-                },
-                blob: function blob() {
-                    return Promise.resolve(new Blob([request.response]));
-                },
-                arrayBuffer: function arrayBuffer() {
-                    return Promise.resolve(new ArrayBuffer([request.response]));
-                },
-
-                headers: {
-                    keys: function keys() {
-                        return _keys;
-                    },
-                    entries: function entries() {
-                        return all;
-                    },
-                    get: function get(n) {
-                        return headers[n.toLowerCase()];
-                    },
-                    has: function has(n) {
-                        return n.toLowerCase() in headers;
-                    }
-                }
-            };
-        }
-        return promise;
-    };
-
-    window.get = function (url) {
-        var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-
-        var promise = Promise.create();
-        options.method = 'GET';
-        window.fetch(url, options).then(handleResponse).catch(promise.reject);
-
-        function handleResponse(e) {
-            if (!e.ok) return promise.reject(e);
-            e.text().then(function (text) {
-                if (text.charAt(0).includes(['[', '{'])) {
-                    try {
-                        promise.resolve(JSON.parse(text));
-                    } catch (err) {
-                        promise.resolve(text);
-                    }
-                } else {
-                    promise.resolve(text);
-                }
-            });
-        }
-        return promise;
-    };
-
-    window.post = function (url, body) {
-        var options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
-
-        var promise = Promise.create();
-        options.method = 'POST';
-        options.body = JSON.stringify(body);
-        window.fetch(url, options).then(handleResponse).catch(promise.reject);
-
-        function handleResponse(e) {
-            if (!e.ok) return promise.reject(e);
-            e.text().then(function (text) {
-                if (text.charAt(0).includes(['[', '{'])) {
-                    try {
-                        promise.resolve(JSON.parse(text));
-                    } catch (err) {
-                        promise.resolve(text);
-                    }
-                } else {
-                    promise.resolve(text);
-                }
-            });
-        }
-        return promise;
-    };
-
-    window.getURL = function (url) {
-        var target = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : '_blank';
-
-        window.open(url, target);
-    };
-
-    if (!window.Config) window.Config = {};
-    if (!window.Global) window.Global = {};
-
-    /**
-     * Alien utilities.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var Utils = function () {
-        function Utils() {
-            _classCallCheck(this, Utils);
-        }
-
-        _createClass(Utils, null, [{
-            key: 'random',
-            value: function random(min, max) {
-                var precision = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
-
-                if (typeof min === 'undefined') return Math.random();
-                if (min === max) return min;
-                min = min || 0;
-                max = max || 1;
-                var p = Math.pow(10, precision);
-                return Math.round((min + Math.random() * (max - min)) * p) / p;
-            }
-        }, {
-            key: 'headsTails',
-            value: function headsTails(heads, tails) {
-                return this.random(0, 1) ? tails : heads;
-            }
-        }, {
-            key: 'queryString',
-            value: function queryString(key) {
-                var str = decodeURI(window.location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[.+*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
-                if (!str.length || str === '0' || str === 'false') return false;
-                return str;
-            }
-        }, {
-            key: 'getConstructorName',
-            value: function getConstructorName(object) {
-                return object.constructor.name || object.constructor.toString().match(/function ([^(]+)/)[1];
-            }
-        }, {
-            key: 'nullObject',
-            value: function nullObject(object) {
-                for (var key in object) {
-                    if (typeof object[key] !== 'undefined') object[key] = null;
-                }return null;
-            }
-        }, {
-            key: 'cloneObject',
-            value: function cloneObject(object) {
-                return JSON.parse(JSON.stringify(object));
-            }
-        }, {
-            key: 'mergeObject',
-            value: function mergeObject() {
-                var object = {};
-
-                for (var _len = arguments.length, objects = Array(_len), _key = 0; _key < _len; _key++) {
-                    objects[_key] = arguments[_key];
-                }
-
-                var _iteratorNormalCompletion = true;
-                var _didIteratorError = false;
-                var _iteratorError = undefined;
-
+    function handleResponse(e) {
+        if (!e.ok) return promise.reject(e);
+        e.text().then(function (text) {
+            if (text.charAt(0).includes(['[', '{'])) {
                 try {
-                    for (var _iterator = objects[Symbol.iterator](), _step; !(_iteratorNormalCompletion = (_step = _iterator.next()).done); _iteratorNormalCompletion = true) {
-                        var obj = _step.value;
-                        for (var key in obj) {
-                            object[key] = obj[key];
-                        }
-                    }
+                    promise.resolve(JSON.parse(text));
                 } catch (err) {
-                    _didIteratorError = true;
-                    _iteratorError = err;
-                } finally {
-                    try {
-                        if (!_iteratorNormalCompletion && _iterator.return) {
-                            _iterator.return();
-                        }
-                    } finally {
-                        if (_didIteratorError) {
-                            throw _iteratorError;
-                        }
-                    }
+                    promise.resolve(text);
                 }
+            } else {
+                promise.resolve(text);
+            }
+        });
+    }
+    return promise;
+};
 
-                return object;
-            }
-        }, {
-            key: 'toArray',
-            value: function toArray(object) {
-                return Object.keys(object).map(function (key) {
-                    return object[key];
-                });
-            }
-        }, {
-            key: 'cloneArray',
-            value: function cloneArray(array) {
-                return array.slice(0);
-            }
-        }, {
-            key: 'basename',
-            value: function basename(path, ext) {
-                var name = path.split('/').last();
-                return !ext ? name.split('.')[0] : name;
-            }
-        }, {
-            key: 'extension',
-            value: function extension(path) {
-                return path.split('.').last().split('?')[0].toLowerCase();
-            }
-        }, {
-            key: 'base64',
-            value: function base64(str) {
-                return window.btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, function (match, p1) {
-                    return String.fromCharCode('0x' + p1);
-                }));
-            }
-        }, {
-            key: 'date',
-            value: function date(str) {
-                var split = str.split(/[^0-9]/);
-                return new Date(split[0], split[1] - 1, split[2], split[3], split[4], split[5]);
-            }
-        }, {
-            key: 'timestamp',
-            value: function timestamp() {
-                return (Date.now() + this.random(0, 99999)).toString();
-            }
-        }, {
-            key: 'pad',
-            value: function pad(number) {
-                return number < 10 ? '0' + number : number;
-            }
-        }, {
-            key: 'hash',
-            get: function get() {
-                return window.location.hash.slice(1);
-            }
-        }]);
+window.post = function (url, body, options = {}) {
+    const promise = Promise.create();
+    options.method = 'POST';
+    options.body = JSON.stringify(body);
+    window.fetch(url, options).then(handleResponse).catch(promise.reject);
 
-        return Utils;
-    }();
-
-    /**
-     * Render loop.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var Render = function () {
-        function Render() {
-            _classCallCheck(this, Render);
-        }
-
-        _createClass(Render, null, [{
-            key: 'init',
-            value: function init() {
-                var _this = this;
-
-                var self = this;
-                var render = [],
-                    skipLimit = 200;
-                var last = performance.now();
-
-                requestAnimationFrame(step);
-
-                function step(t) {
-                    var delta = Math.min(skipLimit, t - last);
-                    last = t;
-                    self.TIME = t;
-                    self.DELTA = delta;
-                    for (var i = render.length - 1; i >= 0; i--) {
-                        var callback = render[i];
-                        if (!callback) {
-                            render.remove(callback);
-                            continue;
-                        }
-                        if (callback.fps) {
-                            if (t - callback.last < 1000 / callback.fps) continue;
-                            callback(++callback.frame);
-                            callback.last = t;
-                            continue;
-                        }
-                        callback(t, delta);
-                    }
-                    if (!self.paused) requestAnimationFrame(step);
+    function handleResponse(e) {
+        if (!e.ok) return promise.reject(e);
+        e.text().then(function (text) {
+            if (text.charAt(0).includes(['[', '{'])) {
+                try {
+                    promise.resolve(JSON.parse(text));
+                } catch (err) {
+                    promise.resolve(text);
                 }
+            } else {
+                promise.resolve(text);
+            }
+        });
+    }
+    return promise;
+};
 
-                this.start = function (callback, fps) {
-                    if (fps) {
-                        callback.fps = fps;
-                        callback.last = -Infinity;
-                        callback.frame = -1;
-                    }
-                    if (!~render.indexOf(callback)) render.unshift(callback);
-                };
+window.getURL = function (url, target = '_blank') {
+    window.open(url, target);
+};
 
-                this.stop = function (callback) {
+if (!window.Config) window.Config = {};
+if (!window.Global) window.Global = {};
+
+/**
+ * Alien utilities.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Utils {
+
+    static random(min, max, precision = 0) {
+        if (typeof min === 'undefined') return Math.random();
+        if (min === max) return min;
+        min = min || 0;
+        max = max || 1;
+        const p = Math.pow(10, precision);
+        return Math.round((min + Math.random() * (max - min)) * p) / p;
+    }
+
+    static headsTails(heads, tails) {
+        return this.random(0, 1) ? tails : heads;
+    }
+
+    static queryString(key) {
+        const str = decodeURI(window.location.search.replace(new RegExp('^(?:.*[&\\?]' + encodeURI(key).replace(/[.+*]/g, '\\$&') + '(?:\\=([^&]*))?)?.*$', 'i'), '$1'));
+        if (!str.length || str === '0' || str === 'false') return false;
+        return str;
+    }
+
+    static getConstructorName(object) {
+        return object.constructor.name || object.constructor.toString().match(/function ([^(]+)/)[1];
+    }
+
+    static nullObject(object) {
+        for (let key in object) if (typeof object[key] !== 'undefined') object[key] = null;
+        return null;
+    }
+
+    static cloneObject(object) {
+        return JSON.parse(JSON.stringify(object));
+    }
+
+    static mergeObject(...objects) {
+        const object = {};
+        for (let obj of objects) for (let key in obj) object[key] = obj[key];
+        return object;
+    }
+
+    static toArray(object) {
+        return Object.keys(object).map(key => {
+            return object[key];
+        });
+    }
+
+    static cloneArray(array) {
+        return array.slice(0);
+    }
+
+    static basename(path, ext) {
+        const name = path.split('/').last();
+        return !ext ? name.split('.')[0] : name;
+    }
+
+    static extension(path) {
+        return path.split('.').last().split('?')[0].toLowerCase();
+    }
+
+    static base64(str) {
+        return window.btoa(encodeURIComponent(str).replace(/%([0-9A-F]{2})/g, (match, p1) => {
+            return String.fromCharCode('0x' + p1);
+        }));
+    }
+
+    static date(str) {
+        const split = str.split(/[^0-9]/);
+        return new Date(split[0], split[1] - 1, split[2], split[3], split[4], split[5]);
+    }
+
+    static timestamp() {
+        return (Date.now() + this.random(0, 99999)).toString();
+    }
+
+    static pad(number) {
+        return number < 10 ? '0' + number : number;
+    }
+
+    static get hash() {
+        return window.location.hash.slice(1);
+    }
+}
+
+/**
+ * Render loop.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Render {
+
+    static init() {
+        const self = this;
+        const render = [],
+            skipLimit = 200;
+        let last = performance.now();
+
+        requestAnimationFrame(step);
+
+        function step(t) {
+            const delta = Math.min(skipLimit, t - last);
+            last = t;
+            self.TIME = t;
+            self.DELTA = delta;
+            for (let i = render.length - 1; i >= 0; i--) {
+                const callback = render[i];
+                if (!callback) {
                     render.remove(callback);
-                };
-
-                this.tick = function () {
-                    _this.TIME = performance.now();
-                    step(_this.TIME);
-                };
-
-                this.pause = function () {
-                    _this.paused = true;
-                };
-
-                this.resume = function () {
-                    if (!_this.paused) return;
-                    _this.paused = false;
-                    requestAnimationFrame(step);
-                };
+                    continue;
+                }
+                if (callback.fps) {
+                    if (t - callback.last < 1000 / callback.fps) continue;
+                    callback(++callback.frame);
+                    callback.last = t;
+                    continue;
+                }
+                callback(t, delta);
             }
-        }]);
-
-        return Render;
-    }();
-
-    Render.init();
-
-    /**
-     * Timer helper class.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var Timer = function () {
-        function Timer() {
-            _classCallCheck(this, Timer);
+            if (!self.paused) requestAnimationFrame(step);
         }
 
-        _createClass(Timer, null, [{
-            key: 'init',
-            value: function init() {
-                var _this2 = this;
-
-                var callbacks = [],
-                    discard = [];
-
-                Render.start(loop);
-
-                function loop(t, delta) {
-                    for (var i = 0; i < discard.length; i++) {
-                        var obj = discard[i];
-                        obj.callback = null;
-                        callbacks.remove(obj);
-                    }
-                    if (discard.length) discard.length = 0;
-                    for (var _i = 0; _i < callbacks.length; _i++) {
-                        var _obj = callbacks[_i];
-                        if (!_obj) {
-                            callbacks.remove(_obj);
-                            continue;
-                        }
-                        if ((_obj.current += delta) >= _obj.time) {
-                            if (_obj.callback) _obj.callback.apply(_obj, _toConsumableArray(_obj.args));
-                            discard.push(_obj);
-                        }
-                    }
-                }
-
-                function find(ref) {
-                    for (var i = 0; i < callbacks.length; i++) {
-                        if (callbacks[i].ref === ref) return callbacks[i];
-                    }return null;
-                }
-
-                this.clearTimeout = function (ref) {
-                    var obj = find(ref);
-                    if (!obj) return false;
-                    obj.callback = null;
-                    callbacks.remove(obj);
-                    return true;
-                };
-
-                this.create = function (callback, time) {
-                    for (var _len2 = arguments.length, args = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
-                        args[_key2 - 2] = arguments[_key2];
-                    }
-
-                    var obj = {
-                        time: Math.max(1, time || 1),
-                        current: 0,
-                        ref: Utils.timestamp(),
-                        callback: callback,
-                        args: args
-                    };
-                    callbacks.push(obj);
-                    return obj.ref;
-                };
-
-                window.defer = this.defer = function (callback) {
-                    return _this2.create(callback, 1);
-                };
+        this.start = (callback, fps) => {
+            if (fps) {
+                callback.fps = fps;
+                callback.last = -Infinity;
+                callback.frame = -1;
             }
-        }]);
+            if (!~render.indexOf(callback)) render.unshift(callback);
+        };
 
-        return Timer;
-    }();
+        this.stop = callback => {
+            render.remove(callback);
+        };
 
-    Timer.init();
+        this.tick = () => {
+            this.TIME = performance.now();
+            step(this.TIME);
+        };
 
-    /**
-     * Event helper class.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
+        this.pause = () => {
+            this.paused = true;
+        };
 
-    var Events = function Events() {
-        var _this3 = this;
+        this.resume = () => {
+            if (!this.paused) return;
+            this.paused = false;
+            requestAnimationFrame(step);
+        };
+    }
+}
 
-        _classCallCheck(this, Events);
+Render.init();
 
-        var Emitter = function () {
-            function Emitter() {
-                _classCallCheck(this, Emitter);
+/**
+ * Timer helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
+class Timer {
+
+    static init() {
+        const callbacks = [],
+            discard = [];
+
+        Render.start(loop);
+
+        function loop(t, delta) {
+            for (let i = 0; i < discard.length; i++) {
+                const obj = discard[i];
+                obj.callback = null;
+                callbacks.remove(obj);
+            }
+            if (discard.length) discard.length = 0;
+            for (let i = 0; i < callbacks.length; i++) {
+                const obj = callbacks[i];
+                if (!obj) {
+                    callbacks.remove(obj);
+                    continue;
+                }
+                if ((obj.current += delta) >= obj.time) {
+                    if (obj.callback) obj.callback(...obj.args);
+                    discard.push(obj);
+                }
+            }
+        }
+
+        function find(ref) {
+            for (let i = 0; i < callbacks.length; i++) if (callbacks[i].ref === ref) return callbacks[i];
+            return null;
+        }
+
+        this.clearTimeout = ref => {
+            const obj = find(ref);
+            if (!obj) return false;
+            obj.callback = null;
+            callbacks.remove(obj);
+            return true;
+        };
+
+        this.create = (callback, time = 1, ...args) => {
+            const obj = {
+                time: Math.max(1, time),
+                current: 0,
+                ref: Utils.timestamp(),
+                callback,
+                args
+            };
+            callbacks.push(obj);
+            return obj.ref;
+        };
+
+        window.defer = this.defer = callback => this.create(callback, 1);
+    }
+}
+
+Timer.init();
+
+/**
+ * Event helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Events {
+
+    constructor() {
+
+        class Emitter {
+
+            constructor() {
                 this.events = [];
                 this.links = [];
             }
 
-            _createClass(Emitter, [{
-                key: 'add',
-                value: function add(event, callback, object) {
-                    this.events.push({ event: event, callback: callback, object: object });
-                }
-            }, {
-                key: 'remove',
-                value: function remove(event, callback) {
-                    for (var i = this.events.length - 1; i >= 0; i--) {
-                        if (this.events[i].event === event && this.events[i].callback === callback) {
-                            this.events[i].removed = true;
-                            this.events.splice(i, 1)[0] = null;
-                        }
-                    }
-                }
-            }, {
-                key: 'fire',
-                value: function fire(event) {
-                    var object = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+            add(event, callback, object) {
+                this.events.push({ event, callback, object });
+            }
 
-                    var called = false;
-                    var clone = Utils.cloneArray(this.events);
-                    for (var i = 0; i < clone.length; i++) {
-                        if (clone[i].event === event && !clone[i].removed) {
-                            clone[i].callback(object);
-                            called = true;
-                        }
-                    }
-                    return called;
-                }
-            }, {
-                key: 'destroy',
-                value: function destroy(object) {
-                    for (var i = this.events.length - 1; i >= 0; i--) {
-                        if (this.events[i].object === object) this.events.splice(i, 1)[0] = null;
+            remove(event, callback) {
+                for (let i = this.events.length - 1; i >= 0; i--) {
+                    if (this.events[i].event === event && this.events[i].callback === callback) {
+                        this.events[i].removed = true;
+                        this.events.splice(i, 1)[0] = null;
                     }
                 }
-            }, {
-                key: 'link',
-                value: function link(object) {
-                    if (!~this.links.indexOf(object)) this.links.push(object);
-                }
-            }]);
+            }
 
-            return Emitter;
-        }();
+            fire(event, object = {}) {
+                let called = false;
+                const clone = Utils.cloneArray(this.events);
+                for (let i = 0; i < clone.length; i++) {
+                    if (clone[i].event === event && !clone[i].removed) {
+                        clone[i].callback(object);
+                        called = true;
+                    }
+                }
+                return called;
+            }
+
+            destroy(object) {
+                for (let i = this.events.length - 1; i >= 0; i--) if (this.events[i].object === object) this.events.splice(i, 1)[0] = null;
+            }
+
+            link(object) {
+                if (!~this.links.indexOf(object)) this.links.push(object);
+            }
+        }
 
         if (!Events.initialized) {
-            Events.emitter = new Emitter();
-            Events.VISIBILITY = 'visibility';
+            Events.emitter        = new Emitter();
+            Events.VISIBILITY     = 'visibility';
             Events.KEYBOARD_PRESS = 'keyboard_press';
-            Events.KEYBOARD_DOWN = 'keyboard_down';
-            Events.KEYBOARD_UP = 'keyboard_up';
-            Events.RESIZE = 'resize';
-            Events.COMPLETE = 'complete';
-            Events.PROGRESS = 'progress';
-            Events.UPDATE = 'update';
-            Events.LOADED = 'loaded';
-            Events.ERROR = 'error';
-            Events.READY = 'ready';
-            Events.HOVER = 'hover';
-            Events.CLICK = 'click';
+            Events.KEYBOARD_DOWN  = 'keyboard_down';
+            Events.KEYBOARD_UP    = 'keyboard_up';
+            Events.RESIZE         = 'resize';
+            Events.COMPLETE       = 'complete';
+            Events.PROGRESS       = 'progress';
+            Events.UPDATE         = 'update';
+            Events.LOADED         = 'loaded';
+            Events.ERROR          = 'error';
+            Events.READY          = 'ready';
+            Events.HOVER          = 'hover';
+            Events.CLICK          = 'click';
 
             Events.initialized = true;
         }
 
-        var linked = [];
+        const linked = [];
 
         this.emitter = new Emitter();
 
-        this.add = function (object, event, callback) {
-            if ((typeof object === 'undefined' ? 'undefined' : _typeof(object)) !== 'object') {
+        this.add = (object, event, callback) => {
+            if (typeof object !== 'object') {
                 callback = event;
                 event = object;
                 object = null;
             }
             if (!object) {
-                Events.emitter.add(event, callback, _this3);
+                Events.emitter.add(event, callback, this);
             } else {
-                var emitter = object.events.emitter;
-                emitter.add(event, callback, _this3);
-                emitter.link(_this3);
+                const emitter = object.events.emitter;
+                emitter.add(event, callback, this);
+                emitter.link(this);
                 linked.push(emitter);
             }
         };
 
-        this.remove = function (object, event, callback) {
-            if ((typeof object === 'undefined' ? 'undefined' : _typeof(object)) !== 'object') {
+        this.remove = (object, event, callback) => {
+            if (typeof object !== 'object') {
                 callback = event;
                 event = object;
                 object = null;
             }
-            if (!object) Events.emitter.remove(event, callback);else object.events.emitter.remove(event, callback);
+            if (!object) Events.emitter.remove(event, callback);
+            else object.events.emitter.remove(event, callback);
         };
 
-        this.fire = function (event) {
-            var object = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-            var local = arguments[2];
-
-            if (_this3.emitter.fire(event, object)) return;
+        this.fire = (event, object = {}, local) => {
+            if (this.emitter.fire(event, object)) return;
             if (local) return;
             Events.emitter.fire(event, object);
         };
 
-        this.bubble = function (object, event) {
-            _this3.add(object, event, function (e) {
-                return _this3.fire(event, e);
-            });
+        this.bubble = (object, event) => {
+            this.add(object, event, e => this.fire(event, e));
         };
 
-        this.destroy = function () {
-            Events.emitter.destroy(_this3);
-            linked.forEach(function (emitter) {
-                return emitter.destroy(_this3);
+        this.destroy = () => {
+            Events.emitter.destroy(this);
+            linked.forEach(emitter => emitter.destroy(this));
+            this.emitter.links.forEach(object => {
+                if (object.unlink) object.unlink(this.emitter);
             });
-            _this3.emitter.links.forEach(function (object) {
-                if (object.unlink) object.unlink(_this3.emitter);
-            });
-            return Utils.nullObject(_this3);
+            return Utils.nullObject(this);
         };
 
-        this.unlink = function (emitter) {
+        this.unlink = emitter => {
             linked.remove(emitter);
         };
-    };
+    }
+}
 
-    /**
-     * Browser detection and vendor prefixes.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
+/**
+ * Browser detection and helper functions.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
-    var Device = function () {
-        function Device() {
-            _classCallCheck(this, Device);
+class Device {
+
+    static init() {
+        this.agent = navigator.userAgent.toLowerCase();
+        this.pixelRatio = window.devicePixelRatio;
+        this.webcam = !!(navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
+        this.language = navigator.userLanguage || navigator.language;
+        this.webaudio = !!window.AudioContext;
+        this.os = (() => {
+            if (this.detect(['iphone', 'ipad'])) return 'ios';
+            if (this.detect(['android'])) return 'android';
+            if (this.detect(['blackberry'])) return 'blackberry';
+            if (this.detect(['mac os'])) return 'mac';
+            if (this.detect(['windows'])) return 'windows';
+            if (this.detect(['linux'])) return 'linux';
+            return 'unknown';
+        })();
+        this.browser = (() => {
+            if (this.os === 'ios') {
+                if (this.detect(['safari'])) return 'safari';
+                return 'unknown';
+            }
+            if (this.os === 'android') {
+                if (this.detect(['chrome'])) return 'chrome';
+                if (this.detect(['firefox'])) return 'firefox';
+                return 'browser';
+            }
+            if (this.detect(['msie'])) return 'ie';
+            if (this.detect(['trident']) && this.detect(['rv:'])) return 'ie';
+            if (this.detect(['windows']) && this.detect(['edge'])) return 'ie';
+            if (this.detect(['chrome'])) return 'chrome';
+            if (this.detect(['safari'])) return 'safari';
+            if (this.detect(['firefox'])) return 'firefox';
+            return 'unknown';
+        })();
+        this.mobile = this.detect(['iphone', 'ipad', 'android', 'blackberry']);
+        this.tablet = Math.max(window.screen ? screen.width : window.innerWidth, window.screen ? screen.height : window.innerHeight) > 1000;
+        this.phone = !this.tablet;
+        this.webgl = (() => {
+            try {
+                const names = ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'],
+                    canvas = document.createElement('canvas');
+                let gl;
+                for (let i = 0; i < names.length; i++) {
+                    gl = canvas.getContext(names[i]);
+                    if (gl) break;
+                }
+                const info = gl.getExtension('WEBGL_debug_renderer_info'),
+                    output = {};
+                if (info) output.gpu = gl.getParameter(info.UNMASKED_RENDERER_WEBGL).toLowerCase();
+                output.renderer = gl.getParameter(gl.RENDERER).toLowerCase();
+                output.version = gl.getParameter(gl.VERSION).toLowerCase();
+                output.glsl = gl.getParameter(gl.SHADING_LANGUAGE_VERSION).toLowerCase();
+                output.extensions = gl.getSupportedExtensions();
+                output.detect = matches => {
+                    if (output.gpu && output.gpu.includes(matches)) return true;
+                    if (output.version && output.version.includes(matches)) return true;
+                    for (let i = 0; i < output.extensions.length; i++) if (output.extensions[i].toLowerCase().includes(matches)) return true;
+                    return false;
+                };
+                return output;
+            } catch (e) {
+                return false;
+            }
+        })();
+    }
+
+    static detect(matches) {
+        return this.agent.includes(matches);
+    }
+
+    static vibrate(time) {
+        if (navigator.vibrate) navigator.vibrate(time);
+    }
+}
+
+Device.init();
+
+/**
+ * Alien component.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Component {
+
+    constructor() {
+        this.events = new Events();
+        this.classes = [];
+        this.timers = [];
+        this.loops = [];
+    }
+
+    initClass(object, ...params) {
+        const child = new object(...params);
+        this.add(child);
+        return child;
+    }
+
+    add(child) {
+        if (child.destroy) {
+            this.classes.push(child);
+            child.parent = this;
+        }
+        return this;
+    }
+
+    delayedCall(callback, time = 0, ...params) {
+        if (!this.timers) return;
+        const timer = Timer.create(() => {
+            if (callback) callback(...params);
+        }, time);
+        this.timers.push(timer);
+        if (this.timers.length > 50) this.timers.shift();
+        return timer;
+    }
+
+    clearTimers() {
+        for (let i = this.timers.length - 1; i >= 0; i--) Timer.clearTimeout(this.timers[i]);
+        this.timers.length = 0;
+    }
+
+    startRender(callback, fps) {
+        this.loops.push(callback);
+        Render.start(callback, fps);
+    }
+
+    stopRender(callback) {
+        this.loops.remove(callback);
+        Render.stop(callback);
+    }
+
+    clearRenders() {
+        for (let i = this.loops.length - 1; i >= 0; i--) this.stopRender(this.loops[i]);
+        this.loops.length = 0;
+    }
+
+    destroy() {
+        if (this.classes) {
+            this.removed = true;
+            const parent = this.parent;
+            if (parent && !parent.removed && parent.remove) parent.remove(this);
+            for (let i = this.classes.length - 1; i >= 0; i--) {
+                const child = this.classes[i];
+                if (child && child.destroy) child.destroy();
+            }
+            this.classes.length = 0;
+            this.clearRenders();
+            this.clearTimers();
+            this.events.destroy();
+        }
+        return Utils.nullObject(this);
+    }
+
+    remove(child) {
+        this.classes.remove(child);
+    }
+}
+
+/**
+ * Assets helper class with image promise method.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Assets {
+
+    static init() {
+        const images = {},
+            json = {};
+
+        this.CDN = '';
+        this.CORS = null;
+
+        this.getPath = path => {
+            if (~path.indexOf('//')) return path;
+            if (this.CDN && !~path.indexOf(this.CDN)) path = this.CDN + path;
+            return path;
+        };
+
+        this.createImage = (path, store, callback) => {
+            if (typeof store !== 'boolean') {
+                callback = store;
+                store = null;
+            }
+            const img = new Image();
+            img.crossOrigin = this.CORS;
+            img.onload = callback;
+            img.onerror = callback;
+            img.src = this.getPath(path);
+            if (store) images[path] = img;
+            return img;
+        };
+
+        this.getImage = path => {
+            return images[path];
+        };
+
+        this.storeData = (name, data) => {
+            json[name] = data;
+            return json[name];
+        };
+
+        this.getData = name => {
+            return json[name];
+        };
+    }
+
+    static loadImage(img) {
+        if (typeof img === 'string') img = this.createImage(img);
+        const promise = Promise.create();
+        img.onload = () => promise.resolve(img);
+        img.onerror = () => promise.resolve(img);
+        return promise;
+    }
+}
+
+Assets.init();
+
+/**
+ * Interpolation helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Interpolation {
+
+    static init() {
+
+        function calculateBezier(aT, aA1, aA2) {
+            return ((A(aA1, aA2) * aT + B(aA1, aA2)) * aT + C(aA1)) * aT;
         }
 
-        _createClass(Device, null, [{
-            key: 'init',
-            value: function init() {
-                var _this4 = this;
-
-                this.agent = navigator.userAgent.toLowerCase();
-                this.prefix = function () {
-                    var styles = window.getComputedStyle(document.documentElement, ''),
-                        pre = (Array.prototype.slice.call(styles).join('').match(/-(webkit|moz|ms)-/) || styles.OLink === '' && ['', 'o'])[1];
-                    return {
-                        lowercase: pre,
-                        js: pre[0].toUpperCase() + pre.substr(1)
-                    };
-                }();
-                this.transformProperty = function () {
-                    var pre = void 0;
-                    switch (_this4.prefix.lowercase) {
-                        case 'webkit':
-                            pre = '-webkit-transform';
-                            break;
-                        case 'moz':
-                            pre = '-moz-transform';
-                            break;
-                        case 'ms':
-                            pre = '-ms-transform';
-                            break;
-                        case 'o':
-                            pre = '-o-transform';
-                            break;
-                        default:
-                            pre = 'transform';
-                            break;
-                    }
-                    return pre;
-                }();
-                this.pixelRatio = window.devicePixelRatio;
-                this.webcam = !!(navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
-                this.language = navigator.userLanguage || navigator.language;
-                this.webaudio = !!window.AudioContext;
-                this.os = function () {
-                    if (_this4.detect(['iphone', 'ipad'])) return 'ios';
-                    if (_this4.detect(['android'])) return 'android';
-                    if (_this4.detect(['blackberry'])) return 'blackberry';
-                    if (_this4.detect(['mac os'])) return 'mac';
-                    if (_this4.detect(['windows'])) return 'windows';
-                    if (_this4.detect(['linux'])) return 'linux';
-                    return 'unknown';
-                }();
-                this.browser = function () {
-                    if (_this4.os === 'ios') {
-                        if (_this4.detect(['safari'])) return 'safari';
-                        return 'unknown';
-                    }
-                    if (_this4.os === 'android') {
-                        if (_this4.detect(['chrome'])) return 'chrome';
-                        if (_this4.detect(['firefox'])) return 'firefox';
-                        return 'browser';
-                    }
-                    if (_this4.detect(['msie'])) return 'ie';
-                    if (_this4.detect(['trident']) && _this4.detect(['rv:'])) return 'ie';
-                    if (_this4.detect(['windows']) && _this4.detect(['edge'])) return 'ie';
-                    if (_this4.detect(['chrome'])) return 'chrome';
-                    if (_this4.detect(['safari'])) return 'safari';
-                    if (_this4.detect(['firefox'])) return 'firefox';
-                    return 'unknown';
-                }();
-                this.mobile = this.detect(['iphone', 'ipad', 'android', 'blackberry']);
-                this.tablet = Math.max(window.screen ? screen.width : window.innerWidth, window.screen ? screen.height : window.innerHeight) > 1000;
-                this.phone = !this.tablet;
-                this.webgl = function () {
-                    try {
-                        var names = ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'],
-                            canvas = document.createElement('canvas');
-                        var gl = void 0;
-                        for (var i = 0; i < names.length; i++) {
-                            gl = canvas.getContext(names[i]);
-                            if (gl) break;
-                        }
-                        var info = gl.getExtension('WEBGL_debug_renderer_info'),
-                            output = {};
-                        if (info) output.gpu = gl.getParameter(info.UNMASKED_RENDERER_WEBGL).toLowerCase();
-                        output.renderer = gl.getParameter(gl.RENDERER).toLowerCase();
-                        output.version = gl.getParameter(gl.VERSION).toLowerCase();
-                        output.glsl = gl.getParameter(gl.SHADING_LANGUAGE_VERSION).toLowerCase();
-                        output.extensions = gl.getSupportedExtensions();
-                        output.detect = function (matches) {
-                            if (output.gpu && output.gpu.includes(matches)) return true;
-                            if (output.version && output.version.includes(matches)) return true;
-                            for (var _i2 = 0; _i2 < output.extensions.length; _i2++) {
-                                if (output.extensions[_i2].toLowerCase().includes(matches)) return true;
-                            }return false;
-                        };
-                        return output;
-                    } catch (e) {
-                        return false;
-                    }
-                }();
+        function getTForX(aX, mX1, mX2) {
+            let aGuessT = aX;
+            for (let i = 0; i < 4; i++) {
+                const currentSlope = getSlope(aGuessT, mX1, mX2);
+                if (currentSlope === 0) return aGuessT;
+                const currentX = calculateBezier(aGuessT, mX1, mX2) - aX;
+                aGuessT -= currentX / currentSlope;
             }
-        }, {
-            key: 'detect',
-            value: function detect(matches) {
-                return this.agent.includes(matches);
-            }
-        }, {
-            key: 'vendor',
-            value: function vendor(style) {
-                return this.prefix.js + style;
-            }
-        }, {
-            key: 'vibrate',
-            value: function vibrate(time) {
-                if (navigator.vibrate) navigator.vibrate(time);
-            }
-        }]);
-
-        return Device;
-    }();
-
-    Device.init();
-
-    /**
-     * Alien component.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var Component = function () {
-        function Component() {
-            _classCallCheck(this, Component);
-
-            this.events = new Events();
-            this.classes = [];
-            this.timers = [];
-            this.loops = [];
+            return aGuessT;
         }
 
-        _createClass(Component, [{
-            key: 'initClass',
-            value: function initClass(object) {
-                for (var _len3 = arguments.length, params = Array(_len3 > 1 ? _len3 - 1 : 0), _key3 = 1; _key3 < _len3; _key3++) {
-                    params[_key3 - 1] = arguments[_key3];
-                }
-
-                var child = new (Function.prototype.bind.apply(object, [null].concat(params)))();
-                this.add(child);
-                return child;
-            }
-        }, {
-            key: 'add',
-            value: function add(child) {
-                if (child.destroy) {
-                    this.classes.push(child);
-                    child.parent = this;
-                }
-                return this;
-            }
-        }, {
-            key: 'delayedCall',
-            value: function delayedCall(callback) {
-                for (var _len4 = arguments.length, params = Array(_len4 > 2 ? _len4 - 2 : 0), _key4 = 2; _key4 < _len4; _key4++) {
-                    params[_key4 - 2] = arguments[_key4];
-                }
-
-                var time = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-
-                if (!this.timers) return;
-                var timer = Timer.create(function () {
-                    if (callback) callback.apply(undefined, params);
-                }, time);
-                this.timers.push(timer);
-                if (this.timers.length > 50) this.timers.shift();
-                return timer;
-            }
-        }, {
-            key: 'clearTimers',
-            value: function clearTimers() {
-                for (var i = this.timers.length - 1; i >= 0; i--) {
-                    Timer.clearTimeout(this.timers[i]);
-                }this.timers.length = 0;
-            }
-        }, {
-            key: 'startRender',
-            value: function startRender(callback, fps) {
-                this.loops.push(callback);
-                Render.start(callback, fps);
-            }
-        }, {
-            key: 'stopRender',
-            value: function stopRender(callback) {
-                this.loops.remove(callback);
-                Render.stop(callback);
-            }
-        }, {
-            key: 'clearRenders',
-            value: function clearRenders() {
-                for (var i = this.loops.length - 1; i >= 0; i--) {
-                    this.stopRender(this.loops[i]);
-                }this.loops.length = 0;
-            }
-        }, {
-            key: 'destroy',
-            value: function destroy() {
-                if (this.classes) {
-                    this.removed = true;
-                    var parent = this.parent;
-                    if (parent && !parent.removed && parent.remove) parent.remove(this);
-                    for (var i = this.classes.length - 1; i >= 0; i--) {
-                        var child = this.classes[i];
-                        if (child && child.destroy) child.destroy();
-                    }
-                    this.classes.length = 0;
-                    this.clearRenders();
-                    this.clearTimers();
-                    this.events.destroy();
-                }
-                return Utils.nullObject(this);
-            }
-        }, {
-            key: 'remove',
-            value: function remove(child) {
-                this.classes.remove(child);
-            }
-        }]);
-
-        return Component;
-    }();
-
-    /**
-     * Assets helper class with image promise method.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var Assets = function () {
-        function Assets() {
-            _classCallCheck(this, Assets);
+        function getSlope(aT, aA1, aA2) {
+            return 3 * A(aA1, aA2) * aT * aT + 2 * B(aA1, aA2) * aT + C(aA1);
         }
 
-        _createClass(Assets, null, [{
-            key: 'init',
-            value: function init() {
-                var _this5 = this;
-
-                var images = {},
-                    json = {};
-
-                this.CDN = '';
-                this.CORS = null;
-
-                this.getPath = function (path) {
-                    if (~path.indexOf('//')) return path;
-                    if (_this5.CDN && !~path.indexOf(_this5.CDN)) path = _this5.CDN + path;
-                    return path;
-                };
-
-                this.createImage = function (path, store, callback) {
-                    if (typeof store !== 'boolean') {
-                        callback = store;
-                        store = null;
-                    }
-                    var img = new Image();
-                    img.crossOrigin = _this5.CORS;
-                    img.src = _this5.getPath(path);
-                    img.onload = callback;
-                    img.onerror = callback;
-                    if (store) images[path] = img;
-                    return img;
-                };
-
-                this.getImage = function (path) {
-                    return images[path];
-                };
-
-                this.storeData = function (name, data) {
-                    json[name] = data;
-                    return json[name];
-                };
-
-                this.getData = function (name) {
-                    return json[name];
-                };
-            }
-        }, {
-            key: 'loadImage',
-            value: function loadImage(img) {
-                if (typeof img === 'string') img = this.createImage(img);
-                var promise = Promise.create();
-                img.onload = function () {
-                    return promise.resolve(img);
-                };
-                img.onerror = function () {
-                    return promise.resolve(img);
-                };
-                return promise;
-            }
-        }]);
-
-        return Assets;
-    }();
-
-    Assets.init();
-
-    /**
-     * Interpolation helper class.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var Interpolation = function () {
-        function Interpolation() {
-            _classCallCheck(this, Interpolation);
+        function A(aA1, aA2) {
+            return 1 - 3 * aA2 + 3 * aA1;
         }
 
-        _createClass(Interpolation, null, [{
-            key: 'init',
-            value: function init() {
-                var _this6 = this;
+        function B(aA1, aA2) {
+            return 3 * aA2 - 6 * aA1;
+        }
 
-                function calculateBezier(aT, aA1, aA2) {
-                    return ((A(aA1, aA2) * aT + B(aA1, aA2)) * aT + C(aA1)) * aT;
+        function C(aA1) {
+            return 3 * aA1;
+        }
+
+        this.convertEase = ease => {
+            return (() => {
+                let fn;
+                switch (ease) {
+                    case 'easeInQuad':
+                        fn = this.Quad.In;
+                        break;
+                    case 'easeInCubic':
+                        fn = this.Cubic.In;
+                        break;
+                    case 'easeInQuart':
+                        fn = this.Quart.In;
+                        break;
+                    case 'easeInQuint':
+                        fn = this.Quint.In;
+                        break;
+                    case 'easeInSine':
+                        fn = this.Sine.In;
+                        break;
+                    case 'easeInExpo':
+                        fn = this.Expo.In;
+                        break;
+                    case 'easeInCirc':
+                        fn = this.Circ.In;
+                        break;
+                    case 'easeInElastic':
+                        fn = this.Elastic.In;
+                        break;
+                    case 'easeInBack':
+                        fn = this.Back.In;
+                        break;
+                    case 'easeInBounce':
+                        fn = this.Bounce.In;
+                        break;
+                    case 'easeOutQuad':
+                        fn = this.Quad.Out;
+                        break;
+                    case 'easeOutCubic':
+                        fn = this.Cubic.Out;
+                        break;
+                    case 'easeOutQuart':
+                        fn = this.Quart.Out;
+                        break;
+                    case 'easeOutQuint':
+                        fn = this.Quint.Out;
+                        break;
+                    case 'easeOutSine':
+                        fn = this.Sine.Out;
+                        break;
+                    case 'easeOutExpo':
+                        fn = this.Expo.Out;
+                        break;
+                    case 'easeOutCirc':
+                        fn = this.Circ.Out;
+                        break;
+                    case 'easeOutElastic':
+                        fn = this.Elastic.Out;
+                        break;
+                    case 'easeOutBack':
+                        fn = this.Back.Out;
+                        break;
+                    case 'easeOutBounce':
+                        fn = this.Bounce.Out;
+                        break;
+                    case 'easeInOutQuad':
+                        fn = this.Quad.InOut;
+                        break;
+                    case 'easeInOutCubic':
+                        fn = this.Cubic.InOut;
+                        break;
+                    case 'easeInOutQuart':
+                        fn = this.Quart.InOut;
+                        break;
+                    case 'easeInOutQuint':
+                        fn = this.Quint.InOut;
+                        break;
+                    case 'easeInOutSine':
+                        fn = this.Sine.InOut;
+                        break;
+                    case 'easeInOutExpo':
+                        fn = this.Expo.InOut;
+                        break;
+                    case 'easeInOutCirc':
+                        fn = this.Circ.InOut;
+                        break;
+                    case 'easeInOutElastic':
+                        fn = this.Elastic.InOut;
+                        break;
+                    case 'easeInOutBack':
+                        fn = this.Back.InOut;
+                        break;
+                    case 'easeInOutBounce':
+                        fn = this.Bounce.InOut;
+                        break;
+                    case 'linear':
+                        fn = this.Linear.None;
+                        break;
                 }
-
-                function getTForX(aX, mX1, mX2) {
-                    var aGuessT = aX;
-                    for (var i = 0; i < 4; i++) {
-                        var currentSlope = getSlope(aGuessT, mX1, mX2);
-                        if (currentSlope === 0) return aGuessT;
-                        var currentX = calculateBezier(aGuessT, mX1, mX2) - aX;
-                        aGuessT -= currentX / currentSlope;
+                if (!fn) {
+                    const curve = TweenManager.getEase(ease);
+                    if (curve) {
+                        const values = curve.split('(')[1].slice(0, -1).split(',');
+                        for (let i = 0; i < values.length; i++) values[i] = parseFloat(values[i]);
+                        fn = values;
+                    } else {
+                        fn = this.Cubic.Out;
                     }
-                    return aGuessT;
                 }
+                return fn;
+            })();
+        };
 
-                function getSlope(aT, aA1, aA2) {
-                    return 3 * A(aA1, aA2) * aT * aT + 2 * B(aA1, aA2) * aT + C(aA1);
-                }
+        this.solve = (values, elapsed) => {
+            if (values[0] === values[1] && values[2] === values[3]) return elapsed;
+            return calculateBezier(getTForX(elapsed, values[0], values[2]), values[1], values[3]);
+        };
 
-                function A(aA1, aA2) {
-                    return 1 - 3 * aA2 + 3 * aA1;
-                }
-
-                function B(aA1, aA2) {
-                    return 3 * aA2 - 6 * aA1;
-                }
-
-                function C(aA1) {
-                    return 3 * aA1;
-                }
-
-                this.convertEase = function (ease) {
-                    return function () {
-                        var fn = void 0;
-                        switch (ease) {
-                            case 'easeInQuad':
-                                fn = _this6.Quad.In;
-                                break;
-                            case 'easeInCubic':
-                                fn = _this6.Cubic.In;
-                                break;
-                            case 'easeInQuart':
-                                fn = _this6.Quart.In;
-                                break;
-                            case 'easeInQuint':
-                                fn = _this6.Quint.In;
-                                break;
-                            case 'easeInSine':
-                                fn = _this6.Sine.In;
-                                break;
-                            case 'easeInExpo':
-                                fn = _this6.Expo.In;
-                                break;
-                            case 'easeInCirc':
-                                fn = _this6.Circ.In;
-                                break;
-                            case 'easeInElastic':
-                                fn = _this6.Elastic.In;
-                                break;
-                            case 'easeInBack':
-                                fn = _this6.Back.In;
-                                break;
-                            case 'easeInBounce':
-                                fn = _this6.Bounce.In;
-                                break;
-                            case 'easeOutQuad':
-                                fn = _this6.Quad.Out;
-                                break;
-                            case 'easeOutCubic':
-                                fn = _this6.Cubic.Out;
-                                break;
-                            case 'easeOutQuart':
-                                fn = _this6.Quart.Out;
-                                break;
-                            case 'easeOutQuint':
-                                fn = _this6.Quint.Out;
-                                break;
-                            case 'easeOutSine':
-                                fn = _this6.Sine.Out;
-                                break;
-                            case 'easeOutExpo':
-                                fn = _this6.Expo.Out;
-                                break;
-                            case 'easeOutCirc':
-                                fn = _this6.Circ.Out;
-                                break;
-                            case 'easeOutElastic':
-                                fn = _this6.Elastic.Out;
-                                break;
-                            case 'easeOutBack':
-                                fn = _this6.Back.Out;
-                                break;
-                            case 'easeOutBounce':
-                                fn = _this6.Bounce.Out;
-                                break;
-                            case 'easeInOutQuad':
-                                fn = _this6.Quad.InOut;
-                                break;
-                            case 'easeInOutCubic':
-                                fn = _this6.Cubic.InOut;
-                                break;
-                            case 'easeInOutQuart':
-                                fn = _this6.Quart.InOut;
-                                break;
-                            case 'easeInOutQuint':
-                                fn = _this6.Quint.InOut;
-                                break;
-                            case 'easeInOutSine':
-                                fn = _this6.Sine.InOut;
-                                break;
-                            case 'easeInOutExpo':
-                                fn = _this6.Expo.InOut;
-                                break;
-                            case 'easeInOutCirc':
-                                fn = _this6.Circ.InOut;
-                                break;
-                            case 'easeInOutElastic':
-                                fn = _this6.Elastic.InOut;
-                                break;
-                            case 'easeInOutBack':
-                                fn = _this6.Back.InOut;
-                                break;
-                            case 'easeInOutBounce':
-                                fn = _this6.Bounce.InOut;
-                                break;
-                            case 'linear':
-                                fn = _this6.Linear.None;
-                                break;
-                        }
-                        if (!fn) {
-                            var curve = TweenManager.getEase(ease);
-                            if (curve) {
-                                var values = curve.split('(')[1].slice(0, -1).split(',');
-                                for (var i = 0; i < values.length; i++) {
-                                    values[i] = parseFloat(values[i]);
-                                }fn = values;
-                            } else {
-                                fn = _this6.Cubic.Out;
-                            }
-                        }
-                        return fn;
-                    }();
-                };
-
-                this.solve = function (values, elapsed) {
-                    if (values[0] === values[1] && values[2] === values[3]) return elapsed;
-                    return calculateBezier(getTForX(elapsed, values[0], values[2]), values[1], values[3]);
-                };
-
-                this.Linear = {
-                    None: function None(k) {
-                        return k;
-                    }
-                };
-
-                this.Quad = {
-                    In: function In(k) {
-                        return k * k;
-                    },
-                    Out: function Out(k) {
-                        return k * (2 - k);
-                    },
-                    InOut: function InOut(k) {
-                        if ((k *= 2) < 1) return 0.5 * k * k;
-                        return -0.5 * (--k * (k - 2) - 1);
-                    }
-                };
-
-                this.Cubic = {
-                    In: function In(k) {
-                        return k * k * k;
-                    },
-                    Out: function Out(k) {
-                        return --k * k * k + 1;
-                    },
-                    InOut: function InOut(k) {
-                        if ((k *= 2) < 1) return 0.5 * k * k * k;
-                        return 0.5 * ((k -= 2) * k * k + 2);
-                    }
-                };
-
-                this.Quart = {
-                    In: function In(k) {
-                        return k * k * k * k;
-                    },
-                    Out: function Out(k) {
-                        return 1 - --k * k * k * k;
-                    },
-                    InOut: function InOut(k) {
-                        if ((k *= 2) < 1) return 0.5 * k * k * k * k;
-                        return -0.5 * ((k -= 2) * k * k * k - 2);
-                    }
-                };
-
-                this.Quint = {
-                    In: function In(k) {
-                        return k * k * k * k * k;
-                    },
-                    Out: function Out(k) {
-                        return --k * k * k * k * k + 1;
-                    },
-                    InOut: function InOut(k) {
-                        if ((k *= 2) < 1) return 0.5 * k * k * k * k * k;
-                        return 0.5 * ((k -= 2) * k * k * k * k + 2);
-                    }
-                };
-
-                this.Sine = {
-                    In: function In(k) {
-                        return 1 - Math.cos(k * Math.PI / 2);
-                    },
-                    Out: function Out(k) {
-                        return Math.sin(k * Math.PI / 2);
-                    },
-                    InOut: function InOut(k) {
-                        return 0.5 * (1 - Math.cos(Math.PI * k));
-                    }
-                };
-
-                this.Expo = {
-                    In: function In(k) {
-                        return k === 0 ? 0 : Math.pow(1024, k - 1);
-                    },
-                    Out: function Out(k) {
-                        return k === 1 ? 1 : 1 - Math.pow(2, -10 * k);
-                    },
-                    InOut: function InOut(k) {
-                        if (k === 0) return 0;
-                        if (k === 1) return 1;
-                        if ((k *= 2) < 1) return 0.5 * Math.pow(1024, k - 1);
-                        return 0.5 * (-Math.pow(2, -10 * (k - 1)) + 2);
-                    }
-                };
-
-                this.Circ = {
-                    In: function In(k) {
-                        return 1 - Math.sqrt(1 - k * k);
-                    },
-                    Out: function Out(k) {
-                        return Math.sqrt(1 - --k * k);
-                    },
-                    InOut: function InOut(k) {
-                        if ((k *= 2) < 1) return -0.5 * (Math.sqrt(1 - k * k) - 1);
-                        return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1);
-                    }
-                };
-
-                this.Elastic = {
-                    In: function In(k) {
-                        var a = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
-                        var p = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0.4;
-
-                        var s = void 0;
-                        if (k === 0) return 0;
-                        if (k === 1) return 1;
-                        if (!a || a < 1) {
-                            a = 1;
-                            s = p / 4;
-                        } else s = p * Math.asin(1 / a) / (2 * Math.PI);
-                        return -(a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
-                    },
-                    Out: function Out(k) {
-                        var a = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
-                        var p = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0.4;
-
-                        var s = void 0;
-                        if (k === 0) return 0;
-                        if (k === 1) return 1;
-                        if (!a || a < 1) {
-                            a = 1;
-                            s = p / 4;
-                        } else s = p * Math.asin(1 / a) / (2 * Math.PI);
-                        return a * Math.pow(2, -10 * k) * Math.sin((k - s) * (2 * Math.PI) / p) + 1;
-                    },
-                    InOut: function InOut(k) {
-                        var a = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
-                        var p = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0.4;
-
-                        var s = void 0;
-                        if (k === 0) return 0;
-                        if (k === 1) return 1;
-                        if (!a || a < 1) {
-                            a = 1;
-                            s = p / 4;
-                        } else s = p * Math.asin(1 / a) / (2 * Math.PI);
-                        if ((k *= 2) < 1) return -0.5 * (a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
-                        return a * Math.pow(2, -10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p) * 0.5 + 1;
-                    }
-                };
-
-                this.Back = {
-                    In: function In(k) {
-                        var s = 1.70158;
-                        return k * k * ((s + 1) * k - s);
-                    },
-                    Out: function Out(k) {
-                        var s = 1.70158;
-                        return --k * k * ((s + 1) * k + s) + 1;
-                    },
-                    InOut: function InOut(k) {
-                        var s = 1.70158 * 1.525;
-                        if ((k *= 2) < 1) return 0.5 * (k * k * ((s + 1) * k - s));
-                        return 0.5 * ((k -= 2) * k * ((s + 1) * k + s) + 2);
-                    }
-                };
-
-                this.Bounce = {
-                    In: function In(k) {
-                        return 1 - Interpolation.Bounce.Out(1 - k);
-                    },
-                    Out: function Out(k) {
-                        if (k < 1 / 2.75) return 7.5625 * k * k;
-                        if (k < 2 / 2.75) return 7.5625 * (k -= 1.5 / 2.75) * k + 0.75;
-                        if (k < 2.5 / 2.75) return 7.5625 * (k -= 2.25 / 2.75) * k + 0.9375;
-                        return 7.5625 * (k -= 2.625 / 2.75) * k + 0.984375;
-                    },
-                    InOut: function InOut(k) {
-                        if (k < 0.5) return Interpolation.Bounce.In(k * 2) * 0.5;
-                        return Interpolation.Bounce.Out(k * 2 - 1) * 0.5 + 0.5;
-                    }
-                };
+        this.Linear = {
+            None(k) {
+                return k;
             }
-        }]);
+        };
 
-        return Interpolation;
-    }();
+        this.Quad = {
+            In(k) {
+                return k * k;
+            },
+            Out(k) {
+                return k * (2 - k);
+            },
+            InOut(k) {
+                if ((k *= 2) < 1) return 0.5 * k * k;
+                return -0.5 * (--k * (k - 2) - 1);
+            }
+        };
 
-    Interpolation.init();
+        this.Cubic = {
+            In(k) {
+                return k * k * k;
+            },
+            Out(k) {
+                return --k * k * k + 1;
+            },
+            InOut(k) {
+                if ((k *= 2) < 1) return 0.5 * k * k * k;
+                return 0.5 * ((k -= 2) * k * k + 2);
+            }
+        };
 
-    /**
-     * Mathematical.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
+        this.Quart = {
+            In(k) {
+                return k * k * k * k;
+            },
+            Out(k) {
+                return 1 - --k * k * k * k;
+            },
+            InOut(k) {
+                if ((k *= 2) < 1) return 0.5 * k * k * k * k;
+                return -0.5 * ((k -= 2) * k * k * k - 2);
+            }
+        };
 
-    var MathTween = function MathTween(object, props, time, ease, delay, update, callback) {
-        var _this7 = this;
+        this.Quint = {
+            In(k) {
+                return k * k * k * k * k;
+            },
+            Out(k) {
+                return --k * k * k * k * k + 1;
+            },
+            InOut(k) {
+                if ((k *= 2) < 1) return 0.5 * k * k * k * k * k;
+                return 0.5 * ((k -= 2) * k * k * k * k + 2);
+            }
+        };
 
-        _classCallCheck(this, MathTween);
+        this.Sine = {
+            In(k) {
+                return 1 - Math.cos(k * Math.PI / 2);
+            },
+            Out(k) {
+                return Math.sin(k * Math.PI / 2);
+            },
+            InOut(k) {
+                return 0.5 * (1 - Math.cos(Math.PI * k));
+            }
+        };
 
-        var self = this;
-        var startTime = void 0,
-            startValues = void 0,
-            endValues = void 0,
-            easeFunction = void 0,
-            paused = void 0,
-            spring = void 0,
-            damping = void 0,
-            elapsed = void 0;
+        this.Expo = {
+            In(k) {
+                return k === 0 ? 0 : Math.pow(1024, k - 1);
+            },
+            Out(k) {
+                return k === 1 ? 1 : 1 - Math.pow(2, -10 * k);
+            },
+            InOut(k) {
+                if (k === 0) return 0;
+                if (k === 1) return 1;
+                if ((k *= 2) < 1) return 0.5 * Math.pow(1024, k - 1);
+                return 0.5 * (-Math.pow(2, -10 * (k - 1)) + 2);
+            }
+        };
+
+        this.Circ = {
+            In(k) {
+                return 1 - Math.sqrt(1 - k * k);
+            },
+            Out(k) {
+                return Math.sqrt(1 - --k * k);
+            },
+            InOut(k) {
+                if ((k *= 2) < 1) return -0.5 * (Math.sqrt(1 - k * k) - 1);
+                return 0.5 * (Math.sqrt(1 - (k -= 2) * k) + 1);
+            }
+        };
+
+        this.Elastic = {
+            In(k, a = 1, p = 0.4) {
+                let s;
+                if (k === 0) return 0;
+                if (k === 1) return 1;
+                if (!a || a < 1) {
+                    a = 1;
+                    s = p / 4;
+                } else s = p * Math.asin(1 / a) / (2 * Math.PI);
+                return -(a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
+            },
+            Out(k, a = 1, p = 0.4) {
+                let s;
+                if (k === 0) return 0;
+                if (k === 1) return 1;
+                if (!a || a < 1) {
+                    a = 1;
+                    s = p / 4;
+                } else s = p * Math.asin(1 / a) / (2 * Math.PI);
+                return a * Math.pow(2, -10 * k) * Math.sin((k - s) * (2 * Math.PI) / p) + 1;
+            },
+            InOut(k, a = 1, p = 0.4) {
+                let s;
+                if (k === 0) return 0;
+                if (k === 1) return 1;
+                if (!a || a < 1) {
+                    a = 1;
+                    s = p / 4;
+                } else s = p * Math.asin(1 / a) / (2 * Math.PI);
+                if ((k *= 2) < 1) return -0.5 * (a * Math.pow(2, 10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p));
+                return a * Math.pow(2, -10 * (k -= 1)) * Math.sin((k - s) * (2 * Math.PI) / p) * 0.5 + 1;
+            }
+        };
+
+        this.Back = {
+            In(k) {
+                const s = 1.70158;
+                return k * k * ((s + 1) * k - s);
+            },
+            Out(k) {
+                const s = 1.70158;
+                return --k * k * ((s + 1) * k + s) + 1;
+            },
+            InOut(k) {
+                const s = 1.70158 * 1.525;
+                if ((k *= 2) < 1) return 0.5 * (k * k * ((s + 1) * k - s));
+                return 0.5 * ((k -= 2) * k * ((s + 1) * k + s) + 2);
+            }
+        };
+
+        this.Bounce = {
+            In(k) {
+                return 1 - Interpolation.Bounce.Out(1 - k);
+            },
+            Out(k) {
+                if (k < 1 / 2.75) return 7.5625 * k * k;
+                if (k < 2 / 2.75) return 7.5625 * (k -= 1.5 / 2.75) * k + 0.75;
+                if (k < 2.5 / 2.75) return 7.5625 * (k -= 2.25 / 2.75) * k + 0.9375;
+                return 7.5625 * (k -= 2.625 / 2.75) * k + 0.984375;
+            },
+            InOut(k) {
+                if (k < 0.5) return Interpolation.Bounce.In(k * 2) * 0.5;
+                return Interpolation.Bounce.Out(k * 2 - 1) * 0.5 + 0.5;
+            }
+        };
+    }
+}
+
+Interpolation.init();
+
+/**
+ * Mathematical.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class MathTween {
+
+    constructor(object, props, time, ease, delay, update, callback) {
+        const self = this;
+        let startTime, startValues, endValues, easeFunction, paused, spring, damping, elapsed;
 
         initMathTween();
 
@@ -1417,9 +1109,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             startValues = {};
             if (props.spring) spring = props.spring;
             if (props.damping) damping = props.damping;
-            for (var prop in endValues) {
-                if (typeof object[prop] === 'number') startValues[prop] = object[prop];
-            }
+            for (let prop in endValues) if (typeof object[prop] === 'number') startValues[prop] = object[prop];
         }
 
         function clear() {
@@ -1430,11 +1120,11 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             if (object.mathTweens) object.mathTweens.remove(self);
         }
 
-        this.update = function (t) {
+        this.update = t => {
             if (paused || t < startTime) return;
             elapsed = (t - startTime) / time;
             elapsed = elapsed > 1 ? 1 : elapsed;
-            var delta = _this7.interpolate(elapsed);
+            const delta = this.interpolate(elapsed);
             if (update) update(delta);
             if (elapsed === 1) {
                 if (callback) callback();
@@ -1442,200 +1132,191 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             }
         };
 
-        this.stop = function () {
+        this.stop = () => {
             clear();
         };
 
-        this.pause = function () {
+        this.pause = () => {
             paused = true;
         };
 
-        this.resume = function () {
+        this.resume = () => {
             paused = false;
             startTime = performance.now() - elapsed * time;
         };
 
-        this.interpolate = function (elapsed) {
-            var delta = easeFunction ? ease(elapsed, spring, damping) : Interpolation.solve(ease, elapsed);
-            for (var prop in startValues) {
+        this.interpolate = elapsed => {
+            const delta = easeFunction ? ease(elapsed, spring, damping) : Interpolation.solve(ease, elapsed);
+            for (let prop in startValues) {
                 if (typeof startValues[prop] === 'number' && typeof endValues[prop] === 'number') {
-                    var start = startValues[prop],
+                    const start = startValues[prop],
                         end = endValues[prop];
                     object[prop] = start + (end - start) * delta;
                 }
             }
             return delta;
         };
-    };
+    }
+}
 
-    /**
-     * Tween helper class.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
+/**
+ * Tween helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
-    var TweenManager = function () {
-        function TweenManager() {
-            _classCallCheck(this, TweenManager);
+class TweenManager {
+
+    static init() {
+        const self = this;
+        const tweens = [];
+
+        this.TRANSFORMS = ['x', 'y', 'z', 'scale', 'scaleX', 'scaleY', 'rotation', 'rotationX', 'rotationY', 'rotationZ', 'skewX', 'skewY', 'perspective'];
+        this.CSS_EASES = {
+            easeOutCubic:   'cubic-bezier(0.215, 0.610, 0.355, 1.000)',
+            easeOutQuad:    'cubic-bezier(0.250, 0.460, 0.450, 0.940)',
+            easeOutQuart:   'cubic-bezier(0.165, 0.840, 0.440, 1.000)',
+            easeOutQuint:   'cubic-bezier(0.230, 1.000, 0.320, 1.000)',
+            easeOutSine:    'cubic-bezier(0.390, 0.575, 0.565, 1.000)',
+            easeOutExpo:    'cubic-bezier(0.190, 1.000, 0.220, 1.000)',
+            easeOutCirc:    'cubic-bezier(0.075, 0.820, 0.165, 1.000)',
+            easeOutBack:    'cubic-bezier(0.175, 0.885, 0.320, 1.275)',
+            easeInCubic:    'cubic-bezier(0.550, 0.055, 0.675, 0.190)',
+            easeInQuad:     'cubic-bezier(0.550, 0.085, 0.680, 0.530)',
+            easeInQuart:    'cubic-bezier(0.895, 0.030, 0.685, 0.220)',
+            easeInQuint:    'cubic-bezier(0.755, 0.050, 0.855, 0.060)',
+            easeInSine:     'cubic-bezier(0.470, 0.000, 0.745, 0.715)',
+            easeInCirc:     'cubic-bezier(0.600, 0.040, 0.980, 0.335)',
+            easeInBack:     'cubic-bezier(0.600, -0.280, 0.735, 0.045)',
+            easeInOutCubic: 'cubic-bezier(0.645, 0.045, 0.355, 1.000)',
+            easeInOutQuad:  'cubic-bezier(0.455, 0.030, 0.515, 0.955)',
+            easeInOutQuart: 'cubic-bezier(0.770, 0.000, 0.175, 1.000)',
+            easeInOutQuint: 'cubic-bezier(0.860, 0.000, 0.070, 1.000)',
+            easeInOutSine:  'cubic-bezier(0.445, 0.050, 0.550, 0.950)',
+            easeInOutExpo:  'cubic-bezier(1.000, 0.000, 0.000, 1.000)',
+            easeInOutCirc:  'cubic-bezier(0.785, 0.135, 0.150, 0.860)',
+            easeInOutBack:  'cubic-bezier(0.680, -0.550, 0.265, 1.550)',
+            easeInOut:      'cubic-bezier(0.420, 0.000, 0.580, 1.000)',
+            linear:         'linear'
+        };
+
+        Render.start(updateTweens);
+
+        function updateTweens(t) {
+            for (let i = tweens.length - 1; i >= 0; i--) {
+                const tween = tweens[i];
+                if (tween.update) tween.update(t);
+                else self.removeMathTween(tween);
+            }
         }
 
-        _createClass(TweenManager, null, [{
-            key: 'init',
-            value: function init() {
-                var _this8 = this;
+        this.addMathTween = tween => {
+            tweens.push(tween);
+        };
 
-                var self = this;
-                var tweens = [];
+        this.removeMathTween = tween => {
+            tweens.remove(tween);
+        };
 
-                this.TRANSFORMS = ['x', 'y', 'z', 'scale', 'scaleX', 'scaleY', 'rotation', 'rotationX', 'rotationY', 'rotationZ', 'skewX', 'skewY', 'perspective'];
-                this.CSS_EASES = {
-                    easeOutCubic: 'cubic-bezier(0.215, 0.610, 0.355, 1.000)',
-                    easeOutQuad: 'cubic-bezier(0.250, 0.460, 0.450, 0.940)',
-                    easeOutQuart: 'cubic-bezier(0.165, 0.840, 0.440, 1.000)',
-                    easeOutQuint: 'cubic-bezier(0.230, 1.000, 0.320, 1.000)',
-                    easeOutSine: 'cubic-bezier(0.390, 0.575, 0.565, 1.000)',
-                    easeOutExpo: 'cubic-bezier(0.190, 1.000, 0.220, 1.000)',
-                    easeOutCirc: 'cubic-bezier(0.075, 0.820, 0.165, 1.000)',
-                    easeOutBack: 'cubic-bezier(0.175, 0.885, 0.320, 1.275)',
-                    easeInCubic: 'cubic-bezier(0.550, 0.055, 0.675, 0.190)',
-                    easeInQuad: 'cubic-bezier(0.550, 0.085, 0.680, 0.530)',
-                    easeInQuart: 'cubic-bezier(0.895, 0.030, 0.685, 0.220)',
-                    easeInQuint: 'cubic-bezier(0.755, 0.050, 0.855, 0.060)',
-                    easeInSine: 'cubic-bezier(0.470, 0.000, 0.745, 0.715)',
-                    easeInCirc: 'cubic-bezier(0.600, 0.040, 0.980, 0.335)',
-                    easeInBack: 'cubic-bezier(0.600, -0.280, 0.735, 0.045)',
-                    easeInOutCubic: 'cubic-bezier(0.645, 0.045, 0.355, 1.000)',
-                    easeInOutQuad: 'cubic-bezier(0.455, 0.030, 0.515, 0.955)',
-                    easeInOutQuart: 'cubic-bezier(0.770, 0.000, 0.175, 1.000)',
-                    easeInOutQuint: 'cubic-bezier(0.860, 0.000, 0.070, 1.000)',
-                    easeInOutSine: 'cubic-bezier(0.445, 0.050, 0.550, 0.950)',
-                    easeInOutExpo: 'cubic-bezier(1.000, 0.000, 0.000, 1.000)',
-                    easeInOutCirc: 'cubic-bezier(0.785, 0.135, 0.150, 0.860)',
-                    easeInOutBack: 'cubic-bezier(0.680, -0.550, 0.265, 1.550)',
-                    easeInOut: 'cubic-bezier(0.420, 0.000, 0.580, 1.000)',
-                    linear: 'linear'
-                };
-
-                Render.start(updateTweens);
-
-                function updateTweens(t) {
-                    for (var i = tweens.length - 1; i >= 0; i--) {
-                        var tween = tweens[i];
-                        if (tween.update) tween.update(t);else self.removeMathTween(tween);
-                    }
-                }
-
-                this.addMathTween = function (tween) {
-                    tweens.push(tween);
-                };
-
-                this.removeMathTween = function (tween) {
-                    tweens.remove(tween);
-                };
-
-                this.tween = function (object, props, time, ease, delay, callback, update) {
-                    if (typeof delay !== 'number') {
-                        update = callback;
-                        callback = delay;
-                        delay = 0;
-                    }
-                    var promise = null;
-                    if (typeof Promise !== 'undefined') {
-                        promise = Promise.create();
-                        if (callback) promise.then(callback);
-                        callback = promise.resolve;
-                    }
-                    var tween = new MathTween(object, props, time, ease, delay, update, callback);
-                    return promise || tween;
-                };
-
-                this.clearTween = function (object) {
-                    if (object.mathTween) object.mathTween.stop();
-                    if (object.mathTweens) {
-                        var _tweens = object.mathTweens;
-                        for (var i = _tweens.length - 1; i >= 0; i--) {
-                            var tween = _tweens[i];
-                            if (tween) tween.stop();
-                        }
-                        object.mathTweens = null;
-                    }
-                };
-
-                this.isTransform = function (key) {
-                    return ~_this8.TRANSFORMS.indexOf(key);
-                };
-
-                this.getEase = function (name) {
-                    return _this8.CSS_EASES[name] || _this8.CSS_EASES.easeOutCubic;
-                };
-
-                this.getAllTransforms = function (object) {
-                    var obj = {};
-                    for (var i = 0; i < _this8.TRANSFORMS.length; i++) {
-                        var key = _this8.TRANSFORMS[i],
-                            val = object[key];
-                        if (val !== 0 && typeof val === 'number') obj[key] = val;
-                    }
-                    return obj;
-                };
-
-                this.parseTransform = function (props) {
-                    var transforms = '';
-                    if (typeof props.x !== 'undefined' || typeof props.y !== 'undefined' || typeof props.z !== 'undefined') {
-                        var x = props.x || 0,
-                            y = props.y || 0,
-                            z = props.z || 0;
-                        var translate = '';
-                        translate += x + 'px, ';
-                        translate += y + 'px, ';
-                        translate += z + 'px';
-                        transforms += 'translate3d(' + translate + ')';
-                    }
-                    if (typeof props.scale !== 'undefined') {
-                        transforms += 'scale(' + props.scale + ')';
-                    } else {
-                        if (typeof props.scaleX !== 'undefined') transforms += 'scaleX(' + props.scaleX + ')';
-                        if (typeof props.scaleY !== 'undefined') transforms += 'scaleY(' + props.scaleY + ')';
-                    }
-                    if (typeof props.rotation !== 'undefined') transforms += 'rotate(' + props.rotation + 'deg)';
-                    if (typeof props.rotationX !== 'undefined') transforms += 'rotateX(' + props.rotationX + 'deg)';
-                    if (typeof props.rotationY !== 'undefined') transforms += 'rotateY(' + props.rotationY + 'deg)';
-                    if (typeof props.rotationZ !== 'undefined') transforms += 'rotateZ(' + props.rotationZ + 'deg)';
-                    if (typeof props.skewX !== 'undefined') transforms += 'skewX(' + props.skewX + 'deg)';
-                    if (typeof props.skewY !== 'undefined') transforms += 'skewY(' + props.skewY + 'deg)';
-                    if (typeof props.perspective !== 'undefined') transforms += 'perspective(' + props.perspective + 'px)';
-                    return transforms;
-                };
-
-                this.interpolate = function (num, alpha, ease) {
-                    var fn = Interpolation.convertEase(ease);
-                    return num * (typeof fn === 'function' ? fn(alpha) : Interpolation.solve(fn, alpha));
-                };
-
-                this.interpolateValues = function (start, end, alpha, ease) {
-                    var fn = Interpolation.convertEase(ease);
-                    return start + (end - start) * (typeof fn === 'function' ? fn(alpha) : Interpolation.solve(fn, alpha));
-                };
+        this.tween = (object, props, time, ease, delay, callback, update) => {
+            if (typeof delay !== 'number') {
+                update = callback;
+                callback = delay;
+                delay = 0;
             }
-        }]);
+            let promise = null;
+            if (typeof Promise !== 'undefined') {
+                promise = Promise.create();
+                if (callback) promise.then(callback);
+                callback = promise.resolve;
+            }
+            const tween = new MathTween(object, props, time, ease, delay, update, callback);
+            return promise || tween;
+        };
 
-        return TweenManager;
-    }();
+        this.clearTween = object => {
+            if (object.mathTween) object.mathTween.stop();
+            if (object.mathTweens) {
+                const tweens = object.mathTweens;
+                for (let i = tweens.length - 1; i >= 0; i--) {
+                    const tween = tweens[i];
+                    if (tween) tween.stop();
+                }
+                object.mathTweens = null;
+            }
+        };
 
-    TweenManager.init();
+        this.isTransform = key => {
+            return ~this.TRANSFORMS.indexOf(key);
+        };
 
-    /**
-     * CSS3 transition animation.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
+        this.getEase = name => {
+            return this.CSS_EASES[name] || this.CSS_EASES.easeOutCubic;
+        };
 
-    var CSSTransition = function CSSTransition(object, props, time, ease, delay, callback) {
-        _classCallCheck(this, CSSTransition);
+        this.getAllTransforms = object => {
+            const obj = {};
+            for (let i = 0; i < this.TRANSFORMS.length; i++) {
+                const key = this.TRANSFORMS[i],
+                    val = object[key];
+                if (val !== 0 && typeof val === 'number') obj[key] = val;
+            }
+            return obj;
+        };
 
-        var self = this;
-        var transformProps = void 0,
-            transitionProps = void 0;
+        this.parseTransform = props => {
+            let transforms = '';
+            if (typeof props.x !== 'undefined' || typeof props.y !== 'undefined' || typeof props.z !== 'undefined') {
+                const x = props.x || 0,
+                    y = props.y || 0,
+                    z = props.z || 0;
+                let translate = '';
+                translate += x + 'px, ';
+                translate += y + 'px, ';
+                translate += z + 'px';
+                transforms += 'translate3d(' + translate + ')';
+            }
+            if (typeof props.scale !== 'undefined') {
+                transforms += 'scale(' + props.scale + ')';
+            } else {
+                if (typeof props.scaleX !== 'undefined') transforms += 'scaleX(' + props.scaleX + ')';
+                if (typeof props.scaleY !== 'undefined') transforms += 'scaleY(' + props.scaleY + ')';
+            }
+            if (typeof props.rotation !== 'undefined') transforms += 'rotate(' + props.rotation + 'deg)';
+            if (typeof props.rotationX !== 'undefined') transforms += 'rotateX(' + props.rotationX + 'deg)';
+            if (typeof props.rotationY !== 'undefined') transforms += 'rotateY(' + props.rotationY + 'deg)';
+            if (typeof props.rotationZ !== 'undefined') transforms += 'rotateZ(' + props.rotationZ + 'deg)';
+            if (typeof props.skewX !== 'undefined') transforms += 'skewX(' + props.skewX + 'deg)';
+            if (typeof props.skewY !== 'undefined') transforms += 'skewY(' + props.skewY + 'deg)';
+            if (typeof props.perspective !== 'undefined') transforms += 'perspective(' + props.perspective + 'px)';
+            return transforms;
+        };
+
+        this.interpolate = (num, alpha, ease) => {
+            const fn = Interpolation.convertEase(ease);
+            return num * (typeof fn === 'function' ? fn(alpha) : Interpolation.solve(fn, alpha));
+        };
+
+        this.interpolateValues = (start, end, alpha, ease) => {
+            const fn = Interpolation.convertEase(ease);
+            return start + (end - start) * (typeof fn === 'function' ? fn(alpha) : Interpolation.solve(fn, alpha));
+        };
+    }
+}
+
+TweenManager.init();
+
+/**
+ * CSS3 transition animation.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class CSSTransition {
+
+    constructor(object, props, time, ease, delay, callback) {
+        const self = this;
+        let transformProps, transitionProps;
 
         initProperties();
         initCSSTween();
@@ -1645,9 +1326,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         function initProperties() {
-            var transform = TweenManager.getAllTransforms(object),
+            const transform = TweenManager.getAllTransforms(object),
                 properties = [];
-            for (var key in props) {
+            for (let key in props) {
                 if (TweenManager.isTransform(key)) {
                     transform.use = true;
                     transform[key] = props[key];
@@ -1657,7 +1338,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
                 }
             }
             if (transform.use) {
-                properties.push(Device.transformProperty);
+                properties.push('transform');
                 delete transform.use;
             }
             transformProps = transform;
@@ -1666,16 +1347,16 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         function initCSSTween() {
             if (killed()) return;
-            if (object.cssTween) object.cssTween.kill = true;
+            if (object.cssTween) object.cssTween.stop();
             object.cssTween = self;
-            var strings = buildStrings(time, ease, delay);
+            const strings = buildStrings(time, ease, delay);
             object.willChange(strings.props);
-            Timer.create(function () {
+            Timer.create(() => {
                 if (killed()) return;
-                object.element.style[Device.vendor('Transition')] = strings.transition;
+                object.element.style.transition = strings.transition;
                 object.css(props);
                 object.transform(transformProps);
-                Timer.create(function () {
+                Timer.create(() => {
                     if (killed()) return;
                     clearCSSTween();
                     if (callback) callback();
@@ -1684,23 +1365,23 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         function buildStrings(time, ease, delay) {
-            var props = '',
+            let props = '',
                 transition = '';
-            for (var i = 0; i < transitionProps.length; i++) {
-                var transitionProp = transitionProps[i];
+            for (let i = 0; i < transitionProps.length; i++) {
+                const transitionProp = transitionProps[i];
                 props += (props.length ? ', ' : '') + transitionProp;
                 transition += (transition.length ? ', ' : '') + transitionProp + ' ' + time + 'ms ' + TweenManager.getEase(ease) + ' ' + delay + 'ms';
             }
             return {
-                props: props,
-                transition: transition
+                props,
+                transition
             };
         }
 
         function clearCSSTween() {
             if (killed()) return;
             self.kill = true;
-            object.element.style[Device.vendor('Transition')] = '';
+            object.element.style.transition = '';
             object.willChange(null);
             object.cssTween = null;
             object = props = null;
@@ -1708,2280 +1389,2018 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         this.stop = clearCSSTween;
-    };
+    }
+}
 
-    /**
-     * Alien interface.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
+/**
+ * Alien interface.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
-    var Interface = function () {
-        function Interface(name) {
-            var type = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'div';
-            var detached = arguments[2];
+class Interface {
 
-            _classCallCheck(this, Interface);
-
-            this.events = new Events();
-            this.classes = [];
-            this.timers = [];
-            this.loops = [];
-            if (typeof name !== 'undefined') {
-                if (typeof name === 'string') {
-                    this.name = name;
-                    this.type = type;
-                    if (type === 'svg') {
-                        var qualifiedName = detached || 'svg';
-                        detached = true;
-                        this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName);
-                        this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
-                    } else {
-                        this.element = document.createElement(type);
-                        if (name[0] !== '.') this.element.id = name;else this.element.className = name.substr(1);
-                    }
-                    this.element.style.position = 'absolute';
-                    if (!detached) document.body.appendChild(this.element);
+    constructor(name, type = 'div', detached) {
+        this.events = new Events();
+        this.classes = [];
+        this.timers = [];
+        this.loops = [];
+        if (typeof name !== 'undefined') {
+            if (typeof name === 'string') {
+                this.name = name;
+                this.type = type;
+                if (type === 'svg') {
+                    const qualifiedName = detached || 'svg';
+                    detached = true;
+                    this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName);
+                    this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
                 } else {
-                    this.element = name;
+                    this.element = document.createElement(type);
+                    if (name.charAt(0) !== '.') this.element.id = name;
+                    else this.element.className = name.substr(1);
                 }
-                this.element.object = this;
+                this.element.style.position = 'absolute';
+                if (!detached) document.body.appendChild(this.element);
+            } else {
+                this.element = name;
+            }
+            this.element.object = this;
+        }
+    }
+
+    initClass(object, ...params) {
+        const child = new object(...params);
+        this.add(child);
+        return child;
+    }
+
+    add(child) {
+        if (child.destroy) {
+            this.classes.push(child);
+            child.parent = this;
+        }
+        if (child.element) this.element.appendChild(child.element);
+        else if (child.nodeName) this.element.appendChild(child);
+        return this;
+    }
+
+    delayedCall(callback, time = 0, ...params) {
+        if (!this.timers) return;
+        const timer = Timer.create(() => {
+            if (callback) callback(...params);
+        }, time);
+        this.timers.push(timer);
+        if (this.timers.length > 50) this.timers.shift();
+        return timer;
+    }
+
+    clearTimers() {
+        for (let i = this.timers.length - 1; i >= 0; i--) Timer.clearTimeout(this.timers[i]);
+        this.timers.length = 0;
+    }
+
+    startRender(callback, fps) {
+        this.loops.push(callback);
+        Render.start(callback, fps);
+    }
+
+    stopRender(callback) {
+        this.loops.remove(callback);
+        Render.stop(callback);
+    }
+
+    clearRenders() {
+        for (let i = this.loops.length - 1; i >= 0; i--) this.stopRender(this.loops[i]);
+        this.loops.length = 0;
+    }
+
+    destroy() {
+        if (!this.classes) return;
+        this.removed = true;
+        const parent = this.parent;
+        if (parent && !parent.removed && parent.remove) parent.remove(this);
+        for (let i = this.classes.length - 1; i >= 0; i--) {
+            const child = this.classes[i];
+            if (child && child.destroy) child.destroy();
+        }
+        this.classes.length = 0;
+        this.element.object = null;
+        this.clearRenders();
+        this.clearTimers();
+        this.events.destroy();
+        return Utils.nullObject(this);
+    }
+
+    remove(child) {
+        if (child.element) child.element.parentNode.removeChild(child.element);
+        else if (child.nodeName) child.parentNode.removeChild(child);
+        this.classes.remove(child);
+    }
+
+    create(name, type) {
+        const child = new Interface(name, type);
+        this.add(child);
+        return child;
+    }
+
+    clone() {
+        return new Interface(this.element.cloneNode(true));
+    }
+
+    empty() {
+        this.element.innerHTML = '';
+        return this;
+    }
+
+    text(text) {
+        if (typeof text === 'undefined') return this.element.textContent;
+        else this.element.textContent = text;
+        return this;
+    }
+
+    html(text) {
+        if (typeof text === 'undefined') return this.element.innerHTML;
+        else this.element.innerHTML = text;
+        return this;
+    }
+
+    hide() {
+        this.element.style.display = 'none';
+        return this;
+    }
+
+    show() {
+        this.element.style.display = '';
+        return this;
+    }
+
+    visible() {
+        this.element.style.visibility = 'visible';
+        return this;
+    }
+
+    invisible() {
+        this.element.style.visibility = 'hidden';
+        return this;
+    }
+
+    setZ(z) {
+        this.element.style.zIndex = z;
+        return this;
+    }
+
+    clearOpacity() {
+        this.element.style.opacity = '';
+        return this;
+    }
+
+    size(w, h = w, noScale) {
+        if (typeof h === 'boolean') {
+            noScale = h;
+            h = w;
+        }
+        if (typeof w !== 'undefined') {
+            if (typeof w === 'string' || typeof h === 'string') {
+                if (typeof w !== 'string') w = w + 'px';
+                if (typeof h !== 'string') h = h + 'px';
+                this.element.style.width = w;
+                this.element.style.height = h;
+            } else {
+                this.element.style.width = w + 'px';
+                this.element.style.height = h + 'px';
+                if (!noScale) this.element.style.backgroundSize = w + 'px ' + h + 'px';
             }
         }
+        this.width = this.element.offsetWidth;
+        this.height = this.element.offsetHeight;
+        return this;
+    }
 
-        _createClass(Interface, [{
-            key: 'initClass',
-            value: function initClass(object) {
-                for (var _len5 = arguments.length, params = Array(_len5 > 1 ? _len5 - 1 : 0), _key5 = 1; _key5 < _len5; _key5++) {
-                    params[_key5 - 1] = arguments[_key5];
-                }
+    mouseEnabled(bool) {
+        this.element.style.pointerEvents = bool ? 'auto' : 'none';
+        return this;
+    }
 
-                var child = new (Function.prototype.bind.apply(object, [null].concat(params)))();
-                this.add(child);
-                return child;
-            }
-        }, {
-            key: 'add',
-            value: function add(child) {
-                if (child.destroy) {
-                    this.classes.push(child);
-                    child.parent = this;
-                }
-                if (child.element) this.element.appendChild(child.element);else if (child.nodeName) this.element.appendChild(child);
-                return this;
-            }
-        }, {
-            key: 'delayedCall',
-            value: function delayedCall(callback) {
-                for (var _len6 = arguments.length, params = Array(_len6 > 2 ? _len6 - 2 : 0), _key6 = 2; _key6 < _len6; _key6++) {
-                    params[_key6 - 2] = arguments[_key6];
-                }
+    fontStyle(fontFamily, fontSize, color, fontStyle) {
+        this.css({ fontFamily, fontSize, color, fontStyle });
+        return this;
+    }
 
-                var time = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
+    bg(src, x, y, repeat) {
+        if (~src.indexOf('.')) src = Assets.getPath(src);
+        if (src.includes(['data:', '.'])) this.element.style.backgroundImage = 'url(' + src + ')';
+        else this.element.style.backgroundColor = src;
+        if (typeof x !== 'undefined') {
+            x = typeof x === 'number' ? x + 'px' : x;
+            y = typeof y === 'number' ? y + 'px' : y;
+            this.element.style.backgroundPosition = x + ' ' + y;
+        }
+        if (repeat) {
+            this.element.style.backgroundSize = '';
+            this.element.style.backgroundRepeat = repeat;
+        }
+        if (x === 'cover' || x === 'contain') {
+            repeat = typeof repeat === 'number' ? repeat + 'px' : repeat;
+            this.element.style.backgroundSize = x;
+            this.element.style.backgroundRepeat = 'no-repeat';
+            this.element.style.backgroundPosition = typeof y !== 'undefined' ? y + ' ' + repeat : 'center';
+        }
+        return this;
+    }
 
-                if (!this.timers) return;
-                var timer = Timer.create(function () {
-                    if (callback) callback.apply(undefined, params);
-                }, time);
-                this.timers.push(timer);
-                if (this.timers.length > 50) this.timers.shift();
-                return timer;
+    center(x, y, noPos) {
+        const css = {};
+        if (typeof x === 'undefined') {
+            css.left = '50%';
+            css.top = '50%';
+            css.marginLeft = -this.width / 2;
+            css.marginTop = -this.height / 2;
+        } else {
+            if (x) {
+                css.left = '50%';
+                css.marginLeft = -this.width / 2;
             }
-        }, {
-            key: 'clearTimers',
-            value: function clearTimers() {
-                for (var i = this.timers.length - 1; i >= 0; i--) {
-                    Timer.clearTimeout(this.timers[i]);
-                }this.timers.length = 0;
+            if (y) {
+                css.top = '50%';
+                css.marginTop = -this.height / 2;
             }
-        }, {
-            key: 'startRender',
-            value: function startRender(callback, fps) {
-                this.loops.push(callback);
-                Render.start(callback, fps);
-            }
-        }, {
-            key: 'stopRender',
-            value: function stopRender(callback) {
-                this.loops.remove(callback);
-                Render.stop(callback);
-            }
-        }, {
-            key: 'clearRenders',
-            value: function clearRenders() {
-                for (var i = this.loops.length - 1; i >= 0; i--) {
-                    this.stopRender(this.loops[i]);
-                }this.loops.length = 0;
-            }
-        }, {
-            key: 'destroy',
-            value: function destroy() {
-                if (this.classes) {
-                    this.removed = true;
-                    var parent = this.parent;
-                    if (parent && !parent.removed && parent.remove) parent.remove(this);
-                    for (var i = this.classes.length - 1; i >= 0; i--) {
-                        var child = this.classes[i];
-                        if (child && child.destroy) child.destroy();
-                    }
-                    this.classes.length = 0;
-                    this.element.object = null;
-                    this.clearRenders();
-                    this.clearTimers();
-                    this.events.destroy();
-                }
-                return Utils.nullObject(this);
-            }
-        }, {
-            key: 'remove',
-            value: function remove(child) {
-                if (child.element) child.element.parentNode.removeChild(child.element);else if (child.nodeName) child.parentNode.removeChild(child);
-                this.classes.remove(child);
-            }
-        }, {
-            key: 'create',
-            value: function create(name, type) {
-                var child = new Interface(name, type);
-                this.add(child);
-                return child;
-            }
-        }, {
-            key: 'clone',
-            value: function clone() {
-                return new Interface(this.element.cloneNode(true));
-            }
-        }, {
-            key: 'empty',
-            value: function empty() {
-                this.element.innerHTML = '';
-                return this;
-            }
-        }, {
-            key: 'text',
-            value: function text(_text) {
-                if (typeof _text === 'undefined') return this.element.textContent;else this.element.textContent = _text;
-                return this;
-            }
-        }, {
-            key: 'html',
-            value: function html(text) {
-                if (typeof text === 'undefined') return this.element.innerHTML;else this.element.innerHTML = text;
-                return this;
-            }
-        }, {
-            key: 'hide',
-            value: function hide() {
-                this.element.style.display = 'none';
-                return this;
-            }
-        }, {
-            key: 'show',
-            value: function show() {
-                this.element.style.display = '';
-                return this;
-            }
-        }, {
-            key: 'visible',
-            value: function visible() {
-                this.element.style.visibility = 'visible';
-                return this;
-            }
-        }, {
-            key: 'invisible',
-            value: function invisible() {
-                this.element.style.visibility = 'hidden';
-                return this;
-            }
-        }, {
-            key: 'setZ',
-            value: function setZ(z) {
-                this.element.style.zIndex = z;
-                return this;
-            }
-        }, {
-            key: 'clearOpacity',
-            value: function clearOpacity() {
-                this.element.style.opacity = '';
-                return this;
-            }
-        }, {
-            key: 'size',
-            value: function size(w) {
-                var h = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : w;
-                var noScale = arguments[2];
+        }
+        if (noPos) {
+            delete css.left;
+            delete css.top;
+        }
+        this.css(css);
+        return this;
+    }
 
-                if (typeof h === 'boolean') {
-                    noScale = h;
-                    h = w;
-                }
-                if (typeof w !== 'undefined') {
-                    if (typeof w === 'string' || typeof h === 'string') {
-                        if (typeof w !== 'string') w = w + 'px';
-                        if (typeof h !== 'string') h = h + 'px';
-                        this.element.style.width = w;
-                        this.element.style.height = h;
-                    } else {
-                        this.element.style.width = w + 'px';
-                        this.element.style.height = h + 'px';
-                        if (!noScale) this.element.style.backgroundSize = w + 'px ' + h + 'px';
-                    }
-                }
-                this.width = this.element.offsetWidth;
-                this.height = this.element.offsetHeight;
-                return this;
-            }
-        }, {
-            key: 'mouseEnabled',
-            value: function mouseEnabled(bool) {
-                this.element.style.pointerEvents = bool ? 'auto' : 'none';
-                return this;
-            }
-        }, {
-            key: 'fontStyle',
-            value: function fontStyle(fontFamily, fontSize, color, _fontStyle) {
-                this.css({ fontFamily: fontFamily, fontSize: fontSize, color: color, fontStyle: _fontStyle });
-                return this;
-            }
-        }, {
-            key: 'bg',
-            value: function bg(src, x, y, repeat) {
-                if (~src.indexOf('.')) src = Assets.getPath(src);
-                if (src.includes(['data:', '.'])) this.element.style.backgroundImage = 'url(' + src + ')';else this.element.style.backgroundColor = src;
-                if (typeof x !== 'undefined') {
-                    x = typeof x === 'number' ? x + 'px' : x;
-                    y = typeof y === 'number' ? y + 'px' : y;
-                    this.element.style.backgroundPosition = x + ' ' + y;
-                }
-                if (repeat) {
-                    this.element.style.backgroundSize = '';
-                    this.element.style.backgroundRepeat = repeat;
-                }
-                if (x === 'cover' || x === 'contain') {
-                    repeat = typeof repeat === 'number' ? repeat + 'px' : repeat;
-                    this.element.style.backgroundSize = x;
-                    this.element.style.backgroundRepeat = 'no-repeat';
-                    this.element.style.backgroundPosition = typeof y !== 'undefined' ? y + ' ' + repeat : 'center';
-                }
-                return this;
-            }
-        }, {
-            key: 'center',
-            value: function center(x, y, noPos) {
-                var css = {};
-                if (typeof x === 'undefined') {
-                    css.left = '50%';
-                    css.top = '50%';
-                    css.marginLeft = -this.width / 2;
-                    css.marginTop = -this.height / 2;
-                } else {
-                    if (x) {
-                        css.left = '50%';
-                        css.marginLeft = -this.width / 2;
-                    }
-                    if (y) {
-                        css.top = '50%';
-                        css.marginTop = -this.height / 2;
-                    }
-                }
-                if (noPos) {
-                    delete css.left;
-                    delete css.top;
-                }
-                this.css(css);
-                return this;
-            }
-        }, {
-            key: 'mask',
-            value: function mask(src) {
-                this.element.style[Device.vendor('Mask')] = (~src.indexOf('.') ? 'url(' + src + ')' : src) + ' no-repeat';
-                this.element.style[Device.vendor('MaskSize')] = 'contain';
-                return this;
-            }
-        }, {
-            key: 'blendMode',
-            value: function blendMode(mode, bg) {
-                this.element.style[bg ? 'background-blend-mode' : 'mix-blend-mode'] = mode;
-                return this;
-            }
-        }, {
-            key: 'css',
-            value: function css(props, value) {
-                if ((typeof props === 'undefined' ? 'undefined' : _typeof(props)) !== 'object') {
-                    if (!value) {
-                        var style = this.element.style[props];
-                        if (typeof style !== 'number') {
-                            if (~style.indexOf('px')) style = Number(style.slice(0, -2));
-                            if (props === 'opacity') style = !isNaN(Number(this.element.style.opacity)) ? Number(this.element.style.opacity) : 1;
-                        }
-                        return style || 0;
-                    } else {
-                        this.element.style[props] = value;
-                        return this;
-                    }
-                }
-                for (var key in props) {
-                    var val = props[key];
-                    if (!(typeof val === 'string' || typeof val === 'number')) continue;
-                    if (typeof val !== 'string' && key !== 'opacity' && key !== 'zIndex') val += 'px';
-                    this.element.style[key] = val;
-                }
-                return this;
-            }
-        }, {
-            key: 'transform',
-            value: function transform(props) {
-                if (!props) props = this;else for (var key in props) {
-                    if (typeof props[key] === 'number') this[key] = props[key];
-                }this.element.style[Device.vendor('Transform')] = TweenManager.parseTransform(props);
-                return this;
-            }
-        }, {
-            key: 'willChange',
-            value: function willChange(props) {
-                var string = typeof props === 'string';
-                if (props) this.element.style['will-change'] = string ? props : Device.transformProperty + ', opacity';else this.element.style['will-change'] = '';
-            }
-        }, {
-            key: 'backfaceVisibility',
-            value: function backfaceVisibility(visible) {
-                if (visible) this.element.style[Device.vendor('BackfaceVisibility')] = 'visible';else this.element.style[Device.vendor('BackfaceVisibility')] = 'hidden';
-            }
-        }, {
-            key: 'enable3D',
-            value: function enable3D(perspective, x, y) {
-                this.element.style[Device.vendor('TransformStyle')] = 'preserve-3d';
-                if (perspective) this.element.style[Device.vendor('Perspective')] = perspective + 'px';
-                if (typeof x !== 'undefined') {
-                    x = typeof x === 'number' ? x + 'px' : x;
-                    y = typeof y === 'number' ? y + 'px' : y;
-                    this.element.style[Device.vendor('PerspectiveOrigin')] = x + ' ' + y;
-                }
-                return this;
-            }
-        }, {
-            key: 'disable3D',
-            value: function disable3D() {
-                this.element.style[Device.vendor('TransformStyle')] = '';
-                this.element.style[Device.vendor('Perspective')] = '';
-                return this;
-            }
-        }, {
-            key: 'transformPoint',
-            value: function transformPoint(x, y, z) {
-                var origin = '';
-                if (typeof x !== 'undefined') origin += typeof x === 'number' ? x + 'px' : x;
-                if (typeof y !== 'undefined') origin += typeof y === 'number' ? ' ' + y + 'px' : ' ' + y;
-                if (typeof z !== 'undefined') origin += typeof z === 'number' ? ' ' + z + 'px' : ' ' + z;
-                this.element.style[Device.vendor('TransformOrigin')] = origin;
-                return this;
-            }
-        }, {
-            key: 'tween',
-            value: function tween(props, time, ease, delay, callback) {
-                if (typeof delay !== 'number') {
-                    callback = delay;
-                    delay = 0;
-                }
-                var promise = null;
-                if (typeof Promise !== 'undefined') {
-                    promise = Promise.create();
-                    if (callback) promise.then(callback);
-                    callback = promise.resolve;
-                }
-                var tween = new CSSTransition(this, props, time, ease, delay, callback);
-                return promise || tween;
-            }
-        }, {
-            key: 'clearTransform',
-            value: function clearTransform() {
-                if (typeof this.x === 'number') this.x = 0;
-                if (typeof this.y === 'number') this.y = 0;
-                if (typeof this.z === 'number') this.z = 0;
-                if (typeof this.scale === 'number') this.scale = 1;
-                if (typeof this.scaleX === 'number') this.scaleX = 1;
-                if (typeof this.scaleY === 'number') this.scaleY = 1;
-                if (typeof this.rotation === 'number') this.rotation = 0;
-                if (typeof this.rotationX === 'number') this.rotationX = 0;
-                if (typeof this.rotationY === 'number') this.rotationY = 0;
-                if (typeof this.rotationZ === 'number') this.rotationZ = 0;
-                if (typeof this.skewX === 'number') this.skewX = 0;
-                if (typeof this.skewY === 'number') this.skewY = 0;
-                this.element.style[Device.transformProperty] = '';
-                return this;
-            }
-        }, {
-            key: 'clearTween',
-            value: function clearTween() {
-                if (this.cssTween) this.cssTween.stop();
-                if (this.mathTween) this.mathTween.stop();
-                return this;
-            }
-        }, {
-            key: 'attr',
-            value: function attr(_attr, value) {
-                if (typeof value === 'undefined') return this.element.getAttribute(_attr);
-                if (value === '') this.element.removeAttribute(_attr);else this.element.setAttribute(_attr, value);
-                return this;
-            }
-        }, {
-            key: 'convertTouchEvent',
-            value: function convertTouchEvent(e) {
-                var touch = {};
-                touch.x = 0;
-                touch.y = 0;
-                if (!e) return touch;
-                if (e.touches || e.changedTouches) {
-                    if (e.touches.length) {
-                        touch.x = e.touches[0].pageX;
-                        touch.y = e.touches[0].pageY;
-                    } else {
-                        touch.x = e.changedTouches[0].pageX;
-                        touch.y = e.changedTouches[0].pageY;
-                    }
-                } else {
-                    touch.x = e.pageX;
-                    touch.y = e.pageY;
-                }
-                return touch;
-            }
-        }, {
-            key: 'click',
-            value: function click(callback) {
-                var _this9 = this;
+    mask(src) {
+        this.element.style.mask = (~src.indexOf('.') ? 'url(' + src + ')' : src) + ' no-repeat';
+        this.element.style.maskSize = 'contain';
+        return this;
+    }
 
-                var click = function click(e) {
-                    if (!_this9.element) return false;
-                    e.object = _this9.element.className === 'hit' ? _this9.parent : _this9;
-                    e.action = 'click';
-                    if (callback) callback(e);
-                };
-                this.element.addEventListener('click', click, true);
-                this.element.style.cursor = 'pointer';
-                return this;
-            }
-        }, {
-            key: 'hover',
-            value: function hover(callback) {
-                var _this10 = this;
+    blendMode(mode, bg) {
+        this.element.style[bg ? 'background-blend-mode' : 'mix-blend-mode'] = mode;
+        return this;
+    }
 
-                var hover = function hover(e) {
-                    if (!_this10.element) return false;
-                    e.object = _this10.element.className === 'hit' ? _this10.parent : _this10;
-                    e.action = e.type === 'mouseout' ? 'out' : 'over';
-                    if (callback) callback(e);
-                };
-                this.element.addEventListener('mouseover', hover, true);
-                this.element.addEventListener('mouseout', hover, true);
-                return this;
-            }
-        }, {
-            key: 'bind',
-            value: function bind(event, callback) {
-                var _this11 = this;
-
-                if (event === 'touchstart' && !Device.mobile) event = 'mousedown';else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';else if (event === 'touchend' && !Device.mobile) event = 'mouseup';
-                if (!this.events['bind_' + event]) this.events['bind_' + event] = [];
-                var events = this.events['bind_' + event];
-                events.push({ target: this.element, callback: callback });
-
-                var touchEvent = function touchEvent(e) {
-                    var touch = _this11.convertTouchEvent(e);
-                    if (!(e instanceof MouseEvent)) {
-                        e.x = touch.x;
-                        e.y = touch.y;
-                    }
-                    events.forEach(function (event) {
-                        if (event.target === e.currentTarget) event.callback(e);
-                    });
-                };
-
-                if (!this.events['fn_' + event]) {
-                    this.events['fn_' + event] = touchEvent;
-                    this.element.addEventListener(event, touchEvent, true);
+    css(props, value) {
+        if (typeof props !== 'object') {
+            if (!value) {
+                let style = this.element.style[props];
+                if (typeof style !== 'number') {
+                    if (~style.indexOf('px')) style = Number(style.slice(0, -2));
+                    if (props === 'opacity') style = !isNaN(Number(this.element.style.opacity)) ? Number(this.element.style.opacity) : 1;
                 }
+                return style || 0;
+            } else {
+                this.element.style[props] = value;
                 return this;
             }
-        }, {
-            key: 'unbind',
-            value: function unbind(event, callback) {
-                if (event === 'touchstart' && !Device.mobile) event = 'mousedown';else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';else if (event === 'touchend' && !Device.mobile) event = 'mouseup';
-                var events = this.events['bind_' + event];
-                if (!events) return this;
-                events.forEach(function (event, i) {
-                    if (event.callback === callback) events.splice(i, 1);
-                });
-                if (this.events['fn_' + event] && !events.length) {
-                    this.element.removeEventListener(event, this.events['fn_' + event], true);
-                    this.events['fn_' + event] = null;
-                }
-                return this;
+        }
+        for (let key in props) {
+            let val = props[key];
+            if (!(typeof val === 'string' || typeof val === 'number')) continue;
+            if (typeof val !== 'string' && key !== 'opacity' && key !== 'zIndex') val += 'px';
+            this.element.style[key] = val;
+        }
+        return this;
+    }
+
+    transform(props) {
+        if (!props) props = this;
+        else for (let key in props) if (typeof props[key] === 'number') this[key] = props[key];
+        this.element.style.transform = TweenManager.parseTransform(props);
+        return this;
+    }
+
+    willChange(props) {
+        const string = typeof props === 'string';
+        if (props) this.element.style.willChange = string ? props : 'transform, opacity';
+        else this.element.style.willChange = '';
+    }
+
+    backfaceVisibility(visible) {
+        if (visible) this.element.style.backfaceVisibility = 'visible';
+        else this.element.style.backfaceVisibility = 'hidden';
+        return this;
+    }
+
+    enable3D(perspective, x, y) {
+        this.element.style.transformStyle = 'preserve-3d';
+        if (perspective) this.element.style.perspective = perspective + 'px';
+        if (typeof x !== 'undefined') {
+            x = typeof x === 'number' ? x + 'px' : x;
+            y = typeof y === 'number' ? y + 'px' : y;
+            this.element.style.perspectiveOrigin = x + ' ' + y;
+        }
+        return this;
+    }
+
+    disable3D() {
+        this.element.style.transformStyle = '';
+        this.element.style.perspective = '';
+        return this;
+    }
+
+    transformPoint(x, y, z) {
+        let origin = '';
+        if (typeof x !== 'undefined') origin += typeof x === 'number' ? x + 'px' : x;
+        if (typeof y !== 'undefined') origin += typeof y === 'number' ? ' ' + y + 'px' : ' ' + y;
+        if (typeof z !== 'undefined') origin += typeof z === 'number' ? ' ' + z + 'px' : ' ' + z;
+        this.element.style.transformOrigin = origin;
+        return this;
+    }
+
+    tween(props, time, ease, delay, callback) {
+        if (typeof delay !== 'number') {
+            callback = delay;
+            delay = 0;
+        }
+        let promise = null;
+        if (typeof Promise !== 'undefined') {
+            promise = Promise.create();
+            if (callback) promise.then(callback);
+            callback = promise.resolve;
+        }
+        const tween = new CSSTransition(this, props, time, ease, delay, callback);
+        return promise || tween;
+    }
+
+    clearTransform() {
+        if (typeof this.x === 'number') this.x = 0;
+        if (typeof this.y === 'number') this.y = 0;
+        if (typeof this.z === 'number') this.z = 0;
+        if (typeof this.scale === 'number') this.scale = 1;
+        if (typeof this.scaleX === 'number') this.scaleX = 1;
+        if (typeof this.scaleY === 'number') this.scaleY = 1;
+        if (typeof this.rotation === 'number') this.rotation = 0;
+        if (typeof this.rotationX === 'number') this.rotationX = 0;
+        if (typeof this.rotationY === 'number') this.rotationY = 0;
+        if (typeof this.rotationZ === 'number') this.rotationZ = 0;
+        if (typeof this.skewX === 'number') this.skewX = 0;
+        if (typeof this.skewY === 'number') this.skewY = 0;
+        this.element.style.transform = '';
+        return this;
+    }
+
+    clearTween() {
+        if (this.cssTween) this.cssTween.stop();
+        if (this.mathTween) this.mathTween.stop();
+        return this;
+    }
+
+    attr(attr, value) {
+        if (typeof value === 'undefined') return this.element.getAttribute(attr);
+        if (value === '') this.element.removeAttribute(attr);
+        else this.element.setAttribute(attr, value);
+        return this;
+    }
+
+    convertTouchEvent(e) {
+        const touch = {};
+        touch.x = 0;
+        touch.y = 0;
+        if (!e) return touch;
+        if (e.touches || e.changedTouches) {
+            if (e.touches.length) {
+                touch.x = e.touches[0].pageX;
+                touch.y = e.touches[0].pageY;
+            } else {
+                touch.x = e.changedTouches[0].pageX;
+                touch.y = e.changedTouches[0].pageY;
             }
-        }, {
-            key: 'interact',
-            value: function interact(overCallback, clickCallback) {
-                this.hit = this.create('.hit');
-                this.hit.css({
-                    position: 'absolute',
-                    left: 0,
-                    top: 0,
-                    width: '100%',
-                    height: '100%',
-                    zIndex: 99999
-                });
-                if (Device.mobile) this.hit.touchClick(overCallback, clickCallback);else this.hit.hover(overCallback).click(clickCallback);
-                return this;
+        } else {
+            touch.x = e.pageX;
+            touch.y = e.pageY;
+        }
+        return touch;
+    }
+
+    click(callback) {
+        const click = e => {
+            if (!this.element) return false;
+            e.object = this.element.className === 'hit' ? this.parent : this;
+            e.action = 'click';
+            if (callback) callback(e);
+        };
+        this.element.addEventListener('click', click, true);
+        this.element.style.cursor = 'pointer';
+        return this;
+    }
+
+    hover(callback) {
+        const hover = e => {
+            if (!this.element) return false;
+            e.object = this.element.className === 'hit' ? this.parent : this;
+            e.action = e.type === 'mouseout' ? 'out' : 'over';
+            if (callback) callback(e);
+        };
+        this.element.addEventListener('mouseover', hover, true);
+        this.element.addEventListener('mouseout', hover, true);
+        return this;
+    }
+
+    bind(event, callback) {
+        if (event === 'touchstart' && !Device.mobile) event = 'mousedown';
+        else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';
+        else if (event === 'touchend' && !Device.mobile) event = 'mouseup';
+        if (!this.events['bind_' + event]) this.events['bind_' + event] = [];
+        const events = this.events['bind_' + event];
+        events.push({ target: this.element, callback });
+
+        const touchEvent = e => {
+            const touch = this.convertTouchEvent(e);
+            if (!(e instanceof MouseEvent)) {
+                e.x = touch.x;
+                e.y = touch.y;
             }
-        }, {
-            key: 'touchClick',
-            value: function touchClick(hover, click) {
-                var _this12 = this;
+            events.forEach(event => {
+                if (event.target === e.currentTarget) event.callback(e);
+            });
+        };
 
-                var start = {};
-                var time = void 0,
-                    move = void 0,
-                    touch = void 0;
+        if (!this.events['fn_' + event]) {
+            this.events['fn_' + event] = touchEvent;
+            this.element.addEventListener(event, touchEvent, true);
+        }
+        return this;
+    }
 
-                var findDistance = function findDistance(p1, p2) {
-                    var dx = p2.x - p1.x,
-                        dy = p2.y - p1.y;
-                    return Math.sqrt(dx * dx + dy * dy);
-                };
+    unbind(event, callback) {
+        if (event === 'touchstart' && !Device.mobile) event = 'mousedown';
+        else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';
+        else if (event === 'touchend' && !Device.mobile) event = 'mouseup';
+        const events = this.events['bind_' + event];
+        if (!events) return this;
+        events.forEach((event, i) => {
+            if (event.callback === callback) events.splice(i, 1);
+        });
+        if (this.events['fn_' + event] && !events.length) {
+            this.element.removeEventListener(event, this.events['fn_' + event], true);
+            this.events['fn_' + event] = null;
+        }
+        return this;
+    }
 
-                var touchMove = function touchMove(e) {
-                    if (!_this12.element) return false;
-                    touch = _this12.convertTouchEvent(e);
-                    move = findDistance(start, touch) > 5;
-                };
+    interact(overCallback, clickCallback) {
+        this.hit = this.create('.hit');
+        this.hit.css({
+            position: 'absolute',
+            left: 0,
+            top: 0,
+            width: '100%',
+            height: '100%',
+            zIndex: 99999
+        });
+        if (Device.mobile) this.hit.touchClick(overCallback, clickCallback);
+        else this.hit.hover(overCallback).click(clickCallback);
+        return this;
+    }
 
-                var setTouch = function setTouch(e) {
-                    var touchEvent = _this12.convertTouchEvent(e);
-                    e.touchX = touchEvent.x;
-                    e.touchY = touchEvent.y;
-                    start.x = e.touchX;
-                    start.y = e.touchY;
-                };
+    touchClick(hover, click) {
+        const start = {};
+        let time, move, touch;
 
-                var touchStart = function touchStart(e) {
-                    if (!_this12.element) return false;
-                    time = performance.now();
-                    e.object = _this12.element.className === 'hit' ? _this12.parent : _this12;
-                    e.action = 'over';
-                    setTouch(e);
-                    if (hover && !move) hover(e);
-                };
+        const findDistance = (p1, p2) => {
+            const dx = p2.x - p1.x,
+                dy = p2.y - p1.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        };
 
-                var touchEnd = function touchEnd(e) {
-                    if (!_this12.element) return false;
-                    var t = performance.now();
-                    e.object = _this12.element.className === 'hit' ? _this12.parent : _this12;
-                    setTouch(e);
-                    if (time && t - time < 750 && click && !move) {
-                        e.action = 'click';
-                        click(e);
-                    }
-                    if (hover) {
-                        e.action = 'out';
-                        hover(e);
-                    }
-                    move = false;
-                };
+        const touchMove = e => {
+            if (!this.element) return false;
+            touch = this.convertTouchEvent(e);
+            move = findDistance(start, touch) > 5;
+        };
 
+        const setTouch = e => {
+            const touchEvent = this.convertTouchEvent(e);
+            e.touchX = touchEvent.x;
+            e.touchY = touchEvent.y;
+            start.x = e.touchX;
+            start.y = e.touchY;
+        };
+
+        const touchStart = e => {
+            if (!this.element) return false;
+            time = performance.now();
+            e.object = this.element.className === 'hit' ? this.parent : this;
+            e.action = 'over';
+            setTouch(e);
+            if (hover && !move) hover(e);
+        };
+
+        const touchEnd = e => {
+            if (!this.element) return false;
+            const t = performance.now();
+            e.object = this.element.className === 'hit' ? this.parent : this;
+            setTouch(e);
+            if (time && t - time < 750 && click && !move) {
+                e.action = 'click';
+                click(e);
+            }
+            if (hover) {
+                e.action = 'out';
+                hover(e);
+            }
+            move = false;
+        };
+
+        this.element.addEventListener('touchmove', touchMove, { passive: true });
+        this.element.addEventListener('touchstart', touchStart, { passive: true });
+        this.element.addEventListener('touchend', touchEnd, { passive: true });
+        return this;
+    }
+
+    touchSwipe(callback, distance = 75) {
+        const move = {};
+        let startX, startY,
+            moving = false;
+
+        const touchStart = e => {
+            const touch = this.convertTouchEvent(e);
+            if (e.touches.length === 1) {
+                startX = touch.x;
+                startY = touch.y;
+                moving = true;
                 this.element.addEventListener('touchmove', touchMove, { passive: true });
-                this.element.addEventListener('touchstart', touchStart, { passive: true });
-                this.element.addEventListener('touchend', touchEnd, { passive: true });
-                return this;
             }
-        }, {
-            key: 'touchSwipe',
-            value: function touchSwipe(callback) {
-                var _this13 = this;
+        };
 
-                var distance = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 75;
+        const touchMove = e => {
+            if (moving) {
+                const touch = this.convertTouchEvent(e),
+                    dx = startX - touch.x,
+                    dy = startY - touch.y;
+                move.direction = null;
+                move.moving = null;
+                move.x = null;
+                move.y = null;
+                move.evt = e;
+                if (Math.abs(dx) >= distance) {
+                    touchEnd();
+                    move.direction = dx > 0 ? 'left' : 'right';
+                } else if (Math.abs(dy) >= distance) {
+                    touchEnd();
+                    move.direction = dy > 0 ? 'up' : 'down';
+                } else {
+                    move.moving = true;
+                    move.x = dx;
+                    move.y = dy;
+                }
+                if (callback) callback(move, e);
+            }
+        };
 
-                var move = {};
-                var startX = void 0,
-                    startY = void 0,
-                    moving = false;
+        const touchEnd = () => {
+            startX = startY = moving = false;
+            this.element.removeEventListener('touchmove', touchMove);
+        };
 
-                var touchStart = function touchStart(e) {
-                    var touch = _this13.convertTouchEvent(e);
-                    if (e.touches.length === 1) {
-                        startX = touch.x;
-                        startY = touch.y;
-                        moving = true;
-                        _this13.element.addEventListener('touchmove', touchMove, { passive: true });
-                    }
-                };
+        this.element.addEventListener('touchstart', touchStart, { passive: true });
+        this.element.addEventListener('touchend', touchEnd, { passive: true });
+        this.element.addEventListener('touchcancel', touchEnd, { passive: true });
+        return this;
+    }
 
-                var touchMove = function touchMove(e) {
-                    if (moving) {
-                        var touch = _this13.convertTouchEvent(e),
-                            dx = startX - touch.x,
-                            dy = startY - touch.y;
-                        move.direction = null;
-                        move.moving = null;
-                        move.x = null;
-                        move.y = null;
-                        move.evt = e;
-                        if (Math.abs(dx) >= distance) {
-                            touchEnd();
-                            move.direction = dx > 0 ? 'left' : 'right';
-                        } else if (Math.abs(dy) >= distance) {
-                            touchEnd();
-                            move.direction = dy > 0 ? 'up' : 'down';
-                        } else {
-                            move.moving = true;
-                            move.x = dx;
-                            move.y = dy;
+    preventScroll() {
+        if (!Device.mobile) return;
+        const preventScroll = e => {
+            let target = e.target;
+            if (target.nodeName === 'INPUT' || target.nodeName === 'TEXTAREA' || target.nodeName === 'SELECT' || target.nodeName === 'A') return;
+            let prevent = true;
+            while (target.parentNode && prevent) {
+                if (target.scrollParent) prevent = false;
+                target = target.parentNode;
+            }
+            if (prevent) e.preventDefault();
+        };
+        this.element.addEventListener('touchstart', preventScroll, { passive: false });
+    }
+
+    overflowScroll(direction) {
+        if (!Device.mobile) return;
+        const x = !!direction.x,
+            y = !!direction.y,
+            overflow = {
+                '-webkit-overflow-scrolling': 'touch'
+            };
+        if (!x && !y || x && y) overflow.overflow = 'scroll';
+        if (!x && y) {
+            overflow.overflowY = 'scroll';
+            overflow.overflowX = 'hidden';
+        }
+        if (x && !y) {
+            overflow.overflowX = 'scroll';
+            overflow.overflowY = 'hidden';
+        }
+        this.css(overflow);
+        this.element.scrollParent = true;
+        this.element.preventEvent = e => e.stopPropagation();
+        this.bind('touchmove', this.element.preventEvent);
+    }
+
+    removeOverflowScroll() {
+        if (!Device.mobile) return;
+        this.css({
+            overflow: 'hidden',
+            overflowX: '',
+            overflowY: '',
+            '-webkit-overflow-scrolling': ''
+        });
+        this.unbind('touchmove', this.element.preventEvent);
+    }
+
+    split(by = '') {
+        const style = {
+                position: 'relative',
+                display: 'inline-block',
+                width: 'auto',
+                height: 'auto',
+                margin: 0,
+                padding: 0
+            },
+            array = [],
+            split = this.text().split(by);
+        this.empty();
+        if (by === ' ') by = '&nbsp;';
+        for (let i = 0; i < split.length; i++) {
+            if (split[i] === ' ') split[i] = '&nbsp;';
+            array.push(this.create('.t', 'span').html(split[i]).css(style));
+            if (by !== '' && i < split.length - 1) array.push(this.create('.t', 'span').html(by).css(style));
+        }
+        return array;
+    }
+}
+
+/**
+ * Accelerometer helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Accelerometer {
+
+    static init() {
+
+        if (!this.active) {
+            this.active = true;
+            this.x = 0;
+            this.y = 0;
+            this.z = 0;
+            this.alpha = 0;
+            this.beta = 0;
+            this.gamma = 0;
+            this.heading = 0;
+            this.rotationRate = {};
+            this.rotationRate.alpha = 0;
+            this.rotationRate.beta = 0;
+            this.rotationRate.gamma = 0;
+            this.toRadians = Device.os === 'ios' ? Math.PI / 180 : 1;
+
+            const updateAccel = e => {
+                switch (window.orientation) {
+                    case 0:
+                        this.x = -e.accelerationIncludingGravity.x;
+                        this.y = e.accelerationIncludingGravity.y;
+                        this.z = e.accelerationIncludingGravity.z;
+                        if (e.rotationRate) {
+                            this.rotationRate.alpha = e.rotationRate.beta * this.toRadians;
+                            this.rotationRate.beta = -e.rotationRate.alpha * this.toRadians;
+                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
                         }
-                        if (callback) callback(move, e);
+                        break;
+                    case 180:
+                        this.x = e.accelerationIncludingGravity.x;
+                        this.y = -e.accelerationIncludingGravity.y;
+                        this.z = e.accelerationIncludingGravity.z;
+                        if (e.rotationRate) {
+                            this.rotationRate.alpha = -e.rotationRate.beta * this.toRadians;
+                            this.rotationRate.beta = e.rotationRate.alpha * this.toRadians;
+                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
+                        }
+                        break;
+                    case 90:
+                        this.x = e.accelerationIncludingGravity.y;
+                        this.y = e.accelerationIncludingGravity.x;
+                        this.z = e.accelerationIncludingGravity.z;
+                        if (e.rotationRate) {
+                            this.rotationRate.alpha = e.rotationRate.alpha * this.toRadians;
+                            this.rotationRate.beta = e.rotationRate.beta * this.toRadians;
+                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
+                        }
+                        break;
+                    case -90:
+                        this.x = -e.accelerationIncludingGravity.y;
+                        this.y = -e.accelerationIncludingGravity.x;
+                        this.z = e.accelerationIncludingGravity.z;
+                        if (e.rotationRate) {
+                            this.rotationRate.alpha = -e.rotationRate.alpha * this.toRadians;
+                            this.rotationRate.beta = -e.rotationRate.beta * this.toRadians;
+                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
+                        }
+                        break;
+                }
+            };
+
+            const updateOrientation = e => {
+                for (let key in e) if (~key.toLowerCase().indexOf('heading')) this.heading = e[key];
+                switch (window.orientation) {
+                    case 0:
+                        this.alpha = e.beta * this.toRadians;
+                        this.beta = -e.alpha * this.toRadians;
+                        this.gamma = e.gamma * this.toRadians;
+                        break;
+                    case 180:
+                        this.alpha = -e.beta * this.toRadians;
+                        this.beta = e.alpha * this.toRadians;
+                        this.gamma = e.gamma * this.toRadians;
+                        break;
+                    case 90:
+                        this.alpha = e.alpha * this.toRadians;
+                        this.beta = e.beta * this.toRadians;
+                        this.gamma = e.gamma * this.toRadians;
+                        break;
+                    case -90:
+                        this.alpha = -e.alpha * this.toRadians;
+                        this.beta = -e.beta * this.toRadians;
+                        this.gamma = e.gamma * this.toRadians;
+                        break;
+                }
+                this.tilt = e.beta * this.toRadians;
+                this.yaw = e.alpha * this.toRadians;
+                this.roll = -e.gamma * this.toRadians;
+                if (Device.os === 'Android') this.heading = compassHeading(e.alpha, e.beta, e.gamma);
+            };
+
+            const compassHeading = (alpha, beta, gamma) => {
+                const degtorad = Math.PI / 180,
+                    x = beta ? beta * degtorad : 0,
+                    y = gamma ? gamma * degtorad : 0,
+                    z = alpha ? alpha * degtorad : 0,
+                    cY = Math.cos(y),
+                    cZ = Math.cos(z),
+                    sX = Math.sin(x),
+                    sY = Math.sin(y),
+                    sZ = Math.sin(z),
+                    Vx = -cZ * sY - sZ * sX * cY,
+                    Vy = -sZ * sY + cZ * sX * cY;
+                let compassHeading = Math.atan(Vx / Vy);
+                if (Vy < 0) compassHeading += Math.PI;
+                else if (Vx < 0) compassHeading += 2 * Math.PI;
+                return compassHeading * (180 / Math.PI);
+            };
+
+            window.addEventListener('devicemotion', updateAccel);
+            window.addEventListener('deviceorientation', updateOrientation);
+
+            this.stop = () => {
+                this.active = false;
+                window.removeEventListener('devicemotion', updateAccel);
+                window.removeEventListener('deviceorientation', updateOrientation);
+            };
+        }
+    }
+}
+
+/**
+ * Mouse interaction.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Mouse {
+
+    static init() {
+
+        if (!this.active) {
+            this.active = true;
+            this.x = 0;
+            this.y = 0;
+            this.normal = {
+                x: 0,
+                y: 0
+            };
+            this.tilt = {
+                x: 0,
+                y: 0
+            };
+            this.inverseNormal = {
+                x: 0,
+                y: 0
+            };
+
+            const update = e => {
+                this.x = e.x;
+                this.y = e.y;
+                this.normal.x = e.x / Stage.width;
+                this.normal.y = e.y / Stage.height;
+                this.tilt.x = this.normal.x * 2 - 1;
+                this.tilt.y = 1 - this.normal.y * 2;
+                this.inverseNormal.x = this.normal.x;
+                this.inverseNormal.y = 1 - this.normal.y;
+            };
+
+            this.input = Stage.initClass(Interaction);
+            Stage.events.add(this.input, Interaction.START, update);
+            Stage.events.add(this.input, Interaction.MOVE, update);
+            update({
+                x: Stage.width / 2,
+                y: Stage.height / 2
+            });
+
+            this.stop = () => {
+                this.active = false;
+                Stage.events.remove(this.input, Interaction.START, update);
+                Stage.events.remove(this.input, Interaction.MOVE, update);
+            };
+        }
+    }
+}
+
+/**
+ * Web audio engine.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
+
+class WebAudio {
+
+    static init() {
+
+        class Sound {
+
+            constructor(asset) {
+                const self = this;
+
+                this.asset = Assets.getPath(asset);
+                if (WebAudio.context.createStereoPanner) this.stereo = WebAudio.context.createStereoPanner();
+                this.output = WebAudio.context.createGain();
+                this.volume = 1;
+                this.rate = 1;
+                if (this.stereo) this.stereo.connect(this.output);
+                this.output.connect(WebAudio.output);
+                this.output.gain.setValueAtTime(0, WebAudio.context.currentTime);
+
+                this.gain = {
+                    set value(value) {
+                        self.volume = value;
+                        self.output.gain.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
+                    },
+                    get value() {
+                        return self.volume;
                     }
                 };
 
-                var touchEnd = function touchEnd() {
-                    startX = startY = moving = false;
-                    _this13.element.removeEventListener('touchmove', touchMove);
-                };
-
-                this.element.addEventListener('touchstart', touchStart, { passive: true });
-                this.element.addEventListener('touchend', touchEnd, { passive: true });
-                this.element.addEventListener('touchcancel', touchEnd, { passive: true });
-                return this;
-            }
-        }, {
-            key: 'preventScroll',
-            value: function preventScroll() {
-                if (!Device.mobile) return;
-                var preventScroll = function preventScroll(e) {
-                    var target = e.target;
-                    if (target.nodeName === 'INPUT' || target.nodeName === 'TEXTAREA' || target.nodeName === 'SELECT' || target.nodeName === 'A') return;
-                    var prevent = true;
-                    while (target.parentNode && prevent) {
-                        if (target.scrollParent) prevent = false;
-                        target = target.parentNode;
+                this.playbackRate = {
+                    set value(value) {
+                        self.rate = value;
+                        if (self.source) self.source.playbackRate.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
+                    },
+                    get value() {
+                        return self.rate;
                     }
-                    if (prevent) e.preventDefault();
                 };
-                this.element.addEventListener('touchstart', preventScroll, { passive: false });
-            }
-        }, {
-            key: 'overflowScroll',
-            value: function overflowScroll(direction) {
-                if (!Device.mobile) return;
-                var x = !!direction.x,
-                    y = !!direction.y,
-                    overflow = {
-                    '-webkit-overflow-scrolling': 'touch'
+
+                this.stereoPan = {
+                    set value(value) {
+                        self.pan = value;
+                        if (self.stereo) self.stereo.pan.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
+                    },
+                    get value() {
+                        return self.pan;
+                    }
                 };
-                if (!x && !y || x && y) overflow.overflow = 'scroll';
-                if (!x && y) {
-                    overflow.overflowY = 'scroll';
-                    overflow.overflowX = 'hidden';
-                }
-                if (x && !y) {
-                    overflow.overflowX = 'scroll';
-                    overflow.overflowY = 'hidden';
-                }
-                this.css(overflow);
-                this.element.scrollParent = true;
-                this.element.preventEvent = function (e) {
-                    return e.stopPropagation();
+
+                this.stop = () => {
+                    if (this.source) {
+                        this.source.stop();
+                        this.playing = false;
+                    }
                 };
-                this.bind('touchmove', this.element.preventEvent);
             }
-        }, {
-            key: 'removeOverflowScroll',
-            value: function removeOverflowScroll() {
-                if (!Device.mobile) return;
-                this.css({
-                    overflow: 'hidden',
-                    overflowX: '',
-                    overflowY: '',
-                    '-webkit-overflow-scrolling': ''
-                });
-                this.unbind('touchmove', this.element.preventEvent);
-            }
-        }, {
-            key: 'split',
-            value: function split() {
-                var by = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : '';
-
-                var style = {
-                    position: 'relative',
-                    display: 'inline-block',
-                    width: 'auto',
-                    height: 'auto',
-                    margin: 0,
-                    padding: 0
-                },
-                    array = [],
-                    split = this.text().split(by);
-                this.empty();
-                if (by === ' ') by = '&nbsp;';
-                for (var i = 0; i < split.length; i++) {
-                    if (split[i] === ' ') split[i] = '&nbsp;';
-                    array.push(this.create('.t', 'span').html(split[i]).css(style));
-                    if (by !== '' && i < split.length - 1) array.push(this.create('.t', 'span').html(by).css(style));
-                }
-                return array;
-            }
-        }]);
-
-        return Interface;
-    }();
-
-    /**
-     * Accelerometer helper class.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var Accelerometer = function () {
-        function Accelerometer() {
-            _classCallCheck(this, Accelerometer);
         }
 
-        _createClass(Accelerometer, null, [{
-            key: 'init',
-            value: function init() {
-                var _this14 = this;
+        if (!this.active) {
+            this.active = true;
 
-                if (!this.active) {
-                    this.active = true;
-                    this.x = 0;
-                    this.y = 0;
-                    this.z = 0;
-                    this.alpha = 0;
-                    this.beta = 0;
-                    this.gamma = 0;
-                    this.heading = 0;
-                    this.rotationRate = {};
-                    this.rotationRate.alpha = 0;
-                    this.rotationRate.beta = 0;
-                    this.rotationRate.gamma = 0;
-                    this.toRadians = Device.os === 'ios' ? Math.PI / 180 : 1;
+            const self = this;
+            const sounds = {};
+            let context;
 
-                    var updateAccel = function updateAccel(e) {
-                        switch (window.orientation) {
-                            case 0:
-                                _this14.x = -e.accelerationIncludingGravity.x;
-                                _this14.y = e.accelerationIncludingGravity.y;
-                                _this14.z = e.accelerationIncludingGravity.z;
-                                if (e.rotationRate) {
-                                    _this14.rotationRate.alpha = e.rotationRate.beta * _this14.toRadians;
-                                    _this14.rotationRate.beta = -e.rotationRate.alpha * _this14.toRadians;
-                                    _this14.rotationRate.gamma = e.rotationRate.gamma * _this14.toRadians;
-                                }
-                                break;
-                            case 180:
-                                _this14.x = e.accelerationIncludingGravity.x;
-                                _this14.y = -e.accelerationIncludingGravity.y;
-                                _this14.z = e.accelerationIncludingGravity.z;
-                                if (e.rotationRate) {
-                                    _this14.rotationRate.alpha = -e.rotationRate.beta * _this14.toRadians;
-                                    _this14.rotationRate.beta = e.rotationRate.alpha * _this14.toRadians;
-                                    _this14.rotationRate.gamma = e.rotationRate.gamma * _this14.toRadians;
-                                }
-                                break;
-                            case 90:
-                                _this14.x = e.accelerationIncludingGravity.y;
-                                _this14.y = e.accelerationIncludingGravity.x;
-                                _this14.z = e.accelerationIncludingGravity.z;
-                                if (e.rotationRate) {
-                                    _this14.rotationRate.alpha = e.rotationRate.alpha * _this14.toRadians;
-                                    _this14.rotationRate.beta = e.rotationRate.beta * _this14.toRadians;
-                                    _this14.rotationRate.gamma = e.rotationRate.gamma * _this14.toRadians;
-                                }
-                                break;
-                            case -90:
-                                _this14.x = -e.accelerationIncludingGravity.y;
-                                _this14.y = -e.accelerationIncludingGravity.x;
-                                _this14.z = e.accelerationIncludingGravity.z;
-                                if (e.rotationRate) {
-                                    _this14.rotationRate.alpha = -e.rotationRate.alpha * _this14.toRadians;
-                                    _this14.rotationRate.beta = -e.rotationRate.beta * _this14.toRadians;
-                                    _this14.rotationRate.gamma = e.rotationRate.gamma * _this14.toRadians;
-                                }
-                                break;
-                        }
-                    };
-
-                    var updateOrientation = function updateOrientation(e) {
-                        for (var key in e) {
-                            if (~key.toLowerCase().indexOf('heading')) _this14.heading = e[key];
-                        }switch (window.orientation) {
-                            case 0:
-                                _this14.alpha = e.beta * _this14.toRadians;
-                                _this14.beta = -e.alpha * _this14.toRadians;
-                                _this14.gamma = e.gamma * _this14.toRadians;
-                                break;
-                            case 180:
-                                _this14.alpha = -e.beta * _this14.toRadians;
-                                _this14.beta = e.alpha * _this14.toRadians;
-                                _this14.gamma = e.gamma * _this14.toRadians;
-                                break;
-                            case 90:
-                                _this14.alpha = e.alpha * _this14.toRadians;
-                                _this14.beta = e.beta * _this14.toRadians;
-                                _this14.gamma = e.gamma * _this14.toRadians;
-                                break;
-                            case -90:
-                                _this14.alpha = -e.alpha * _this14.toRadians;
-                                _this14.beta = -e.beta * _this14.toRadians;
-                                _this14.gamma = e.gamma * _this14.toRadians;
-                                break;
-                        }
-                        _this14.tilt = e.beta * _this14.toRadians;
-                        _this14.yaw = e.alpha * _this14.toRadians;
-                        _this14.roll = -e.gamma * _this14.toRadians;
-                        if (Device.os === 'Android') _this14.heading = _compassHeading(e.alpha, e.beta, e.gamma);
-                    };
-
-                    var _compassHeading = function _compassHeading(alpha, beta, gamma) {
-                        var degtorad = Math.PI / 180,
-                            x = beta ? beta * degtorad : 0,
-                            y = gamma ? gamma * degtorad : 0,
-                            z = alpha ? alpha * degtorad : 0,
-                            cY = Math.cos(y),
-                            cZ = Math.cos(z),
-                            sX = Math.sin(x),
-                            sY = Math.sin(y),
-                            sZ = Math.sin(z),
-                            Vx = -cZ * sY - sZ * sX * cY,
-                            Vy = -sZ * sY + cZ * sX * cY;
-                        var compassHeading = Math.atan(Vx / Vy);
-                        if (Vy < 0) compassHeading += Math.PI;else if (Vx < 0) compassHeading += 2 * Math.PI;
-                        return compassHeading * (180 / Math.PI);
-                    };
-
-                    window.addEventListener('devicemotion', updateAccel);
-                    window.addEventListener('deviceorientation', updateOrientation);
-
-                    this.stop = function () {
-                        _this14.active = false;
-                        window.removeEventListener('devicemotion', updateAccel);
-                        window.removeEventListener('deviceorientation', updateOrientation);
-                    };
-                }
-            }
-        }]);
-
-        return Accelerometer;
-    }();
-
-    /**
-     * Mouse interaction.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var Mouse = function () {
-        function Mouse() {
-            _classCallCheck(this, Mouse);
-        }
-
-        _createClass(Mouse, null, [{
-            key: 'init',
-            value: function init() {
-                var _this15 = this;
-
-                if (!this.active) {
-                    this.active = true;
-                    this.x = 0;
-                    this.y = 0;
-                    this.normal = {
-                        x: 0,
-                        y: 0
-                    };
-                    this.tilt = {
-                        x: 0,
-                        y: 0
-                    };
-                    this.inverseNormal = {
-                        x: 0,
-                        y: 0
-                    };
-
-                    var update = function update(e) {
-                        _this15.x = e.x;
-                        _this15.y = e.y;
-                        _this15.normal.x = e.x / Stage.width;
-                        _this15.normal.y = e.y / Stage.height;
-                        _this15.tilt.x = _this15.normal.x * 2 - 1;
-                        _this15.tilt.y = 1 - _this15.normal.y * 2;
-                        _this15.inverseNormal.x = _this15.normal.x;
-                        _this15.inverseNormal.y = 1 - _this15.normal.y;
-                    };
-
-                    this.input = Stage.initClass(Interaction);
-                    Stage.events.add(this.input, Interaction.START, update);
-                    Stage.events.add(this.input, Interaction.MOVE, update);
-                    update({
-                        x: Stage.width / 2,
-                        y: Stage.height / 2
-                    });
-
-                    this.stop = function () {
-                        _this15.active = false;
-                        Stage.events.remove(_this15.input, Interaction.START, update);
-                        Stage.events.remove(_this15.input, Interaction.MOVE, update);
-                    };
-                }
-            }
-        }]);
-
-        return Mouse;
-    }();
-
-    /**
-     * Web audio engine.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
-
-    var WebAudio = function () {
-        function WebAudio() {
-            _classCallCheck(this, WebAudio);
-        }
-
-        _createClass(WebAudio, null, [{
-            key: 'init',
-            value: function init() {
-                var _this17 = this;
-
-                var Sound = function Sound(asset) {
-                    var _this16 = this;
-
-                    _classCallCheck(this, Sound);
-
-                    var self = this;
-
-                    this.asset = Assets.getPath(asset);
-                    if (WebAudio.context.createStereoPanner) this.stereo = WebAudio.context.createStereoPanner();
-                    this.output = WebAudio.context.createGain();
-                    this.volume = 1;
-                    this.rate = 1;
-                    if (this.stereo) this.stereo.connect(this.output);
-                    this.output.connect(WebAudio.output);
-                    this.output.gain.setValueAtTime(0, WebAudio.context.currentTime);
-
-                    this.gain = {
-                        set value(value) {
-                            self.volume = value;
-                            self.output.gain.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
-                        },
-                        get value() {
-                            return self.volume;
-                        }
-                    };
-
-                    this.playbackRate = {
-                        set value(value) {
-                            self.rate = value;
-                            if (self.source) self.source.playbackRate.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
-                        },
-                        get value() {
-                            return self.rate;
-                        }
-                    };
-
-                    this.stereoPan = {
-                        set value(value) {
-                            self.pan = value;
-                            if (self.stereo) self.stereo.pan.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
-                        },
-                        get value() {
-                            return self.pan;
-                        }
-                    };
-
-                    this.stop = function () {
-                        if (_this16.source) {
-                            _this16.source.stop();
-                            _this16.playing = false;
-                        }
-                    };
-                };
-
-                if (!this.active) {
-                    this.active = true;
-
-                    var _self = this;
-                    var sounds = {};
-                    var context = void 0;
-
-                    if (window.AudioContext) {
-                        context = new AudioContext();
-                        this.output = context.createGain();
-                        this.volume = 1;
-                        this.output.connect(context.destination);
-                        this.gain = {
-                            set value(value) {
-                                _self.volume = value;
-                                _self.output.gain.linearRampToValueAtTime(value, context.currentTime + 0.015);
-                            },
-                            get value() {
-                                return _self.volume;
-                            }
-                        };
-                        this.context = context;
+            if (window.AudioContext) {
+                context = new AudioContext();
+                this.output = context.createGain();
+                this.volume = 1;
+                this.output.connect(context.destination);
+                this.gain = {
+                    set value(value) {
+                        self.volume = value;
+                        self.output.gain.linearRampToValueAtTime(value, context.currentTime + 0.015);
+                    },
+                    get value() {
+                        return self.volume;
                     }
+                };
+                this.context = context;
+            }
 
-                    this.loadSound = function (id, callback) {
-                        var promise = Promise.create();
-                        if (callback) promise.then(callback);
-                        callback = promise.resolve;
-                        var sound = _this17.getSound(id);
-                        window.fetch(sound.asset).then(function (response) {
-                            if (!response.ok) return callback();
-                            response.arrayBuffer().then(function (data) {
-                                context.decodeAudioData(data, function (buffer) {
-                                    sound.buffer = buffer;
-                                    sound.complete = true;
-                                    callback();
-                                }, function () {
-                                    callback();
-                                });
-                            });
-                        }).catch(function () {
+            this.loadSound = (id, callback) => {
+                const promise = Promise.create();
+                if (callback) promise.then(callback);
+                callback = promise.resolve;
+                const sound = this.getSound(id);
+                window.fetch(sound.asset).then(response => {
+                    if (!response.ok) return callback();
+                    response.arrayBuffer().then(data => {
+                        context.decodeAudioData(data, buffer => {
+                            sound.buffer = buffer;
+                            sound.complete = true;
+                            callback();
+                        }, () => {
                             callback();
                         });
-                        sound.ready = function () {
-                            return promise;
-                        };
-                    };
-
-                    this.createSound = function (id, asset, callback) {
-                        sounds[id] = new Sound(asset);
-                        if (Device.os === 'ios' && callback) callback();else _this17.loadSound(id, callback);
-                        return sounds[id];
-                    };
-
-                    this.getSound = function (id) {
-                        return sounds[id];
-                    };
-
-                    this.trigger = function (id) {
-                        if (!context) return;
-                        if (context.state === 'suspended') context.resume();
-                        var sound = _this17.getSound(id);
-                        if (!sound.ready) _this17.loadSound(id);
-                        sound.ready().then(function () {
-                            if (sound.complete) {
-                                if (sound.stopping && sound.loop) {
-                                    sound.stopping = false;
-                                    return;
-                                }
-                                sound.playing = true;
-                                sound.source = context.createBufferSource();
-                                sound.source.buffer = sound.buffer;
-                                sound.source.loop = sound.loop;
-                                sound.source.playbackRate.setValueAtTime(sound.rate, context.currentTime);
-                                sound.source.connect(sound.stereo ? sound.stereo : sound.output);
-                                sound.source.start();
-                                sound.output.gain.linearRampToValueAtTime(sound.volume, context.currentTime + 0.015);
-                            }
-                        });
-                    };
-
-                    this.play = function (id) {
-                        var volume = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 1;
-                        var loop = arguments[2];
-
-                        if (!context) return;
-                        if (typeof volume === 'boolean') {
-                            loop = volume;
-                            volume = 1;
-                        }
-                        var sound = _this17.getSound(id);
-                        if (sound) {
-                            sound.volume = volume;
-                            sound.loop = !!loop;
-                            _this17.trigger(id);
-                        }
-                    };
-
-                    this.fadeInAndPlay = function (id, volume, loop, time, ease) {
-                        var delay = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 0;
-
-                        if (!context) return;
-                        var sound = _this17.getSound(id);
-                        if (sound) {
-                            sound.volume = 0;
-                            sound.loop = !!loop;
-                            _this17.trigger(id);
-                            TweenManager.tween(sound.gain, { value: volume }, time, ease, delay);
-                        }
-                    };
-
-                    this.fadeOutAndStop = function (id, time, ease) {
-                        var delay = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
-
-                        if (!context) return;
-                        var sound = _this17.getSound(id);
-                        if (sound && sound.playing) {
-                            TweenManager.tween(sound.gain, { value: 0 }, time, ease, delay, function () {
-                                if (!sound.stopping) return;
-                                sound.stopping = false;
-                                sound.stop();
-                            });
-                            sound.stopping = true;
-                        }
-                    };
-
-                    this.remove = function (id) {
-                        var sound = _this17.getSound(id);
-                        if (sound && sound.source) {
-                            sound.source.buffer = null;
-                            sound.source.stop();
-                            sound.source.disconnect();
-                            sound.source = null;
-                            sound.playing = false;
-                            delete sounds[id];
-                        }
-                    };
-
-                    this.mute = function () {
-                        if (!context) return;
-                        TweenManager.tween(_this17.gain, { value: 0 }, 300, 'easeOutSine');
-                    };
-
-                    this.unmute = function () {
-                        if (!context) return;
-                        TweenManager.tween(_this17.gain, { value: 1 }, 500, 'easeOutSine');
-                    };
-
-                    this.stop = function () {
-                        _this17.active = false;
-                        if (!context) return;
-                        for (var id in sounds) {
-                            var sound = sounds[id];
-                            if (sound) sound.stop();
-                        }
-                        context.close();
-                    };
-                }
-
-                window.WebAudio = this;
-            }
-        }]);
-
-        return WebAudio;
-    }();
-
-    /**
-     * Stage instance.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var Stage = new (function (_Interface) {
-        _inherits(_class, _Interface);
-
-        function _class() {
-            _classCallCheck(this, _class);
-
-            var _this18 = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, 'Stage'));
-
-            var self = _this18;
-            var last = void 0;
-
-            initHTML();
-            addListeners();
-
-            function initHTML() {
-                self.css({ overflow: 'hidden' });
-                self.preventScroll();
-            }
-
-            function addListeners() {
-                window.addEventListener('focus', focus);
-                window.addEventListener('blur', blur);
-                window.addEventListener('keydown', keyDown);
-                window.addEventListener('keyup', keyUp);
-                window.addEventListener('keypress', keyPress);
-                window.addEventListener('resize', resize);
-                window.addEventListener('orientationchange', resize);
-                resize();
-            }
-
-            function focus() {
-                if (last !== 'focus') {
-                    last = 'focus';
-                    Events.emitter.fire(Events.VISIBILITY, { type: 'focus' });
-                }
-            }
-
-            function blur() {
-                if (last !== 'blur') {
-                    last = 'blur';
-                    Events.emitter.fire(Events.VISIBILITY, { type: 'blur' });
-                }
-            }
-
-            function keyDown(e) {
-                Events.emitter.fire(Events.KEYBOARD_DOWN, e);
-            }
-
-            function keyUp(e) {
-                Events.emitter.fire(Events.KEYBOARD_UP, e);
-            }
-
-            function keyPress(e) {
-                Events.emitter.fire(Events.KEYBOARD_PRESS, e);
-            }
-
-            function resize() {
-                self.size();
-                self.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
-                Events.emitter.fire(Events.RESIZE);
-            }
-
-            _this18.destroy = function () {
-                if (Accelerometer.active) Accelerometer.stop();
-                if (Mouse.active) Mouse.stop();
-                if (WebAudio.active) WebAudio.stop();
-                window.removeEventListener('focus', focus);
-                window.removeEventListener('blur', blur);
-                window.removeEventListener('keydown', keyDown);
-                window.removeEventListener('keyup', keyUp);
-                window.removeEventListener('keypress', keyPress);
-                window.removeEventListener('resize', resize);
-                window.removeEventListener('orientationchange', resize);
-                return _get(_class.prototype.__proto__ || Object.getPrototypeOf(_class.prototype), 'destroy', _this18).call(_this18);
+                    });
+                }).catch(() => {
+                    callback();
+                });
+                sound.ready = () => promise;
             };
-            return _this18;
+
+            this.createSound = (id, asset, callback) => {
+                sounds[id] = new Sound(asset);
+                if (Device.os === 'ios' && callback) callback();
+                else this.loadSound(id, callback);
+                return sounds[id];
+            };
+
+            this.getSound = id => {
+                return sounds[id];
+            };
+
+            this.trigger = id => {
+                if (!context) return;
+                if (context.state === 'suspended') context.resume();
+                const sound = this.getSound(id);
+                if (!sound.ready) this.loadSound(id);
+                sound.ready().then(() => {
+                    if (sound.complete) {
+                        if (sound.stopping && sound.loop) {
+                            sound.stopping = false;
+                            return;
+                        }
+                        sound.playing = true;
+                        sound.source = context.createBufferSource();
+                        sound.source.buffer = sound.buffer;
+                        sound.source.loop = sound.loop;
+                        sound.source.playbackRate.setValueAtTime(sound.rate, context.currentTime);
+                        sound.source.connect(sound.stereo ? sound.stereo : sound.output);
+                        sound.source.start();
+                        sound.output.gain.linearRampToValueAtTime(sound.volume, context.currentTime + 0.015);
+                    }
+                });
+            };
+
+            this.play = (id, volume = 1, loop) => {
+                if (!context) return;
+                if (typeof volume === 'boolean') {
+                    loop = volume;
+                    volume = 1;
+                }
+                const sound = this.getSound(id);
+                if (sound) {
+                    sound.volume = volume;
+                    sound.loop = !!loop;
+                    this.trigger(id);
+                }
+            };
+
+            this.fadeInAndPlay = (id, volume, loop, time, ease, delay = 0) => {
+                if (!context) return;
+                const sound = this.getSound(id);
+                if (sound) {
+                    sound.volume = 0;
+                    sound.loop = !!loop;
+                    this.trigger(id);
+                    TweenManager.tween(sound.gain, { value: volume }, time, ease, delay);
+                }
+            };
+
+            this.fadeOutAndStop = (id, time, ease, delay = 0) => {
+                if (!context) return;
+                const sound = this.getSound(id);
+                if (sound && sound.playing) {
+                    TweenManager.tween(sound.gain, { value: 0 }, time, ease, delay, () => {
+                        if (!sound.stopping) return;
+                        sound.stopping = false;
+                        sound.stop();
+                    });
+                    sound.stopping = true;
+                }
+            };
+
+            this.remove = id => {
+                const sound = this.getSound(id);
+                if (sound && sound.source) {
+                    sound.source.buffer = null;
+                    sound.source.stop();
+                    sound.source.disconnect();
+                    sound.source = null;
+                    sound.playing = false;
+                    delete sounds[id];
+                }
+            };
+
+            this.mute = () => {
+                if (!context) return;
+                TweenManager.tween(this.gain, { value: 0 }, 300, 'easeOutSine');
+            };
+
+            this.unmute = () => {
+                if (!context) return;
+                TweenManager.tween(this.gain, { value: 1 }, 500, 'easeOutSine');
+            };
+
+            this.stop = () => {
+                this.active = false;
+                if (!context) return;
+                for (let id in sounds) {
+                    const sound = sounds[id];
+                    if (sound) sound.stop();
+                }
+                context.close();
+            };
         }
 
-        return _class;
-    }(Interface))();
+        window.WebAudio = this;
+    }
+}
 
-    /**
-     * 2D vector.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
+/**
+ * Stage instance.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
-    var Vector2 = function () {
-        function Vector2(x, y) {
-            _classCallCheck(this, Vector2);
+const Stage = new (class extends Interface {
 
-            this.x = typeof x === 'number' ? x : 0;
-            this.y = typeof y === 'number' ? y : 0;
-            this.type = 'vector2';
+    constructor() {
+        super('Stage');
+        const self = this;
+        let last;
+
+        initHTML();
+        addListeners();
+
+        function initHTML() {
+            self.css({ overflow: 'hidden' });
+            self.preventScroll();
         }
 
-        _createClass(Vector2, [{
-            key: 'set',
-            value: function set(x, y) {
-                this.x = x || 0;
-                this.y = y || 0;
-                return this;
-            }
-        }, {
-            key: 'clear',
-            value: function clear() {
-                this.x = 0;
-                this.y = 0;
-                return this;
-            }
-        }, {
-            key: 'copyTo',
-            value: function copyTo(v) {
-                v.x = this.x;
-                v.y = this.y;
-                return this;
-            }
-        }, {
-            key: 'copy',
-            value: function copy(v) {
-                this.x = v.x || 0;
-                this.y = v.y || 0;
-                return this;
-            }
-        }, {
-            key: 'lengthSq',
-            value: function lengthSq() {
-                return this.x * this.x + this.y * this.y || 0.00001;
-            }
-        }, {
-            key: 'length',
-            value: function length() {
-                return Math.sqrt(this.lengthSq());
-            }
-        }, {
-            key: 'normalize',
-            value: function normalize() {
-                var length = this.length();
-                this.x /= length;
-                this.y /= length;
-                return this;
-            }
-        }, {
-            key: 'setLength',
-            value: function setLength(length) {
-                this.normalize().multiply(length);
-                return this;
-            }
-        }, {
-            key: 'addVectors',
-            value: function addVectors(a, b) {
-                this.x = a.x + b.x;
-                this.y = a.y + b.y;
-                return this;
-            }
-        }, {
-            key: 'subVectors',
-            value: function subVectors(a, b) {
-                this.x = a.x - b.x;
-                this.y = a.y - b.y;
-                return this;
-            }
-        }, {
-            key: 'multiplyVectors',
-            value: function multiplyVectors(a, b) {
-                this.x = a.x * b.x;
-                this.y = a.y * b.y;
-                return this;
-            }
-        }, {
-            key: 'add',
-            value: function add(v) {
-                this.x += v.x;
-                this.y += v.y;
-                return this;
-            }
-        }, {
-            key: 'sub',
-            value: function sub(v) {
-                this.x -= v.x;
-                this.y -= v.y;
-                return this;
-            }
-        }, {
-            key: 'multiply',
-            value: function multiply(v) {
-                this.x *= v;
-                this.y *= v;
-                return this;
-            }
-        }, {
-            key: 'divide',
-            value: function divide(v) {
-                this.x /= v;
-                this.y /= v;
-                return this;
-            }
-        }, {
-            key: 'perpendicular',
-            value: function perpendicular() {
-                var tx = this.x,
-                    ty = this.y;
-                this.x = -ty;
-                this.y = tx;
-                return this;
-            }
-        }, {
-            key: 'lerp',
-            value: function lerp(v, alpha) {
-                this.x += (v.x - this.x) * alpha;
-                this.y += (v.y - this.y) * alpha;
-                return this;
-            }
-        }, {
-            key: 'deltaLerp',
-            value: function deltaLerp(v, alpha) {
-                var delta = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
+        function addListeners() {
+            window.addEventListener('focus', focus);
+            window.addEventListener('blur', blur);
+            window.addEventListener('keydown', keyDown);
+            window.addEventListener('keyup', keyUp);
+            window.addEventListener('keypress', keyPress);
+            window.addEventListener('resize', resize);
+            window.addEventListener('orientationchange', resize);
+            resize();
+        }
 
-                for (var i = 0; i < delta; i++) {
-                    this.lerp(v, alpha);
-                }return this;
+        function focus() {
+            if (last !== 'focus') {
+                last = 'focus';
+                Events.emitter.fire(Events.VISIBILITY, { type: 'focus' });
             }
-        }, {
-            key: 'interp',
-            value: function interp(v, alpha, ease) {
-                var dist = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 5000;
+        }
 
-                if (!this.calc) this.calc = new Vector2();
-                this.calc.subVectors(this, v);
-                var fn = Interpolation.convertEase(ease),
-                    a = fn(Math.clamp(Math.range(this.calc.lengthSq(), 0, dist * dist, 1, 0), 0, 1) * (alpha / 10));
-                return this.lerp(v, a);
+        function blur() {
+            if (last !== 'blur') {
+                last = 'blur';
+                Events.emitter.fire(Events.VISIBILITY, { type: 'blur' });
             }
-        }, {
-            key: 'setAngleRadius',
-            value: function setAngleRadius(a, r) {
-                this.x = Math.cos(a) * r;
-                this.y = Math.sin(a) * r;
-                return this;
-            }
-        }, {
-            key: 'addAngleRadius',
-            value: function addAngleRadius(a, r) {
-                this.x += Math.cos(a) * r;
-                this.y += Math.sin(a) * r;
-                return this;
-            }
-        }, {
-            key: 'dot',
-            value: function dot(a) {
-                var b = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this;
+        }
 
-                return a.x * b.x + a.y * b.y;
-            }
-        }, {
-            key: 'clone',
-            value: function clone() {
-                return new Vector2(this.x, this.y);
-            }
-        }, {
-            key: 'distanceTo',
-            value: function distanceTo(v, noSq) {
-                var dx = this.x - v.x,
-                    dy = this.y - v.y;
-                if (!noSq) return Math.sqrt(dx * dx + dy * dy);
-                return dx * dx + dy * dy;
-            }
-        }, {
-            key: 'solveAngle',
-            value: function solveAngle(a) {
-                var b = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : this;
+        function keyDown(e) {
+            Events.emitter.fire(Events.KEYBOARD_DOWN, e);
+        }
 
-                return Math.atan2(a.y - b.y, a.x - b.x);
-            }
-        }, {
-            key: 'equals',
-            value: function equals(v) {
-                return this.x === v.x && this.y === v.y;
-            }
-        }, {
-            key: 'toString',
-            value: function toString() {
-                var split = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : ' ';
+        function keyUp(e) {
+            Events.emitter.fire(Events.KEYBOARD_UP, e);
+        }
 
-                return this.x + split + this.y;
-            }
-        }]);
+        function keyPress(e) {
+            Events.emitter.fire(Events.KEYBOARD_PRESS, e);
+        }
 
-        return Vector2;
-    }();
+        function resize(e) {
+            self.size();
+            self.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+            Events.emitter.fire(Events.RESIZE, e);
+        }
 
-    /**
-     * Interaction helper class.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
+        this.destroy = () => {
+            if (Accelerometer.active) Accelerometer.stop();
+            if (Mouse.active) Mouse.stop();
+            if (WebAudio.active) WebAudio.stop();
+            window.removeEventListener('focus', focus);
+            window.removeEventListener('blur', blur);
+            window.removeEventListener('keydown', keyDown);
+            window.removeEventListener('keyup', keyUp);
+            window.removeEventListener('keypress', keyPress);
+            window.removeEventListener('resize', resize);
+            window.removeEventListener('orientationchange', resize);
+            return super.destroy();
+        };
+    }
+})();
 
-    var Interaction = function (_Component) {
-        _inherits(Interaction, _Component);
+/**
+ * 2D vector.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
-        function Interaction() {
-            var object = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : Stage;
+class Vector2 {
 
-            _classCallCheck(this, Interaction);
+    constructor(x, y) {
+        this.x = typeof x === 'number' ? x : 0;
+        this.y = typeof y === 'number' ? y : 0;
+        this.type = 'vector2';
+    }
 
-            if (!Interaction.initialized) {
-                Interaction.CLICK = 'interaction_click';
-                Interaction.START = 'interaction_start';
-                Interaction.MOVE = 'interaction_move';
-                Interaction.DRAG = 'interaction_drag';
-                Interaction.END = 'interaction_end';
+    set(x, y) {
+        this.x = x || 0;
+        this.y = y || 0;
+        return this;
+    }
 
-                var events = {
+    clear() {
+        this.x = 0;
+        this.y = 0;
+        return this;
+    }
+
+    copyTo(v) {
+        v.x = this.x;
+        v.y = this.y;
+        return this;
+    }
+
+    copy(v) {
+        this.x = v.x || 0;
+        this.y = v.y || 0;
+        return this;
+    }
+
+    lengthSq() {
+        return this.x * this.x + this.y * this.y || 0.00001;
+    }
+
+    length() {
+        return Math.sqrt(this.lengthSq());
+    }
+
+    normalize() {
+        const length = this.length();
+        this.x /= length;
+        this.y /= length;
+        return this;
+    }
+
+    setLength(length) {
+        this.normalize().multiplyScalar(length);
+        return this;
+    }
+
+    add(v) {
+        this.x += v.x;
+        this.y += v.y;
+        return this;
+    }
+
+    addScalar(s) {
+        this.x += s;
+        this.y += s;
+        return this;
+    }
+
+    addVectors(a, b) {
+        this.x = a.x + b.x;
+        this.y = a.y + b.y;
+        return this;
+    }
+
+    sub(v) {
+        this.x -= v.x;
+        this.y -= v.y;
+        return this;
+    }
+
+    subScalar(s) {
+        this.x -= s;
+        this.y -= s;
+        return this;
+    }
+
+    subVectors(a, b) {
+        this.x = a.x - b.x;
+        this.y = a.y - b.y;
+        return this;
+    }
+
+    multiply(v) {
+        this.x *= v.x;
+        this.y *= v.y;
+        return this;
+    }
+
+    multiplyScalar(s) {
+        this.x *= s;
+        this.y *= s;
+        return this;
+    }
+
+    multiplyVectors(a, b) {
+        this.x = a.x * b.x;
+        this.y = a.y * b.y;
+        return this;
+    }
+
+    divide(v) {
+        this.x /= v.x;
+        this.y /= v.y;
+        return this;
+    }
+
+    divideScalar(s) {
+        this.x /= s;
+        this.y /= s;
+        return this;
+    }
+
+    perpendicular() {
+        const tx = this.x,
+            ty = this.y;
+        this.x = -ty;
+        this.y = tx;
+        return this;
+    }
+
+    lerp(v, alpha) {
+        this.x += (v.x - this.x) * alpha;
+        this.y += (v.y - this.y) * alpha;
+        return this;
+    }
+
+    deltaLerp(v, alpha, delta = 1) {
+        for (let i = 0; i < delta; i++) this.lerp(v, alpha);
+        return this;
+    }
+
+    interp(v, alpha, ease, dist = 5000) {
+        if (!this.calc) this.calc = new Vector2();
+        this.calc.subVectors(this, v);
+        const fn = Interpolation.convertEase(ease),
+            a = fn(Math.clamp(Math.range(this.calc.lengthSq(), 0, dist * dist, 1, 0), 0, 1) * (alpha / 10));
+        return this.lerp(v, a);
+    }
+
+    setAngleRadius(a, r) {
+        this.x = Math.cos(a) * r;
+        this.y = Math.sin(a) * r;
+        return this;
+    }
+
+    addAngleRadius(a, r) {
+        this.x += Math.cos(a) * r;
+        this.y += Math.sin(a) * r;
+        return this;
+    }
+
+    dot(a, b = this) {
+        return a.x * b.x + a.y * b.y;
+    }
+
+    clone() {
+        return new Vector2(this.x, this.y);
+    }
+
+    distanceTo(v, noSq) {
+        const dx = this.x - v.x,
+            dy = this.y - v.y;
+        if (!noSq) return Math.sqrt(dx * dx + dy * dy);
+        return dx * dx + dy * dy;
+    }
+
+    solveAngle(a, b = this) {
+        return Math.atan2(a.y - b.y, a.x - b.x);
+    }
+
+    equals(v) {
+        return this.x === v.x && this.y === v.y;
+    }
+
+    toString(split = ' ') {
+        return this.x + split + this.y;
+    }
+}
+
+/**
+ * Interaction helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Interaction extends Component {
+
+    constructor(object = Stage) {
+
+        if (!Interaction.initialized) {
+            Interaction.CLICK = 'interaction_click';
+            Interaction.START = 'interaction_start';
+            Interaction.MOVE  = 'interaction_move';
+            Interaction.DRAG  = 'interaction_drag';
+            Interaction.END   = 'interaction_end';
+
+            const events = {
                     touchstart: [],
                     touchmove: [],
                     touchend: []
                 },
-                    touchStart = function touchStart(e) {
-                    return events.touchstart.forEach(function (callback) {
-                        return callback(e);
-                    });
-                },
-                    _touchMove = function _touchMove(e) {
-                    return events.touchmove.forEach(function (callback) {
-                        return callback(e);
-                    });
-                },
-                    _touchEnd = function _touchEnd(e) {
-                    return events.touchend.forEach(function (callback) {
-                        return callback(e);
-                    });
-                };
+                touchStart = e => events.touchstart.forEach(callback => callback(e)),
+                touchMove = e => events.touchmove.forEach(callback => callback(e)),
+                touchEnd = e => events.touchend.forEach(callback => callback(e));
 
-                Interaction.bind = function (event, callback) {
-                    return events[event].push(callback);
-                };
-                Interaction.unbind = function (event, callback) {
-                    return events[event].remove(callback);
-                };
+            Interaction.bind = (event, callback) => events[event].push(callback);
+            Interaction.unbind = (event, callback) => events[event].remove(callback);
 
-                Stage.bind('touchstart', touchStart);
-                Stage.bind('touchmove', _touchMove);
-                Stage.bind('touchend', _touchEnd);
-                Stage.bind('touchcancel', _touchEnd);
+            Stage.bind('touchstart', touchStart);
+            Stage.bind('touchmove', touchMove);
+            Stage.bind('touchend', touchEnd);
+            Stage.bind('touchcancel', touchEnd);
 
-                Interaction.initialized = true;
-            }
-
-            var _this19 = _possibleConstructorReturn(this, (Interaction.__proto__ || Object.getPrototypeOf(Interaction)).call(this));
-
-            var self = _this19;
-            var distance = void 0,
-                timeDown = void 0,
-                timeMove = void 0;
-
-            _this19.x = 0;
-            _this19.y = 0;
-            _this19.hold = new Vector2();
-            _this19.last = new Vector2();
-            _this19.delta = new Vector2();
-            _this19.move = new Vector2();
-            _this19.velocity = new Vector2();
-
-            addListeners();
-
-            function addListeners() {
-                if (object === Stage) Interaction.bind('touchstart', down);else object.bind('touchstart', down);
-                Interaction.bind('touchmove', move);
-                Interaction.bind('touchend', up);
-            }
-
-            function down(e) {
-                self.isTouching = true;
-                self.x = e.x;
-                self.y = e.y;
-                self.hold.x = self.last.x = e.x;
-                self.hold.y = self.last.y = e.y;
-                self.delta.x = self.move.x = self.velocity.x = 0;
-                self.delta.y = self.move.y = self.velocity.y = 0;
-                distance = 0;
-                self.events.fire(Interaction.START, e, true);
-                timeDown = timeMove = Render.TIME;
-            }
-
-            function move(e) {
-                if (self.isTouching) {
-                    self.move.x = e.x - self.hold.x;
-                    self.move.y = e.y - self.hold.y;
-                }
-                self.x = e.x;
-                self.y = e.y;
-                self.delta.x = e.x - self.last.x;
-                self.delta.y = e.y - self.last.y;
-                self.last.x = e.x;
-                self.last.y = e.y;
-                distance += self.delta.length();
-                var delta = Math.max(0.001, Render.TIME - (timeMove || Render.TIME));
-                timeMove = Render.TIME;
-                self.velocity.x = Math.abs(self.delta.x) / delta;
-                self.velocity.y = Math.abs(self.delta.y) / delta;
-                self.events.fire(Interaction.MOVE, e, true);
-                if (self.isTouching) self.events.fire(Interaction.DRAG, e, true);
-            }
-
-            function up(e) {
-                if (!self.isTouching) return;
-                self.isTouching = false;
-                self.move.x = 0;
-                self.move.y = 0;
-                var delta = Math.max(0.001, Render.TIME - (timeMove || Render.TIME));
-                if (delta > 100) {
-                    self.delta.x = 0;
-                    self.delta.y = 0;
-                }
-                self.events.fire(Interaction.END, e, true);
-                if (distance < 20 && Render.TIME - timeDown < 2000) self.events.fire(Interaction.CLICK, e, true);
-            }
-
-            _this19.destroy = function () {
-                Interaction.unbind('touchstart', down);
-                Interaction.unbind('touchmove', move);
-                Interaction.unbind('touchend', up);
-                if (object !== Stage && object.unbind) object.unbind('touchstart', down);
-                return _get(Interaction.prototype.__proto__ || Object.getPrototypeOf(Interaction.prototype), 'destroy', _this19).call(_this19);
-            };
-            return _this19;
+            Interaction.initialized = true;
         }
 
-        return Interaction;
-    }(Component);
+        super();
+        const self = this;
+        let distance, timeDown, timeMove;
 
-    /**
-     * Asset loader with promise method.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
+        this.x = 0;
+        this.y = 0;
+        this.hold = new Vector2();
+        this.last = new Vector2();
+        this.delta = new Vector2();
+        this.move = new Vector2();
+        this.velocity = new Vector2();
 
-    var AssetLoader = function (_Component2) {
-        _inherits(AssetLoader, _Component2);
+        addListeners();
 
-        function AssetLoader(assets, callback) {
-            _classCallCheck(this, AssetLoader);
+        function addListeners() {
+            if (object === Stage) Interaction.bind('touchstart', down);
+            else object.bind('touchstart', down);
+            Interaction.bind('touchmove', move);
+            Interaction.bind('touchend', up);
+        }
 
-            if (Array.isArray(assets)) {
-                assets = function () {
-                    var keys = assets.map(function (path) {
-                        return Utils.basename(path);
-                    });
-                    return keys.reduce(function (o, k, i) {
-                        o[k] = assets[i];
-                        return o;
-                    }, {});
-                }();
+        function down(e) {
+            self.isTouching = true;
+            self.x = e.x;
+            self.y = e.y;
+            self.hold.x = self.last.x = e.x;
+            self.hold.y = self.last.y = e.y;
+            self.delta.x = self.move.x = self.velocity.x = 0;
+            self.delta.y = self.move.y = self.velocity.y = 0;
+            distance = 0;
+            self.events.fire(Interaction.START, e, true);
+            timeDown = timeMove = Render.TIME;
+        }
+
+        function move(e) {
+            if (self.isTouching) {
+                self.move.x = e.x - self.hold.x;
+                self.move.y = e.y - self.hold.y;
             }
+            self.x = e.x;
+            self.y = e.y;
+            self.delta.x = e.x - self.last.x;
+            self.delta.y = e.y - self.last.y;
+            self.last.x = e.x;
+            self.last.y = e.y;
+            distance += self.delta.length();
+            const delta = Math.max(0.001, Render.TIME - (timeMove || Render.TIME));
+            timeMove = Render.TIME;
+            self.velocity.x = Math.abs(self.delta.x) / delta;
+            self.velocity.y = Math.abs(self.delta.y) / delta;
+            self.events.fire(Interaction.MOVE, e, true);
+            if (self.isTouching) self.events.fire(Interaction.DRAG, e, true);
+        }
 
-            var _this20 = _possibleConstructorReturn(this, (AssetLoader.__proto__ || Object.getPrototypeOf(AssetLoader)).call(this));
+        function up(e) {
+            if (!self.isTouching) return;
+            self.isTouching = false;
+            self.move.x = 0;
+            self.move.y = 0;
+            const delta = Math.max(0.001, Render.TIME - (timeMove || Render.TIME));
+            if (delta > 100) {
+                self.delta.x = 0;
+                self.delta.y = 0;
+            }
+            self.events.fire(Interaction.END, e, true);
+            if (distance < 20 && Render.TIME - timeDown < 2000) self.events.fire(Interaction.CLICK, e, true);
+        }
 
-            var self = _this20;
-            var total = Object.keys(assets).length;
-            var loaded = 0;
+        this.destroy = () => {
+            Interaction.unbind('touchstart', down);
+            Interaction.unbind('touchmove', move);
+            Interaction.unbind('touchend', up);
+            if (object !== Stage && object.unbind) object.unbind('touchstart', down);
+            return super.destroy();
+        };
+    }
+}
 
-            for (var key in assets) {
-                loadAsset(key, assets[key]);
-            }function loadAsset(key, asset) {
-                var ext = Utils.extension(asset);
-                if (ext.includes(['jpg', 'jpeg', 'png', 'gif', 'svg'])) {
-                    Assets.createImage(asset, assetLoaded);
-                    return;
-                }
-                if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
-                    if (!window.AudioContext || !window.WebAudio) return assetLoaded();
-                    window.WebAudio.createSound(key, asset, assetLoaded);
-                    return;
-                }
-                window.get(Assets.getPath(asset), {
-                    credentials: 'include'
-                }).then(function (data) {
-                    if (ext === 'json') Assets.storeData(key, data);
-                    if (ext === 'js') window.eval(data.replace('use strict', ''));
-                    assetLoaded();
-                }).catch(function () {
-                    assetLoaded();
+/**
+ * Asset loader with promise method.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class AssetLoader extends Component {
+
+    constructor(assets, callback) {
+
+        if (Array.isArray(assets)) {
+            assets = (() => {
+                const keys = assets.map(path => {
+                    return Utils.basename(path);
                 });
-            }
-
-            function assetLoaded() {
-                self.percent = ++loaded / total;
-                self.events.fire(Events.PROGRESS, { percent: self.percent }, true);
-                if (loaded === total) complete();
-            }
-
-            function complete() {
-                self.events.fire(Events.COMPLETE, null, true);
-                if (callback) callback();
-            }
-            return _this20;
+                return keys.reduce((o, k, i) => {
+                    o[k] = assets[i];
+                    return o;
+                }, {});
+            })();
         }
 
-        _createClass(AssetLoader, null, [{
-            key: 'loadAssets',
-            value: function loadAssets(assets, callback) {
-                var promise = Promise.create();
-                if (!callback) callback = promise.resolve;
-                promise.loader = new AssetLoader(assets, callback);
-                return promise;
+        super();
+        const self = this;
+        const total = Object.keys(assets).length;
+        let loaded = 0;
+
+        for (let key in assets) loadAsset(key, assets[key]);
+
+        function loadAsset(key, path) {
+            const ext = Utils.extension(path);
+            if (ext.includes(['jpg', 'jpeg', 'png', 'gif', 'svg'])) {
+                Assets.createImage(path, assetLoaded);
+                return;
             }
-        }]);
-
-        return AssetLoader;
-    }(Component);
-
-    /**
-     * Loader helper class.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Font loader with promise method.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * State dispatcher.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Storage helper class.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Canvas values.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var CanvasValues = function () {
-        function CanvasValues(style) {
-            _classCallCheck(this, CanvasValues);
-
-            this.styles = {};
-            if (!style) this.data = new Float32Array(6);else this.styled = false;
+            if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
+                if (!window.AudioContext || !window.WebAudio) return assetLoaded();
+                window.WebAudio.createSound(key, path, assetLoaded);
+                return;
+            }
+            window.get(Assets.getPath(path), Assets.OPTIONS).then(data => {
+                if (ext === 'json') Assets.storeData(key, data);
+                if (ext === 'js') window.eval(data.replace('use strict', ''));
+                assetLoaded();
+            }).catch(() => {
+                assetLoaded();
+            });
         }
 
-        _createClass(CanvasValues, [{
-            key: 'setTRSA',
-            value: function setTRSA(x, y, r, sx, sy, a) {
-                var m = this.data;
-                m[0] = x;
-                m[1] = y;
-                m[2] = r;
-                m[3] = sx;
-                m[4] = sy;
-                m[5] = a;
-            }
-        }, {
-            key: 'calculate',
-            value: function calculate(values) {
-                var v = values.data,
-                    m = this.data;
-                m[0] = m[0] + v[0];
-                m[1] = m[1] + v[1];
-                m[2] = m[2] + v[2];
-                m[3] = m[3] * v[3];
-                m[4] = m[4] * v[4];
-                m[5] = m[5] * v[5];
-            }
-        }, {
-            key: 'calculateStyle',
-            value: function calculateStyle(parent) {
-                if (!parent.styled) return false;
-                this.styled = true;
-                var values = parent.values;
-                for (var key in values) {
-                    if (!this.styles[key]) this.styles[key] = values[key];
-                }
-            }
-        }, {
-            key: 'shadowOffsetX',
-            set: function set(val) {
-                this.styled = true;
-                this.styles.shadowOffsetX = val;
-            },
-            get: function get() {
-                return this.styles.shadowOffsetX;
-            }
-        }, {
-            key: 'shadowOffsetY',
-            set: function set(val) {
-                this.styled = true;
-                this.styles.shadowOffsetY = val;
-            },
-            get: function get() {
-                return this.styles.shadowOffsetY;
-            }
-        }, {
-            key: 'shadowBlur',
-            set: function set(val) {
-                this.styled = true;
-                this.styles.shadowBlur = val;
-            },
-            get: function get() {
-                return this.styles.shadowBlur;
-            }
-        }, {
-            key: 'shadowColor',
-            set: function set(val) {
-                this.styled = true;
-                this.styles.shadowColor = val;
-            },
-            get: function get() {
-                return this.styles.shadowColor;
-            }
-        }, {
-            key: 'values',
-            get: function get() {
-                return this.styles;
-            }
-        }]);
-
-        return CanvasValues;
-    }();
-
-    /**
-     * Canvas object.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    var CanvasObject = function () {
-        function CanvasObject() {
-            _classCallCheck(this, CanvasObject);
-
-            this.visible = true;
-            this.blendMode = 'source-over';
-            this.x = 0;
-            this.y = 0;
-            this.px = 0;
-            this.py = 0;
-            this.clipX = 0;
-            this.clipY = 0;
-            this.clipWidth = 0;
-            this.clipHeight = 0;
-            this.width = 0;
-            this.height = 0;
-            this.rotation = 0;
-            this.scale = 1;
-            this.opacity = 1;
-            this.values = new CanvasValues();
-            this.styles = new CanvasValues(true);
-            this.children = [];
+        function assetLoaded() {
+            self.percent = ++loaded / total;
+            self.events.fire(Events.PROGRESS, { percent: self.percent }, true);
+            if (loaded === total) complete();
         }
 
-        _createClass(CanvasObject, [{
-            key: 'updateValues',
-            value: function updateValues() {
-                this.values.setTRSA(this.x, this.y, Math.radians(this.rotation), this.scaleX || this.scale, this.scaleY || this.scale, this.opacity);
-                if (this.parent.values) this.values.calculate(this.parent.values);
-                if (this.parent.styles) this.styles.calculateStyle(this.parent.styles);
-            }
-        }, {
-            key: 'render',
-            value: function render(override) {
-                if (!this.visible) return false;
-                this.updateValues();
-                if (this.draw) this.draw(override);
-                for (var i = 0; i < this.children.length; i++) {
-                    this.children[i].render(override);
-                }
-            }
-        }, {
-            key: 'startDraw',
-            value: function startDraw() {
-                var ox = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-                var oy = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-                var override = arguments[2];
+        function complete() {
+            self.events.fire(Events.COMPLETE, null, true);
+            if (callback) callback();
+        }
+    }
 
-                var context = this.canvas.context,
-                    v = this.values.data,
-                    x = v[0] + ox,
-                    y = v[1] + oy;
-                context.save();
-                if (!override) context.globalCompositeOperation = this.blendMode;
-                context.translate(x, y);
-                context.rotate(v[2]);
-                context.scale(v[3], v[4]);
-                context.globalAlpha = v[5];
-                if (this.styles.styled) {
-                    var values = this.styles.values;
-                    for (var key in values) {
-                        context[key] = values[key];
-                    }
-                }
-            }
-        }, {
-            key: 'endDraw',
-            value: function endDraw() {
-                this.canvas.context.restore();
-            }
-        }, {
-            key: 'add',
-            value: function add(child) {
-                child.setCanvas(this.canvas);
-                child.parent = this;
-                this.children.push(child);
-                child.z = this.children.length;
-            }
-        }, {
-            key: 'setCanvas',
-            value: function setCanvas(canvas) {
-                this.canvas = canvas;
-                for (var i = 0; i < this.children.length; i++) {
-                    this.children[i].setCanvas(canvas);
-                }
-            }
-        }, {
-            key: 'remove',
-            value: function remove(child) {
-                child.canvas = null;
-                child.parent = null;
-                this.children.remove(child);
-            }
-        }, {
-            key: 'isMask',
-            value: function isMask() {
-                var obj = this;
-                while (obj) {
-                    if (obj.masked) return true;
-                    obj = obj.parent;
-                }
-                return false;
-            }
-        }, {
-            key: 'unmask',
-            value: function unmask() {
-                this.masked.mask(null);
-                this.masked = null;
-            }
-        }, {
-            key: 'setZ',
-            value: function setZ(z) {
-                this.z = z;
-                this.parent.children.sort(function (a, b) {
-                    return a.z - b.z;
-                });
-            }
-        }, {
-            key: 'follow',
-            value: function follow(object) {
-                this.x = object.x;
-                this.y = object.y;
-                this.px = object.px;
-                this.py = object.py;
-                this.clipX = object.clipX;
-                this.clipY = object.clipY;
-                this.clipWidth = object.clipWidth;
-                this.clipHeight = object.clipHeight;
-                this.width = object.width;
-                this.height = object.height;
-                this.rotation = object.rotation;
-                this.scale = object.scale;
-                this.scaleX = object.scaleX || object.scale;
-                this.scaleY = object.scaleY || object.scale;
-                return this;
-            }
-        }, {
-            key: 'visible',
-            value: function visible() {
-                this.visible = true;
-                return this;
-            }
-        }, {
-            key: 'invisible',
-            value: function invisible() {
-                this.visible = false;
-                return this;
-            }
-        }, {
-            key: 'transform',
-            value: function transform(props) {
-                for (var key in props) {
-                    if (typeof props[key] === 'number') this[key] = props[key];
-                }return this;
-            }
-        }, {
-            key: 'transformPoint',
-            value: function transformPoint(x, y) {
-                this.px = typeof x === 'number' ? x : this.width * (parseFloat(x) / 100);
-                this.py = typeof y === 'number' ? y : this.height * (parseFloat(y) / 100);
-                return this;
-            }
-        }, {
-            key: 'clip',
-            value: function clip(x, y, w, h) {
-                this.clipX = x;
-                this.clipY = y;
-                this.clipWidth = w;
-                this.clipHeight = h;
-                return this;
-            }
-        }, {
-            key: 'destroy',
-            value: function destroy() {
-                if (this.children) for (var i = this.children.length - 1; i >= 0; i--) {
-                    this.children[i].destroy();
-                }return Utils.nullObject(this);
-            }
-        }]);
+    static loadAssets(assets, callback) {
+        const promise = Promise.create();
+        if (!callback) callback = promise.resolve;
+        promise.loader = new AssetLoader(assets, callback);
+        return promise;
+    }
+}
 
-        return CanvasObject;
-    }();
+/**
+ * Loader helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
-    /**
-     * Canvas graphics.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
+/**
+ * Font loader with promise method.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
-    var CanvasGraphics = function (_CanvasObject) {
-        _inherits(CanvasGraphics, _CanvasObject);
+/**
+ * State dispatcher.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
-        function CanvasGraphics() {
-            var w = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-            var h = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : w;
+/**
+ * Storage helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
-            _classCallCheck(this, CanvasGraphics);
+/**
+ * Canvas values.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
-            var _this21 = _possibleConstructorReturn(this, (CanvasGraphics.__proto__ || Object.getPrototypeOf(CanvasGraphics)).call(this));
+class CanvasValues {
 
-            var self = _this21;
-            var draw = [],
-                mask = void 0;
+    constructor(style) {
+        this.styles = {};
+        if (!style) this.data = new Float32Array(6);
+        else this.styled = false;
+    }
 
-            _this21.width = w;
-            _this21.height = h;
-            _this21.props = {};
+    setTRSA(x, y, r, sx, sy, a) {
+        const m = this.data;
+        m[0] = x;
+        m[1] = y;
+        m[2] = r;
+        m[3] = sx;
+        m[4] = sy;
+        m[5] = a;
+    }
 
-            function setProperties(context) {
-                for (var key in self.props) {
-                    context[key] = self.props[key];
-                }
+    calculate(values) {
+        const v = values.data,
+            m = this.data;
+        m[0] = m[0] + v[0];
+        m[1] = m[1] + v[1];
+        m[2] = m[2] + v[2];
+        m[3] = m[3] * v[3];
+        m[4] = m[4] * v[4];
+        m[5] = m[5] * v[5];
+    }
+
+    calculateStyle(parent) {
+        if (!parent.styled) return false;
+        this.styled = true;
+        const values = parent.values;
+        for (let key in values) if (!this.styles[key]) this.styles[key] = values[key];
+    }
+
+    set shadowOffsetX(val) {
+        this.styled = true;
+        this.styles.shadowOffsetX = val;
+    }
+
+    get shadowOffsetX() {
+        return this.styles.shadowOffsetX;
+    }
+
+    set shadowOffsetY(val) {
+        this.styled = true;
+        this.styles.shadowOffsetY = val;
+    }
+
+    get shadowOffsetY() {
+        return this.styles.shadowOffsetY;
+    }
+
+    set shadowBlur(val) {
+        this.styled = true;
+        this.styles.shadowBlur = val;
+    }
+
+    get shadowBlur() {
+        return this.styles.shadowBlur;
+    }
+
+    set shadowColor(val) {
+        this.styled = true;
+        this.styles.shadowColor = val;
+    }
+
+    get shadowColor() {
+        return this.styles.shadowColor;
+    }
+
+    get values() {
+        return this.styles;
+    }
+}
+
+/**
+ * Canvas object.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class CanvasObject {
+
+    constructor() {
+        this.visible = true;
+        this.blendMode = 'source-over';
+        this.x = 0;
+        this.y = 0;
+        this.px = 0;
+        this.py = 0;
+        this.clipX = 0;
+        this.clipY = 0;
+        this.clipWidth = 0;
+        this.clipHeight = 0;
+        this.width = 0;
+        this.height = 0;
+        this.rotation = 0;
+        this.scale = 1;
+        this.opacity = 1;
+        this.values = new CanvasValues();
+        this.styles = new CanvasValues(true);
+        this.children = [];
+    }
+
+    updateValues() {
+        this.values.setTRSA(this.x, this.y, Math.radians(this.rotation), this.scaleX || this.scale, this.scaleY || this.scale, this.opacity);
+        if (this.parent.values) this.values.calculate(this.parent.values);
+        if (this.parent.styles) this.styles.calculateStyle(this.parent.styles);
+    }
+
+    render(override) {
+        if (!this.visible) return false;
+        this.updateValues();
+        if (this.draw) this.draw(override);
+        for (let i = 0; i < this.children.length; i++) this.children[i].render(override);
+    }
+
+    startDraw(ox = 0, oy = 0, override) {
+        const context = this.canvas.context,
+            v = this.values.data,
+            x = v[0] + ox,
+            y = v[1] + oy;
+        context.save();
+        if (!override) context.globalCompositeOperation = this.blendMode;
+        context.translate(x, y);
+        context.rotate(v[2]);
+        context.scale(v[3], v[4]);
+        context.globalAlpha = v[5];
+        if (this.styles.styled) {
+            const values = this.styles.values;
+            for (let key in values) context[key] = values[key];
+        }
+    }
+
+    endDraw() {
+        this.canvas.context.restore();
+    }
+
+    add(child) {
+        child.setCanvas(this.canvas);
+        child.parent = this;
+        this.children.push(child);
+        child.z = this.children.length;
+    }
+
+    setCanvas(canvas) {
+        this.canvas = canvas;
+        for (let i = 0; i < this.children.length; i++) this.children[i].setCanvas(canvas);
+    }
+
+    remove(child) {
+        child.canvas = null;
+        child.parent = null;
+        this.children.remove(child);
+    }
+
+    isMask() {
+        let obj = this;
+        while (obj) {
+            if (obj.masked) return true;
+            obj = obj.parent;
+        }
+        return false;
+    }
+
+    unmask() {
+        this.masked.mask(null);
+        this.masked = null;
+    }
+
+    setZ(z) {
+        this.z = z;
+        this.parent.children.sort((a, b) => {
+            return a.z - b.z;
+        });
+    }
+
+    follow(object) {
+        this.x = object.x;
+        this.y = object.y;
+        this.px = object.px;
+        this.py = object.py;
+        this.clipX = object.clipX;
+        this.clipY = object.clipY;
+        this.clipWidth = object.clipWidth;
+        this.clipHeight = object.clipHeight;
+        this.width = object.width;
+        this.height = object.height;
+        this.rotation = object.rotation;
+        this.scale = object.scale;
+        this.scaleX = object.scaleX || object.scale;
+        this.scaleY = object.scaleY || object.scale;
+        return this;
+    }
+
+    visible() {
+        this.visible = true;
+        return this;
+    }
+
+    invisible() {
+        this.visible = false;
+        return this;
+    }
+
+    transform(props) {
+        for (let key in props) if (typeof props[key] === 'number') this[key] = props[key];
+        return this;
+    }
+
+    transformPoint(x, y) {
+        this.px = typeof x === 'number' ? x : this.width * (parseFloat(x) / 100);
+        this.py = typeof y === 'number' ? y : this.height * (parseFloat(y) / 100);
+        return this;
+    }
+
+    clip(x, y, w, h) {
+        this.clipX = x;
+        this.clipY = y;
+        this.clipWidth = w;
+        this.clipHeight = h;
+        return this;
+    }
+
+    destroy() {
+        if (this.children) for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
+        return Utils.nullObject(this);
+    }
+}
+
+/**
+ * Canvas graphics.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class CanvasGraphics extends CanvasObject {
+
+    constructor(w = 0, h = w) {
+        super();
+        const self = this;
+        let draw = [],
+            mask;
+
+        this.width = w;
+        this.height = h;
+        this.props = {};
+
+        function setProperties(context) {
+            for (let key in self.props) context[key] = self.props[key];
+        }
+
+        this.draw = override => {
+            if (this.isMask() && !override) return false;
+            const context = this.canvas.context;
+            this.startDraw(this.px, this.py, override);
+            setProperties(context);
+            if (this.clipWidth && this.clipHeight) {
+                context.beginPath();
+                context.rect(this.clipX, this.clipY, this.clipWidth, this.clipHeight);
+                context.clip();
             }
+            for (let i = 0; i < draw.length; i++) {
+                const cmd = draw[i];
+                if (!cmd) continue;
+                const fn = cmd.shift();
+                context[fn].apply(context, cmd);
+                cmd.unshift(fn);
+            }
+            this.endDraw();
+            if (mask) {
+                context.globalCompositeOperation = mask.blendMode;
+                mask.render(true);
+            }
+        };
 
-            _this21.draw = function (override) {
-                if (_this21.isMask() && !override) return false;
-                var context = _this21.canvas.context;
-                _this21.startDraw(_this21.px, _this21.py, override);
-                setProperties(context);
-                if (_this21.clipWidth && _this21.clipHeight) {
-                    context.beginPath();
-                    context.rect(_this21.clipX, _this21.clipY, _this21.clipWidth, _this21.clipHeight);
-                    context.clip();
-                }
-                for (var i = 0; i < draw.length; i++) {
-                    var cmd = draw[i];
-                    if (!cmd) continue;
-                    var fn = cmd.shift();
-                    context[fn].apply(context, cmd);
-                    cmd.unshift(fn);
-                }
-                _this21.endDraw();
-                if (mask) {
-                    context.globalCompositeOperation = mask.blendMode;
-                    mask.render(true);
-                }
-            };
+        this.clear = () => {
+            for (let i = draw.length - 1; i >= 0; i--) draw[i].length = 0;
+            draw.length = 0;
+        };
 
-            _this21.clear = function () {
-                for (var i = draw.length - 1; i >= 0; i--) {
+        this.arc = (x = 0, y = 0, radius = this.radius || this.width / 2, startAngle = 0, endAngle = Math.PI * 2, anti = false) => {
+            if (x && !y) {
+                startAngle = Math.radians(-90), endAngle = x;
+                x = 0;
+                y = 0;
+            }
+            draw.push(['arc', x, y, radius, startAngle, endAngle, anti]);
+        };
+
+        this.quadraticCurveTo = (cpx, cpy, x, y) => {
+            draw.push(['quadraticCurveTo', cpx, cpy, x, y]);
+        };
+
+        this.bezierCurveTo = (cp1x, cp1y, cp2x, cp2y, x, y) => {
+            draw.push(['bezierCurveTo', cp1x, cp1y, cp2x, cp2y, x, y]);
+        };
+
+        this.fillRect = (x, y, w, h) => {
+            draw.push(['fillRect', x, y, w, h]);
+        };
+
+        this.clearRect = (x, y, w, h) => {
+            draw.push(['clearRect', x, y, w, h]);
+        };
+
+        this.strokeRect = (x, y, w, h) => {
+            draw.push(['strokeRect', x, y, w, h]);
+        };
+
+        this.moveTo = (x, y) => {
+            draw.push(['moveTo', x, y]);
+        };
+
+        this.lineTo = (x, y) => {
+            draw.push(['lineTo', x, y]);
+        };
+
+        this.stroke = () => {
+            draw.push(['stroke']);
+        };
+
+        this.fill = () => {
+            if (!mask) draw.push(['fill']);
+        };
+
+        this.beginPath = () => {
+            draw.push(['beginPath']);
+        };
+
+        this.closePath = () => {
+            draw.push(['closePath']);
+        };
+
+        this.fillText = (text, x = 0, y = 0) => {
+            draw.push(['fillText', text, x, y]);
+        };
+
+        this.strokeText = (text, x = 0, y = 0) => {
+            draw.push(['strokeText', text, x, y]);
+        };
+
+        this.setLineDash = value => {
+            draw.push(['setLineDash', value]);
+        };
+
+        this.drawImage = (img, sx = 0, sy = 0, sWidth = img.width, sHeight = img.height, dx = 0, dy = 0, dWidth = img.width, dHeight = img.height) => {
+            draw.push(['drawImage', img, sx, sy, sWidth, sHeight, dx + -this.px, dy + -this.py, dWidth, dHeight]);
+        };
+
+        this.mask = object => {
+            if (!object) return mask = null;
+            mask = object;
+            object.masked = this;
+            for (let i = 0; i < draw.length; i++) {
+                if (draw[i][0] === 'fill' || draw[i][0] === 'stroke') {
                     draw[i].length = 0;
-                }draw.length = 0;
-            };
-
-            _this21.arc = function () {
-                var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-                var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-                var radius = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _this21.radius || _this21.width / 2;
-                var startAngle = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : 0;
-                var endAngle = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : Math.PI * 2;
-                var anti = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : false;
-
-                if (x && !y) {
-                    startAngle = Math.radians(-90), endAngle = x;
-                    x = 0;
-                    y = 0;
+                    draw.splice(i, 1);
                 }
-                draw.push(['arc', x, y, radius, startAngle, endAngle, anti]);
-            };
-
-            _this21.quadraticCurveTo = function (cpx, cpy, x, y) {
-                draw.push(['quadraticCurveTo', cpx, cpy, x, y]);
-            };
-
-            _this21.bezierCurveTo = function (cp1x, cp1y, cp2x, cp2y, x, y) {
-                draw.push(['bezierCurveTo', cp1x, cp1y, cp2x, cp2y, x, y]);
-            };
-
-            _this21.fillRect = function (x, y, w, h) {
-                draw.push(['fillRect', x, y, w, h]);
-            };
-
-            _this21.clearRect = function (x, y, w, h) {
-                draw.push(['clearRect', x, y, w, h]);
-            };
-
-            _this21.strokeRect = function (x, y, w, h) {
-                draw.push(['strokeRect', x, y, w, h]);
-            };
-
-            _this21.moveTo = function (x, y) {
-                draw.push(['moveTo', x, y]);
-            };
-
-            _this21.lineTo = function (x, y) {
-                draw.push(['lineTo', x, y]);
-            };
-
-            _this21.stroke = function () {
-                draw.push(['stroke']);
-            };
-
-            _this21.fill = function () {
-                if (!mask) draw.push(['fill']);
-            };
-
-            _this21.beginPath = function () {
-                draw.push(['beginPath']);
-            };
-
-            _this21.closePath = function () {
-                draw.push(['closePath']);
-            };
-
-            _this21.fillText = function (text) {
-                var x = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-                var y = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
-
-                draw.push(['fillText', text, x, y]);
-            };
-
-            _this21.strokeText = function (text) {
-                var x = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-                var y = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
-
-                draw.push(['strokeText', text, x, y]);
-            };
-
-            _this21.setLineDash = function (value) {
-                draw.push(['setLineDash', value]);
-            };
-
-            _this21.drawImage = function (img) {
-                var sx = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-                var sy = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 0;
-                var sWidth = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : img.width;
-                var sHeight = arguments.length > 4 && arguments[4] !== undefined ? arguments[4] : img.height;
-                var dx = arguments.length > 5 && arguments[5] !== undefined ? arguments[5] : 0;
-                var dy = arguments.length > 6 && arguments[6] !== undefined ? arguments[6] : 0;
-                var dWidth = arguments.length > 7 && arguments[7] !== undefined ? arguments[7] : img.width;
-                var dHeight = arguments.length > 8 && arguments[8] !== undefined ? arguments[8] : img.height;
-
-                draw.push(['drawImage', img, sx, sy, sWidth, sHeight, dx + -_this21.px, dy + -_this21.py, dWidth, dHeight]);
-            };
-
-            _this21.mask = function (object) {
-                if (!object) return mask = null;
-                mask = object;
-                object.masked = _this21;
-                for (var i = 0; i < draw.length; i++) {
-                    if (draw[i][0] === 'fill' || draw[i][0] === 'stroke') {
-                        draw[i].length = 0;
-                        draw.splice(i, 1);
-                    }
-                }
-            };
-
-            _this21.clone = function () {
-                var object = new CanvasGraphics(_this21.width, _this21.height);
-                object.visible = _this21.visible;
-                object.blendMode = _this21.blendMode;
-                object.opacity = _this21.opacity;
-                object.follow(_this21);
-                object.props = Utils.cloneObject(_this21.props);
-                object.setDraw(Utils.cloneArray(draw));
-                return object;
-            };
-
-            _this21.setDraw = function (array) {
-                draw = array;
-            };
-            return _this21;
-        }
-
-        _createClass(CanvasGraphics, [{
-            key: 'strokeStyle',
-            set: function set(val) {
-                this.props.strokeStyle = val;
-            },
-            get: function get() {
-                return this.props.strokeStyle;
             }
-        }, {
-            key: 'fillStyle',
-            set: function set(val) {
-                this.props.fillStyle = val;
-            },
-            get: function get() {
-                return this.props.fillStyle;
-            }
-        }, {
-            key: 'lineWidth',
-            set: function set(val) {
-                this.props.lineWidth = val;
-            },
-            get: function get() {
-                return this.props.lineWidth;
-            }
-        }, {
-            key: 'lineCap',
-            set: function set(val) {
-                this.props.lineCap = val;
-            },
-            get: function get() {
-                return this.props.lineCap;
-            }
-        }, {
-            key: 'lineDashOffset',
-            set: function set(val) {
-                this.props.lineDashOffset = val;
-            },
-            get: function get() {
-                return this.props.lineDashOffset;
-            }
-        }, {
-            key: 'lineJoin',
-            set: function set(val) {
-                this.props.lineJoin = val;
-            },
-            get: function get() {
-                return this.props.lineJoin;
-            }
-        }, {
-            key: 'miterLimit',
-            set: function set(val) {
-                this.props.miterLimit = val;
-            },
-            get: function get() {
-                return this.props.miterLimit;
-            }
-        }, {
-            key: 'font',
-            set: function set(val) {
-                this.props.font = val;
-            },
-            get: function get() {
-                return this.props.font;
-            }
-        }, {
-            key: 'textAlign',
-            set: function set(val) {
-                this.props.textAlign = val;
-            },
-            get: function get() {
-                return this.props.textAlign;
-            }
-        }, {
-            key: 'textBaseline',
-            set: function set(val) {
-                this.props.textBaseline = val;
-            },
-            get: function get() {
-                return this.props.textBaseline;
-            }
-        }]);
+        };
 
-        return CanvasGraphics;
-    }(CanvasObject);
+        this.clone = () => {
+            const object = new CanvasGraphics(this.width, this.height);
+            object.visible = this.visible;
+            object.blendMode = this.blendMode;
+            object.opacity = this.opacity;
+            object.follow(this);
+            object.props = Utils.cloneObject(this.props);
+            object.setDraw(Utils.cloneArray(draw));
+            return object;
+        };
 
-    /**
-     * Canvas interface.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
+        this.setDraw = array => {
+            draw = array;
+        };
+    }
 
-    var Canvas = function Canvas(w) {
-        var h = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : w;
+    set strokeStyle(val) {
+        this.props.strokeStyle = val;
+    }
 
-        var _this22 = this;
+    get strokeStyle() {
+        return this.props.strokeStyle;
+    }
 
-        var retina = arguments[2];
-        var whiteAlpha = arguments[3];
+    set fillStyle(val) {
+        this.props.fillStyle = val;
+    }
 
-        _classCallCheck(this, Canvas);
+    get fillStyle() {
+        return this.props.fillStyle;
+    }
+
+    set lineWidth(val) {
+        this.props.lineWidth = val;
+    }
+
+    get lineWidth() {
+        return this.props.lineWidth;
+    }
+
+    set lineCap(val) {
+        this.props.lineCap = val;
+    }
+
+    get lineCap() {
+        return this.props.lineCap;
+    }
+
+    set lineDashOffset(val) {
+        this.props.lineDashOffset = val;
+    }
+
+    get lineDashOffset() {
+        return this.props.lineDashOffset;
+    }
+
+    set lineJoin(val) {
+        this.props.lineJoin = val;
+    }
+
+    get lineJoin() {
+        return this.props.lineJoin;
+    }
+
+    set miterLimit(val) {
+        this.props.miterLimit = val;
+    }
+
+    get miterLimit() {
+        return this.props.miterLimit;
+    }
+
+    set font(val) {
+        this.props.font = val;
+    }
+
+    get font() {
+        return this.props.font;
+    }
+
+    set textAlign(val) {
+        this.props.textAlign = val;
+    }
+
+    get textAlign() {
+        return this.props.textAlign;
+    }
+
+    set textBaseline(val) {
+        this.props.textBaseline = val;
+    }
+
+    get textBaseline() {
+        return this.props.textBaseline;
+    }
+}
+
+/**
+ * Canvas interface.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Canvas {
+
+    constructor(w, h = w, retina, whiteAlpha) {
 
         if (typeof h === 'boolean') {
             retina = h;
             h = w;
         }
 
-        var self = this;
+        const self = this;
 
         this.element = document.createElement('canvas');
         this.context = this.element.getContext('2d');
@@ -3992,7 +3411,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         size(w, h);
 
         function size(w, h) {
-            var ratio = retina ? 2 : 1;
+            const ratio = retina ? 2 : 1;
             self.element.width = w * ratio;
             self.element.height = h * ratio;
             self.width = w;
@@ -4003,7 +3422,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             self.element.style.width = w + 'px';
             self.element.style.height = h + 'px';
             if (whiteAlpha) {
-                var alpha = new CanvasGraphics(self.width, self.height);
+                const alpha = new CanvasGraphics(self.width, self.height);
                 alpha.fillStyle = 'rgba(255, 255, 255, 0.002)';
                 alpha.fillRect(0, 0, self.width, self.height);
                 alpha.setCanvas(self);
@@ -4015,56 +3434,48 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
 
         this.size = size;
 
-        this.toDataURL = function (type, quality) {
-            return _this22.element.toDataURL(type, quality);
+        this.toDataURL = (type, quality) => {
+            return this.element.toDataURL(type, quality);
         };
 
-        this.render = function (noClear) {
-            if (!(typeof noClear === 'boolean' && noClear)) _this22.clear();
-            for (var i = 0; i < _this22.children.length; i++) {
-                _this22.children[i].render();
-            }
+        this.render = noClear => {
+            if (!(typeof noClear === 'boolean' && noClear)) this.clear();
+            for (let i = 0; i < this.children.length; i++) this.children[i].render();
         };
 
-        this.clear = function () {
-            _this22.context.clearRect(0, 0, _this22.element.width, _this22.element.height);
+        this.clear = () => {
+            this.context.clearRect(0, 0, this.element.width, this.element.height);
         };
 
-        this.add = function (child) {
-            child.setCanvas(_this22);
-            child.parent = _this22;
-            _this22.children.push(child);
-            child.z = _this22.children.length;
+        this.add = child => {
+            child.setCanvas(this);
+            child.parent = this;
+            this.children.push(child);
+            child.z = this.children.length;
         };
 
-        this.remove = function (child) {
+        this.remove = child => {
             child.canvas = null;
             child.parent = null;
-            _this22.children.remove(child);
+            this.children.remove(child);
         };
 
-        this.destroy = function () {
-            if (_this22.children) for (var i = _this22.children.length - 1; i >= 0; i--) {
-                _this22.children[i].destroy();
-            }_this22.object.destroy();
-            return Utils.nullObject(_this22);
+        this.destroy = () => {
+            if (this.children) for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
+            this.object.destroy();
+            return Utils.nullObject(this);
         };
 
-        this.getImageData = function () {
-            var x = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
-            var y = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-            var w = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : _this22.element.width;
-            var h = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : _this22.element.height;
-
-            _this22.imageData = _this22.context.getImageData(x, y, w, h);
-            return _this22.imageData;
+        this.getImageData = (x = 0, y = 0, w = this.element.width, h = this.element.height) => {
+            this.imageData = this.context.getImageData(x, y, w, h);
+            return this.imageData;
         };
 
-        this.getPixel = function (x, y, dirty) {
-            if (!_this22.imageData || dirty) _this22.getImageData();
-            var imgData = {},
-                index = (x + y * _this22.element.width) * 4,
-                pixels = _this22.imageData.data;
+        this.getPixel = (x, y, dirty) => {
+            if (!this.imageData || dirty) this.getImageData();
+            const imgData = {},
+                index = (x + y * this.element.width) * 4,
+                pixels = this.imageData.data;
             imgData.r = pixels[index];
             imgData.g = pixels[index + 1];
             imgData.b = pixels[index + 2];
@@ -4072,468 +3483,454 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             return imgData;
         };
 
-        this.putImageData = function (imageData) {
-            _this22.context.putImageData(imageData, 0, 0);
+        this.putImageData = imageData => {
+            this.context.putImageData(imageData, 0, 0);
         };
-    };
+    }
+}
 
-    /**
-     * Canvas texture.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
+/**
+ * Canvas texture.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
-    var CanvasTexture = function (_CanvasObject2) {
-        _inherits(CanvasTexture, _CanvasObject2);
+class CanvasTexture extends CanvasObject {
 
-        function CanvasTexture(texture) {
-            var w = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 0;
-            var h = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : w;
+    constructor(texture, w = 0, h = w) {
+        super();
+        const self = this;
+        let mask;
 
-            _classCallCheck(this, CanvasTexture);
+        this.width = w;
+        this.height = h;
 
-            var _this23 = _possibleConstructorReturn(this, (CanvasTexture.__proto__ || Object.getPrototypeOf(CanvasTexture)).call(this));
+        initTexture();
 
-            var self = _this23;
-            var mask = void 0;
-
-            _this23.width = w;
-            _this23.height = h;
-
-            initTexture();
-
-            function initTexture() {
-                if (typeof texture === 'string') {
-                    Assets.loadImage(texture).then(function (image) {
-                        self.texture = image;
-                        setDimensions();
-                    });
-                } else {
-                    self.texture = texture;
+        function initTexture() {
+            if (typeof texture === 'string') {
+                Assets.loadImage(texture).then(image => {
+                    self.texture = image;
                     setDimensions();
-                }
+                });
+            } else {
+                self.texture = texture;
+                setDimensions();
             }
-
-            function setDimensions() {
-                if (self.onload) self.onload();
-                if (!self.width && !self.height) {
-                    self.width = self.texture.width;
-                    self.height = self.texture.height;
-                }
-            }
-
-            _this23.draw = function (override) {
-                if (_this23.isMask() && !override) return false;
-                var context = _this23.canvas.context;
-                if (_this23.texture) {
-                    _this23.startDraw(_this23.px, _this23.py, override);
-                    context.drawImage(_this23.texture, -_this23.px, -_this23.py, _this23.width, _this23.height);
-                    _this23.endDraw();
-                }
-                if (mask) {
-                    context.globalCompositeOperation = 'source-in';
-                    mask.render(true);
-                    context.globalCompositeOperation = 'source-over';
-                }
-            };
-
-            _this23.mask = function (object) {
-                if (!object) return mask = null;
-                mask = object;
-                object.masked = _this23;
-            };
-            return _this23;
         }
 
-        return CanvasTexture;
-    }(CanvasObject);
-
-    /**
-     * Canvas font utilities.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Color helper class.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Video interface.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * SVG interface.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Scroll interaction.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Slide interaction.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Slide video.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Slide loader with promise method.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Webcam interface.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    if (!navigator.getUserMedia) navigator.getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-
-    /**
-     * Webcam motion tracker.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Linked list.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Object pool.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * 3D vector.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * 3D utilities with texture promise method.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /* global THREE */
-
-    /**
-     * Raycaster.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /* global THREE */
-
-    /**
-     * 3D interaction.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Screen projection.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /* global THREE */
-
-    /**
-     * Shader helper class.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /* global THREE */
-
-    /**
-     * Post processing effects.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /* global THREE */
-
-    /**
-     * Euler integrator.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Particle physics.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Particle.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Random Euler rotation.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Alien abduction point.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    /**
-     * Alien.js Example Project.
-     *
-     * @author Patrick Schroen / https://github.com/pschroen
-     */
-
-    Config.UI_COLOR = 'white';
-
-    Config.ASSETS = ['assets/images/alienkitty.svg', 'assets/images/alienkitty_eyelid.svg'];
-
-    var AlienKittyCanvas = function (_Interface2) {
-        _inherits(AlienKittyCanvas, _Interface2);
-
-        function AlienKittyCanvas() {
-            _classCallCheck(this, AlienKittyCanvas);
-
-            var _this24 = _possibleConstructorReturn(this, (AlienKittyCanvas.__proto__ || Object.getPrototypeOf(AlienKittyCanvas)).call(this, 'AlienKittyCanvas'));
-
-            var self = _this24;
-            var canvas = void 0,
-                alienkitty = void 0,
-                eyelid1 = void 0,
-                eyelid2 = void 0;
-
-            initHTML();
-            initCanvas();
-            initImages();
-
-            function initHTML() {
-                self.size(90, 86).css({ opacity: 0 });
+        function setDimensions() {
+            if (self.onload) self.onload();
+            if (!self.width && !self.height) {
+                self.width = self.texture.width;
+                self.height = self.texture.height;
             }
-
-            function initCanvas() {
-                canvas = self.initClass(Canvas, 90, 86, true);
-            }
-
-            function initImages() {
-                Promise.all([Assets.loadImage('assets/images/alienkitty.svg'), Assets.loadImage('assets/images/alienkitty_eyelid.svg')]).then(finishSetup);
-            }
-
-            function finishSetup(img) {
-                alienkitty = self.initClass(CanvasTexture, img[0], 90, 86);
-                eyelid1 = self.initClass(CanvasTexture, img[1], 24, 14);
-                eyelid1.transformPoint('50%', 0).transform({ x: 35, y: 25, scaleX: 1.5, scaleY: 0.01 });
-                eyelid2 = self.initClass(CanvasTexture, img[1], 24, 14);
-                eyelid2.transformPoint(0, 0).transform({ x: 53, y: 26, scaleX: 1, scaleY: 0.01 });
-                alienkitty.add(eyelid1);
-                alienkitty.add(eyelid2);
-                canvas.add(alienkitty);
-            }
-
-            function blink() {
-                self.delayedCall(Utils.headsTails(blink1, blink2), Utils.random(0, 10000));
-            }
-
-            function blink1() {
-                TweenManager.tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', function () {
-                    TweenManager.tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
-                });
-                TweenManager.tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 120, 'easeOutCubic', function () {
-                    TweenManager.tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 180, 'easeOutCubic', function () {
-                        blink();
-                    });
-                });
-            }
-
-            function blink2() {
-                TweenManager.tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', function () {
-                    TweenManager.tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
-                });
-                TweenManager.tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 180, 'easeOutCubic', function () {
-                    TweenManager.tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 240, 'easeOutCubic', function () {
-                        blink();
-                    });
-                });
-            }
-
-            function loop() {
-                canvas.render();
-            }
-
-            _this24.animateIn = function () {
-                blink();
-                _this24.tween({ opacity: 1 }, 500, 'easeOutQuart');
-                _this24.startRender(loop);
-            };
-
-            _this24.animateOut = function (callback) {
-                _this24.tween({ opacity: 0 }, 500, 'easeInOutQuad', function () {
-                    _this24.stopRender(loop);
-                    _this24.clearTimers();
-                    if (callback) callback();
-                });
-            };
-            return _this24;
         }
 
-        return AlienKittyCanvas;
-    }(Interface);
-
-    var Progress = function (_Interface3) {
-        _inherits(Progress, _Interface3);
-
-        function Progress() {
-            _classCallCheck(this, Progress);
-
-            var _this25 = _possibleConstructorReturn(this, (Progress.__proto__ || Object.getPrototypeOf(Progress)).call(this, 'Progress'));
-
-            var self = _this25;
-            var size = 90;
-            var canvas = void 0,
-                circle = void 0;
-
-            initHTML();
-            initCanvas();
-            initCircle();
-            _this25.startRender(loop);
-
-            function initHTML() {
-                self.size(size);
-                self.progress = 0;
+        this.draw = override => {
+            if (this.isMask() && !override) return false;
+            const context = this.canvas.context;
+            if (this.texture) {
+                this.startDraw(this.px, this.py, override);
+                context.drawImage(this.texture, -this.px, -this.py, this.width, this.height);
+                this.endDraw();
             }
-
-            function initCanvas() {
-                canvas = self.initClass(Canvas, size, true);
+            if (mask) {
+                context.globalCompositeOperation = 'source-in';
+                mask.render(true);
+                context.globalCompositeOperation = 'source-over';
             }
+        };
 
-            function initCircle() {
-                circle = self.initClass(CanvasGraphics);
-                circle.x = size / 2;
-                circle.y = size / 2;
-                circle.radius = size * 0.4;
-                circle.lineWidth = 1.5;
-                circle.strokeStyle = Config.UI_COLOR;
-                canvas.add(circle);
-            }
+        this.mask = object => {
+            if (!object) return mask = null;
+            mask = object;
+            object.masked = this;
+        };
+    }
+}
 
-            function drawCircle() {
-                circle.clear();
-                var endAngle = Math.radians(-90) + Math.radians(self.progress * 360);
-                circle.beginPath();
-                circle.arc(endAngle);
-                circle.stroke();
-            }
+/**
+ * Canvas font utilities.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
-            function loop() {
-                if (self.complete) return;
-                if (self.progress >= 1) complete();
-                drawCircle();
-                canvas.render();
-            }
+/**
+ * Color helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
-            function complete() {
-                self.complete = true;
-                self.events.fire(Events.COMPLETE);
-                self.stopRender(loop);
-            }
+/**
+ * SVG interface.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
-            _this25.update = function (e) {
-                if (_this25.complete) return;
-                TweenManager.tween(_this25, { progress: e.percent }, 500, 'easeOutCubic');
-            };
+/**
+ * Video interface.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
-            _this25.animateOut = function (callback) {
-                _this25.tween({ scale: 0.9, opacity: 0 }, 400, 'easeInCubic', callback);
-            };
-            return _this25;
+/**
+ * Background video interface.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/**
+ * Scroll interaction.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/**
+ * Scroll lock.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/**
+ * Slide interaction.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/**
+ * Slide video.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/**
+ * Slide loader with promise method.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/**
+ * Webcam interface.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+if (!navigator.getUserMedia) navigator.getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
+
+/**
+ * Webcam motion tracker.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/**
+ * Linked list.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/**
+ * Object pool.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/**
+ * 3D vector.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/**
+ * 3D utilities with texture promise method.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/* global THREE */
+
+/**
+ * Raycaster.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/* global THREE */
+
+/**
+ * 3D interaction.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/**
+ * Screen projection.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/* global THREE */
+
+/**
+ * Shader helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/* global THREE */
+
+/**
+ * Post processing effects.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/* global THREE */
+
+/**
+ * Euler integrator.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/**
+ * Particle physics.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/**
+ * Particle.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/**
+ * Random Euler rotation.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/**
+ * Wiggle behavior.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/**
+ * Alien abduction point.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/**
+ * Alien.js Example Project.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+Config.UI_COLOR = 'white';
+
+Config.ASSETS = [
+    'assets/images/alienkitty.svg',
+    'assets/images/alienkitty_eyelid.svg'
+];
+
+class AlienKittyCanvas extends Interface {
+
+    constructor() {
+        super('AlienKittyCanvas');
+        const self = this;
+        let canvas, alienkitty, eyelid1, eyelid2;
+
+        initHTML();
+        initCanvas();
+        initImages();
+
+        function initHTML() {
+            self.size(90, 86).css({ opacity: 0 });
         }
 
-        return Progress;
-    }(Interface);
-
-    var Loader = function (_Interface4) {
-        _inherits(Loader, _Interface4);
-
-        function Loader() {
-            _classCallCheck(this, Loader);
-
-            var _this26 = _possibleConstructorReturn(this, (Loader.__proto__ || Object.getPrototypeOf(Loader)).call(this, 'Loader'));
-
-            var self = _this26;
-            var loader = void 0,
-                progress = void 0;
-
-            initHTML();
-            initLoader();
-            initProgress();
-
-            function initHTML() {
-                self.size('100%');
-            }
-
-            function initLoader() {
-                loader = self.initClass(AssetLoader, Config.ASSETS);
-                self.events.add(loader, Events.PROGRESS, loadUpdate);
-            }
-
-            function initProgress() {
-                progress = self.initClass(Progress);
-                progress.center();
-                self.events.add(progress, Events.COMPLETE, loadComplete);
-            }
-
-            function loadUpdate(e) {
-                progress.update(e);
-            }
-
-            function loadComplete() {
-                self.events.fire(Events.COMPLETE);
-            }
-
-            _this26.animateOut = function (callback) {
-                progress.animateOut(callback);
-            };
-            return _this26;
+        function initCanvas() {
+            canvas = self.initClass(Canvas, 90, 86, true);
         }
 
-        return Loader;
-    }(Interface);
+        function initImages() {
+            Promise.all([
+                Assets.loadImage('assets/images/alienkitty.svg'),
+                Assets.loadImage('assets/images/alienkitty_eyelid.svg')
+            ]).then(finishSetup);
+        }
 
-    var Main = function Main(_ref) {
-        var container = _ref.container;
+        function finishSetup(img) {
+            alienkitty = self.initClass(CanvasTexture, img[0], 90, 86);
+            eyelid1 = self.initClass(CanvasTexture, img[1], 24, 14);
+            eyelid1.transformPoint('50%', 0).transform({ x: 35, y: 25, scaleX: 1.5, scaleY: 0.01 });
+            eyelid2 = self.initClass(CanvasTexture, img[1], 24, 14);
+            eyelid2.transformPoint(0, 0).transform({ x: 53, y: 26, scaleX: 1, scaleY: 0.01 });
+            alienkitty.add(eyelid1);
+            alienkitty.add(eyelid2);
+            canvas.add(alienkitty);
+        }
 
-        _classCallCheck(this, Main);
+        function blink() {
+            self.delayedCall(Utils.headsTails(blink1, blink2), Utils.random(0, 10000));
+        }
+
+        function blink1() {
+            TweenManager.tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+                TweenManager.tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
+            });
+            TweenManager.tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 120, 'easeOutCubic', () => {
+                TweenManager.tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 180, 'easeOutCubic', () => {
+                    blink();
+                });
+            });
+        }
+
+        function blink2() {
+            TweenManager.tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+                TweenManager.tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
+            });
+            TweenManager.tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 180, 'easeOutCubic', () => {
+                TweenManager.tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 240, 'easeOutCubic', () => {
+                    blink();
+                });
+            });
+        }
+
+        function loop() {
+            canvas.render();
+        }
+
+        this.animateIn = () => {
+            blink();
+            this.tween({ opacity: 1 }, 500, 'easeOutQuart');
+            this.startRender(loop);
+        };
+
+        this.animateOut = callback => {
+            this.tween({ opacity: 0 }, 500, 'easeInOutQuad', () => {
+                this.stopRender(loop);
+                this.clearTimers();
+                if (callback) callback();
+            });
+        };
+    }
+}
+
+class Progress extends Interface {
+
+    constructor() {
+        super('Progress');
+        const self = this;
+        const size = 90;
+        let canvas, circle;
+
+        initHTML();
+        initCanvas();
+        initCircle();
+        this.startRender(loop);
+
+        function initHTML() {
+            self.size(size);
+            self.progress = 0;
+        }
+
+        function initCanvas() {
+            canvas = self.initClass(Canvas, size, true);
+        }
+
+        function initCircle() {
+            circle = self.initClass(CanvasGraphics);
+            circle.x = size / 2;
+            circle.y = size / 2;
+            circle.radius = size * 0.4;
+            circle.lineWidth = 1.5;
+            circle.strokeStyle = Config.UI_COLOR;
+            canvas.add(circle);
+        }
+
+        function drawCircle() {
+            circle.clear();
+            const endAngle = Math.radians(-90) + Math.radians(self.progress * 360);
+            circle.beginPath();
+            circle.arc(endAngle);
+            circle.stroke();
+        }
+
+        function loop() {
+            if (self.complete) return;
+            if (self.progress >= 1) complete();
+            drawCircle();
+            canvas.render();
+        }
+
+        function complete() {
+            self.complete = true;
+            self.events.fire(Events.COMPLETE);
+            self.stopRender(loop);
+        }
+
+        this.update = e => {
+            if (this.complete) return;
+            TweenManager.tween(this, { progress: e.percent }, 500, 'easeOutCubic');
+        };
+
+        this.animateOut = callback => {
+            this.tween({ scale: 0.9, opacity: 0 }, 400, 'easeInCubic', callback);
+        };
+    }
+}
+
+class Loader extends Interface {
+
+    constructor() {
+        super('Loader');
+        const self = this;
+        let loader, progress;
+
+        initHTML();
+        initLoader();
+        initProgress();
+
+        function initHTML() {
+            self.size('100%');
+        }
+
+        function initLoader() {
+            loader = self.initClass(AssetLoader, Config.ASSETS);
+            self.events.add(loader, Events.PROGRESS, loadUpdate);
+        }
+
+        function initProgress() {
+            progress = self.initClass(Progress);
+            progress.center();
+            self.events.add(progress, Events.COMPLETE, loadComplete);
+        }
+
+        function loadUpdate(e) {
+            progress.update(e);
+        }
+
+        function loadComplete() {
+            self.events.fire(Events.COMPLETE);
+        }
+
+        this.animateOut = callback => {
+            progress.animateOut(callback);
+        };
+    }
+}
+
+class Main {
+
+    constructor({ container }) {
 
         container.appendChild(Stage.element);
 
-        var loader = void 0,
-            wrapper = void 0,
-            alienkitty = void 0;
+        let loader, wrapper, alienkitty;
 
         initStage();
         initLoader();
@@ -4553,7 +3950,7 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
         }
 
         function loadComplete() {
-            loader.animateOut(function () {
+            loader.animateOut(() => {
                 loader = loader.destroy();
                 Stage.events.fire(Events.COMPLETE);
             });
@@ -4567,7 +3964,9 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
             wrapper.tween({ z: 0 }, 7000, 'easeOutCubic');
             alienkitty.animateIn();
         }
-    };
+    }
+}
 
-    return Main;
-});
+return Main;
+
+})));

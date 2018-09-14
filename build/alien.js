@@ -2,7 +2,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-if (typeof Promise !== 'undefined') Promise.create = function () {
+Promise.create = function () {
     let resolve, reject;
     const promise = new Promise(function (res, rej) {
         resolve = res;
@@ -119,48 +119,6 @@ Date.prototype.addDays = function (days) {
     const date = new Date(this.valueOf());
     date.setDate(date.getDate() + days);
     return date;
-};
-
-if (!window.fetch) window.fetch = function (url, options = {}) {
-    const promise = Promise.create(),
-        request = new XMLHttpRequest();
-    request.open(options.method || 'GET', url);
-    for (let i in options.headers) request.setRequestHeader(i, options.headers[i]);
-    request.onload = () => promise.resolve(response());
-    request.onerror = promise.reject;
-    request.send(options.body);
-
-    function response() {
-        const keys = [],
-            all = [],
-            headers = {};
-        let header;
-        request.getAllResponseHeaders().replace(/^(.*?):\s*([\s\S]*?)$/gm, function (m, key, value) {
-            keys.push(key = key.toLowerCase());
-            all.push([key, value]);
-            header = headers[key];
-            headers[key] = header ? `${header},${value}` : value;
-        });
-        return {
-            ok: (request.status / 200 | 0) == 1,
-            status: request.status,
-            statusText: request.statusText,
-            url: request.responseURL,
-            clone: response,
-            text() { return Promise.resolve(request.responseText); },
-            json() { return Promise.resolve(request.responseText).then(JSON.parse); },
-            xml() { return Promise.resolve(request.responseXML); },
-            blob() { return Promise.resolve(new Blob([request.response])); },
-            arrayBuffer() { return Promise.resolve(new ArrayBuffer([request.response])); },
-            headers: {
-                keys() { return keys; },
-                entries() { return all; },
-                get(n) { return headers[n.toLowerCase()]; },
-                has(n) { return n.toLowerCase() in headers; }
-            }
-        };
-    }
-    return promise;
 };
 
 window.get = function (url, options = {}) {
@@ -421,9 +379,9 @@ class Timer {
             return true;
         };
 
-        this.create = (callback, time, ...args) => {
+        this.create = (callback, time = 1, ...args) => {
             const obj = {
-                time: Math.max(1, time || 1),
+                time: Math.max(1, time),
                 current: 0,
                 ref: Utils.timestamp(),
                 callback,
@@ -565,7 +523,7 @@ class Events {
 }
 
 /**
- * Browser detection and vendor prefixes.
+ * Browser detection and helper functions.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
@@ -574,35 +532,6 @@ class Device {
 
     static init() {
         this.agent = navigator.userAgent.toLowerCase();
-        this.prefix = (() => {
-            const styles = window.getComputedStyle(document.documentElement, ''),
-                pre = (Array.prototype.slice.call(styles).join('').match(/-(webkit|moz|ms)-/) || styles.OLink === '' && ['', 'o'])[1];
-            return {
-                lowercase: pre,
-                js: pre[0].toUpperCase() + pre.substr(1)
-            };
-        })();
-        this.transformProperty = (() => {
-            let pre;
-            switch (this.prefix.lowercase) {
-                case 'webkit':
-                    pre = '-webkit-transform';
-                    break;
-                case 'moz':
-                    pre = '-moz-transform';
-                    break;
-                case 'ms':
-                    pre = '-ms-transform';
-                    break;
-                case 'o':
-                    pre = '-o-transform';
-                    break;
-                default:
-                    pre = 'transform';
-                    break;
-            }
-            return pre;
-        })();
         this.pixelRatio = window.devicePixelRatio;
         this.webcam = !!(navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia);
         this.language = navigator.userLanguage || navigator.language;
@@ -668,10 +597,6 @@ class Device {
 
     static detect(matches) {
         return this.agent.includes(matches);
-    }
-
-    static vendor(style) {
-        return this.prefix.js + style;
     }
 
     static vibrate(time) {
@@ -790,9 +715,9 @@ class Assets {
             }
             const img = new Image();
             img.crossOrigin = this.CORS;
-            img.src = this.getPath(path);
             img.onload = callback;
             img.onerror = callback;
+            img.src = this.getPath(path);
             if (store) images[path] = img;
             return img;
         };
@@ -1407,7 +1332,7 @@ class CSSTransition {
                 }
             }
             if (transform.use) {
-                properties.push(Device.transformProperty);
+                properties.push('transform');
                 delete transform.use;
             }
             transformProps = transform;
@@ -1416,13 +1341,13 @@ class CSSTransition {
 
         function initCSSTween() {
             if (killed()) return;
-            if (object.cssTween) object.cssTween.kill = true;
+            if (object.cssTween) object.cssTween.stop();
             object.cssTween = self;
             const strings = buildStrings(time, ease, delay);
             object.willChange(strings.props);
             Timer.create(() => {
                 if (killed()) return;
-                object.element.style[Device.vendor('Transition')] = strings.transition;
+                object.element.style.transition = strings.transition;
                 object.css(props);
                 object.transform(transformProps);
                 Timer.create(() => {
@@ -1450,7 +1375,7 @@ class CSSTransition {
         function clearCSSTween() {
             if (killed()) return;
             self.kill = true;
-            object.element.style[Device.vendor('Transition')] = '';
+            object.element.style.transition = '';
             object.willChange(null);
             object.cssTween = null;
             object = props = null;
@@ -1485,7 +1410,7 @@ class Interface {
                     this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
                 } else {
                     this.element = document.createElement(type);
-                    if (name[0] !== '.') this.element.id = name;
+                    if (name.charAt(0) !== '.') this.element.id = name;
                     else this.element.className = name.substr(1);
                 }
                 this.element.style.position = 'absolute';
@@ -1544,20 +1469,19 @@ class Interface {
     }
 
     destroy() {
-        if (this.classes) {
-            this.removed = true;
-            const parent = this.parent;
-            if (parent && !parent.removed && parent.remove) parent.remove(this);
-            for (let i = this.classes.length - 1; i >= 0; i--) {
-                const child = this.classes[i];
-                if (child && child.destroy) child.destroy();
-            }
-            this.classes.length = 0;
-            this.element.object = null;
-            this.clearRenders();
-            this.clearTimers();
-            this.events.destroy();
+        if (!this.classes) return;
+        this.removed = true;
+        const parent = this.parent;
+        if (parent && !parent.removed && parent.remove) parent.remove(this);
+        for (let i = this.classes.length - 1; i >= 0; i--) {
+            const child = this.classes[i];
+            if (child && child.destroy) child.destroy();
         }
+        this.classes.length = 0;
+        this.element.object = null;
+        this.clearRenders();
+        this.clearTimers();
+        this.events.destroy();
         return Utils.nullObject(this);
     }
 
@@ -1704,8 +1628,8 @@ class Interface {
     }
 
     mask(src) {
-        this.element.style[Device.vendor('Mask')] = (~src.indexOf('.') ? 'url(' + src + ')' : src) + ' no-repeat';
-        this.element.style[Device.vendor('MaskSize')] = 'contain';
+        this.element.style.mask = (~src.indexOf('.') ? 'url(' + src + ')' : src) + ' no-repeat';
+        this.element.style.maskSize = 'contain';
         return this;
     }
 
@@ -1740,35 +1664,36 @@ class Interface {
     transform(props) {
         if (!props) props = this;
         else for (let key in props) if (typeof props[key] === 'number') this[key] = props[key];
-        this.element.style[Device.vendor('Transform')] = TweenManager.parseTransform(props);
+        this.element.style.transform = TweenManager.parseTransform(props);
         return this;
     }
 
     willChange(props) {
         const string = typeof props === 'string';
-        if (props) this.element.style['will-change'] = string ? props : Device.transformProperty + ', opacity';
-        else this.element.style['will-change'] = '';
+        if (props) this.element.style.willChange = string ? props : 'transform, opacity';
+        else this.element.style.willChange = '';
     }
 
     backfaceVisibility(visible) {
-        if (visible) this.element.style[Device.vendor('BackfaceVisibility')] = 'visible';
-        else this.element.style[Device.vendor('BackfaceVisibility')] = 'hidden';
+        if (visible) this.element.style.backfaceVisibility = 'visible';
+        else this.element.style.backfaceVisibility = 'hidden';
+        return this;
     }
 
     enable3D(perspective, x, y) {
-        this.element.style[Device.vendor('TransformStyle')] = 'preserve-3d';
-        if (perspective) this.element.style[Device.vendor('Perspective')] = perspective + 'px';
+        this.element.style.transformStyle = 'preserve-3d';
+        if (perspective) this.element.style.perspective = perspective + 'px';
         if (typeof x !== 'undefined') {
             x = typeof x === 'number' ? x + 'px' : x;
             y = typeof y === 'number' ? y + 'px' : y;
-            this.element.style[Device.vendor('PerspectiveOrigin')] = x + ' ' + y;
+            this.element.style.perspectiveOrigin = x + ' ' + y;
         }
         return this;
     }
 
     disable3D() {
-        this.element.style[Device.vendor('TransformStyle')] = '';
-        this.element.style[Device.vendor('Perspective')] = '';
+        this.element.style.transformStyle = '';
+        this.element.style.perspective = '';
         return this;
     }
 
@@ -1777,7 +1702,7 @@ class Interface {
         if (typeof x !== 'undefined') origin += typeof x === 'number' ? x + 'px' : x;
         if (typeof y !== 'undefined') origin += typeof y === 'number' ? ' ' + y + 'px' : ' ' + y;
         if (typeof z !== 'undefined') origin += typeof z === 'number' ? ' ' + z + 'px' : ' ' + z;
-        this.element.style[Device.vendor('TransformOrigin')] = origin;
+        this.element.style.transformOrigin = origin;
         return this;
     }
 
@@ -1809,7 +1734,7 @@ class Interface {
         if (typeof this.rotationZ === 'number') this.rotationZ = 0;
         if (typeof this.skewX === 'number') this.skewX = 0;
         if (typeof this.skewY === 'number') this.skewY = 0;
-        this.element.style[Device.transformProperty] = '';
+        this.element.style.transform = '';
         return this;
     }
 
@@ -2566,10 +2491,10 @@ const Stage = new (class extends Interface {
             Events.emitter.fire(Events.KEYBOARD_PRESS, e);
         }
 
-        function resize() {
+        function resize(e) {
             self.size();
             self.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
-            Events.emitter.fire(Events.RESIZE);
+            Events.emitter.fire(Events.RESIZE, e);
         }
 
         this.destroy = () => {
@@ -2642,25 +2567,7 @@ class Vector2 {
     }
 
     setLength(length) {
-        this.normalize().multiply(length);
-        return this;
-    }
-
-    addVectors(a, b) {
-        this.x = a.x + b.x;
-        this.y = a.y + b.y;
-        return this;
-    }
-
-    subVectors(a, b) {
-        this.x = a.x - b.x;
-        this.y = a.y - b.y;
-        return this;
-    }
-
-    multiplyVectors(a, b) {
-        this.x = a.x * b.x;
-        this.y = a.y * b.y;
+        this.normalize().multiplyScalar(length);
         return this;
     }
 
@@ -2670,21 +2577,63 @@ class Vector2 {
         return this;
     }
 
+    addScalar(s) {
+        this.x += s;
+        this.y += s;
+        return this;
+    }
+
+    addVectors(a, b) {
+        this.x = a.x + b.x;
+        this.y = a.y + b.y;
+        return this;
+    }
+
     sub(v) {
         this.x -= v.x;
         this.y -= v.y;
         return this;
     }
 
+    subScalar(s) {
+        this.x -= s;
+        this.y -= s;
+        return this;
+    }
+
+    subVectors(a, b) {
+        this.x = a.x - b.x;
+        this.y = a.y - b.y;
+        return this;
+    }
+
     multiply(v) {
-        this.x *= v;
-        this.y *= v;
+        this.x *= v.x;
+        this.y *= v.y;
+        return this;
+    }
+
+    multiplyScalar(s) {
+        this.x *= s;
+        this.y *= s;
+        return this;
+    }
+
+    multiplyVectors(a, b) {
+        this.x = a.x * b.x;
+        this.y = a.y * b.y;
         return this;
     }
 
     divide(v) {
-        this.x /= v;
-        this.y /= v;
+        this.x /= v.x;
+        this.y /= v.y;
+        return this;
+    }
+
+    divideScalar(s) {
+        this.x /= s;
+        this.y /= s;
         return this;
     }
 
@@ -2899,20 +2848,18 @@ class AssetLoader extends Component {
 
         for (let key in assets) loadAsset(key, assets[key]);
 
-        function loadAsset(key, asset) {
-            const ext = Utils.extension(asset);
+        function loadAsset(key, path) {
+            const ext = Utils.extension(path);
             if (ext.includes(['jpg', 'jpeg', 'png', 'gif', 'svg'])) {
-                Assets.createImage(asset, assetLoaded);
+                Assets.createImage(path, assetLoaded);
                 return;
             }
             if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
                 if (!window.AudioContext || !window.WebAudio) return assetLoaded();
-                window.WebAudio.createSound(key, asset, assetLoaded);
+                window.WebAudio.createSound(key, path, assetLoaded);
                 return;
             }
-            window.get(Assets.getPath(asset), {
-                credentials: 'include'
-            }).then(data => {
+            window.get(Assets.getPath(path), Assets.OPTIONS).then(data => {
                 if (ext === 'json') Assets.storeData(key, data);
                 if (ext === 'js') window.eval(data.replace('use strict', ''));
                 assetLoaded();
@@ -4005,30 +3952,63 @@ class Color {
             this.r += color.r;
             this.g += color.g;
             this.b += color.b;
+            return this;
         };
 
         this.mix = (color, percent) => {
             this.r *= (1 - percent) + color.r * percent;
             this.g *= (1 - percent) + color.g * percent;
             this.b *= (1 - percent) + color.b * percent;
+            return this;
         };
 
         this.addScalar = s => {
             this.r += s;
             this.g += s;
             this.b += s;
+            return this;
+        };
+
+        this.sub = color => {
+            this.r -= color.r;
+            this.g -= color.g;
+            this.b -= color.b;
+            return this;
+        };
+
+        this.subScalar = s => {
+            this.r -= s;
+            this.g -= s;
+            this.b -= s;
+            return this;
         };
 
         this.multiply = color => {
             this.r *= color.r;
             this.g *= color.g;
             this.b *= color.b;
+            return this;
         };
 
         this.multiplyScalar = s => {
             this.r *= s;
             this.g *= s;
             this.b *= s;
+            return this;
+        };
+
+        this.divide = color => {
+            this.r /= color.r;
+            this.g /= color.g;
+            this.b /= color.b;
+            return this;
+        };
+
+        this.divideScalar = s => {
+            this.r /= s;
+            this.g /= s;
+            this.b /= s;
+            return this;
         };
 
         this.clone = () => {
@@ -4048,211 +4028,6 @@ class Color {
             if (color.length < 7) color = this.random();
             return color;
         };
-    }
-}
-
-/**
- * Video interface.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-class Video extends Component {
-
-    constructor(params) {
-        super();
-        const self = this;
-        const event = {};
-        let lastTime, buffering, seekTo, forceRender,
-            tick = 0;
-
-        this.loaded = {
-            start: 0,
-            end: 0,
-            percent: 0
-        };
-
-        createElement();
-        if (params.preload !== false) preload();
-
-        function createElement() {
-            const src = params.src;
-            self.element = document.createElement('video');
-            if (src) self.element.src = Assets.getPath(src);
-            self.element.controls = params.controls;
-            self.element.id = params.id || '';
-            self.element.width = params.width;
-            self.element.height = params.height;
-            self.element.loop = params.loop;
-            self.object = new Interface(self.element);
-            self.width = params.width;
-            self.height = params.height;
-            self.object.size(self.width, self.height);
-            if (Device.mobile) {
-                self.object.attr('webkit-playsinline', true);
-                self.object.attr('playsinline', true);
-            }
-        }
-
-        function preload() {
-            self.element.preload = 'auto';
-            self.element.load();
-        }
-
-        function step() {
-            if (!self.element) return self.stopRender(step);
-            self.duration = self.element.duration;
-            self.time = self.element.currentTime;
-            if (self.element.currentTime === lastTime) {
-                tick++;
-                if (tick > 30 && !buffering) {
-                    buffering = true;
-                    self.events.fire(Events.ERROR, null, true);
-                }
-            } else {
-                tick = 0;
-                if (buffering) {
-                    self.events.fire(Events.READY, null, true);
-                    buffering = false;
-                }
-            }
-            lastTime = self.element.currentTime;
-            if (self.element.currentTime >= (self.duration || self.element.duration) - 0.001) {
-                if (!self.loop) {
-                    if (!forceRender) self.stopRender(step);
-                    self.events.fire(Events.COMPLETE, null, true);
-                }
-            }
-            event.time = self.element.currentTime;
-            event.duration = self.element.duration;
-            event.loaded = self.loaded;
-            self.events.fire(Events.UPDATE, event, true);
-        }
-
-        function checkReady() {
-            if (!self.element) return false;
-            if (!seekTo) {
-                self.buffered = self.element.readyState === self.element.HAVE_ENOUGH_DATA;
-            } else {
-                const seekable = self.element.seekable;
-                let max = -1;
-                if (seekable) {
-                    for (let i = 0; i < seekable.length; i++) if (seekable.start(i) < seekTo) max = seekable.end(i) - 0.5;
-                    if (max >= seekTo) self.buffered = true;
-                } else {
-                    self.buffered = true;
-                }
-            }
-            if (self.buffered) {
-                self.stopRender(checkReady);
-                self.events.fire(Events.READY, null, true);
-            }
-        }
-
-        function handleProgress() {
-            if (!self.ready()) return;
-            const bf = self.element.buffered,
-                time = self.element.currentTime;
-            let range = 0;
-            while (!(bf.start(range) <= time && time <= bf.end(range))) range += 1;
-            self.loaded.start = bf.start(range) / self.element.duration;
-            self.loaded.end = bf.end(range) / self.element.duration;
-            self.loaded.percent = self.loaded.end - self.loaded.start;
-            self.events.fire(Events.PROGRESS, self.loaded, true);
-        }
-
-        this.play = () => {
-            this.playing = true;
-            this.element.play();
-            this.startRender(step);
-        };
-
-        this.pause = () => {
-            this.playing = false;
-            this.element.pause();
-            this.stopRender(step);
-        };
-
-        this.stop = () => {
-            this.playing = false;
-            this.element.pause();
-            this.stopRender(step);
-            if (this.ready()) this.element.currentTime = 0;
-        };
-
-        this.volume = v => {
-            this.element.volume = v;
-            if (this.muted) {
-                this.muted = false;
-                this.object.attr('muted', '');
-            }
-        };
-
-        this.mute = () => {
-            this.volume(0);
-            this.muted = true;
-            this.object.attr('muted', true);
-        };
-
-        this.seek = t => {
-            if (this.element.readyState <= 1) {
-                this.delayedCall(() => {
-                    if (this.seek) this.seek(t);
-                }, 32);
-                return;
-            }
-            this.element.currentTime = t;
-        };
-
-        this.canPlayTo = t => {
-            seekTo = null;
-            if (t) seekTo = t;
-            if (!this.buffered) this.startRender(checkReady);
-            return this.buffered;
-        };
-
-        this.ready = () => {
-            return this.element.readyState > this.element.HAVE_CURRENT_DATA;
-        };
-
-        this.size = (w, h) => {
-            this.element.width = this.width = w;
-            this.element.height = this.height = h;
-            this.object.size(this.width, this.height);
-        };
-
-        this.forceRender = () => {
-            forceRender = true;
-            this.startRender(step);
-        };
-
-        this.trackProgress = () => {
-            this.element.addEventListener('progress', handleProgress);
-        };
-
-        this.destroy = () => {
-            this.element.removeEventListener('progress', handleProgress);
-            this.stop();
-            this.element.src = '';
-            this.object.destroy();
-            return super.destroy();
-        };
-    }
-
-    set loop(bool) {
-        this.element.loop = bool;
-    }
-
-    get loop() {
-        return this.element.loop;
-    }
-
-    set src(src) {
-        this.element.src = Assets.getPath(src);
-    }
-
-    get src() {
-        return this.element.src;
     }
 }
 
@@ -4346,6 +4121,234 @@ class SVG {
         this.destroy = () => {
             this.object.destroy();
             return Utils.nullObject(this);
+        };
+    }
+}
+
+/**
+ * Video interface.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Video extends Component {
+
+    constructor(params) {
+        super();
+        const self = this;
+        const event = {};
+        let lastTime, buffering,
+            tick = 0;
+
+        this.playing = false;
+        this.loaded = { start: 0, end: 0, percent: 0 };
+
+        createElement();
+        if (params.preload !== false) preload();
+        else this.element.preload = 'none';
+
+        function createElement() {
+            const src = params.src;
+            self.element = document.createElement('video');
+            if (src) self.element.src = Assets.getPath(src);
+            self.element.controls = params.controls;
+            self.element.id = params.id || '';
+            self.element.width = params.width;
+            self.element.height = params.height;
+            self.element.loop = params.loop;
+            self.element.muted = true;
+            self.element.playsinline = true;
+            self.object = new Interface(self.element);
+            self.width = params.width;
+            self.height = params.height;
+            self.object.size(self.width, self.height);
+        }
+
+        function preload() {
+            self.element.preload = 'auto';
+            self.element.load();
+        }
+
+        function step() {
+            if (!self.element) return self.stopRender(step);
+            self.duration = self.element.duration;
+            self.time = self.element.currentTime;
+            if (self.element.currentTime === lastTime) {
+                tick++;
+                if (tick > 30 && !buffering) {
+                    buffering = true;
+                    self.events.fire(Events.ERROR, null, true);
+                }
+            } else {
+                tick = 0;
+                if (buffering) {
+                    self.events.fire(Events.READY, null, true);
+                    buffering = false;
+                }
+            }
+            lastTime = self.element.currentTime;
+            if (self.element.currentTime >= (self.duration || self.element.duration) - 0.001) {
+                if (!self.element.loop) {
+                    self.stopRender(step);
+                    self.events.fire(Events.COMPLETE, null, true);
+                } else {
+                    self.element.currentTime = 0;
+                }
+            }
+            event.time = self.element.currentTime;
+            event.duration = self.element.duration;
+            event.loaded = self.loaded;
+            self.events.fire(Events.UPDATE, event, true);
+        }
+
+        function handleProgress() {
+            if (!self.ready()) return;
+            const bf = self.element.buffered,
+                time = self.element.currentTime;
+            let range = 0;
+            while (!(bf.start(range) <= time && time <= bf.end(range))) range += 1;
+            self.loaded.start = bf.start(range) / self.element.duration;
+            self.loaded.end = bf.end(range) / self.element.duration;
+            self.loaded.percent = self.loaded.end - self.loaded.start;
+            self.events.fire(Events.PROGRESS, self.loaded, true);
+        }
+
+        this.play = () => {
+            this.playing = true;
+            this.element.play();
+            this.startRender(step);
+        };
+
+        this.pause = () => {
+            this.playing = false;
+            this.stopRender(step);
+            this.element.pause();
+        };
+
+        this.stop = () => {
+            this.pause();
+            if (this.ready()) this.element.currentTime = 0;
+        };
+
+        this.volume = v => {
+            this.element.volume = v;
+            if (this.element.muted) this.element.muted = false;
+        };
+
+        this.mute = () => {
+            this.element.muted = true;
+        };
+
+        this.unmute = () => {
+            this.element.muted = false;
+        };
+
+        this.ready = () => {
+            return this.element.readyState > this.element.HAVE_CURRENT_DATA;
+        };
+
+        this.size = (w, h) => {
+            this.element.width = this.width = w;
+            this.element.height = this.height = h;
+            this.object.size(w, h);
+        };
+
+        this.trackProgress = () => {
+            this.element.addEventListener('progress', handleProgress);
+        };
+
+        this.destroy = () => {
+            this.element.removeEventListener('progress', handleProgress);
+            this.stop();
+            this.element.src = '';
+            this.object.destroy();
+            return super.destroy();
+        };
+    }
+}
+
+/**
+ * Background video interface.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class BackgroundVideo extends Interface {
+
+    constructor(params) {
+
+        if (!BackgroundVideo.initialized) {
+            BackgroundVideo.test = BackgroundVideo.test || !Device.mobile;
+
+            BackgroundVideo.initialized = true;
+        }
+
+        super('.BackgroundVideo');
+        const self = this;
+        let cover, wrapper, video,
+            tick = 0;
+
+        this.fade = params.fade !== false;
+
+        initHTML();
+        if (BackgroundVideo.test) {
+            initVideo();
+            if (this.fade) addListeners();
+        }
+
+        function initHTML() {
+            self.size('100%').mouseEnabled(false);
+            cover = self.create('.cover');
+            cover.size('100%').bg(params.img || '#000', 'cover');
+        }
+
+        function initVideo() {
+            wrapper = self.create('.wrapper');
+            wrapper.size('100%');
+            if (self.fade) wrapper.css({ opacity: 0 });
+            video = wrapper.initClass(Video, {
+                src: params.src,
+                loop: params.loop !== false,
+                width: params.width,
+                height: params.height,
+                preload: true
+            });
+            video.object.css({ position: 'absolute' });
+            self.video = video;
+        }
+
+        function addListeners() {
+            self.events.add(video, Events.UPDATE, videoUpdate);
+        }
+
+        function videoUpdate() {
+            if (tick++ < 10) return;
+            self.events.remove(video, Events.UPDATE, videoUpdate);
+            wrapper.tween({ opacity: params.opacity || 1 }, 500, 'easeOutSine', () => {
+                if (!params.opacity) wrapper.clearOpacity();
+            });
+        }
+
+        this.play = () => {
+            if (!video) return;
+            video.play();
+        };
+
+        this.pause = () => {
+            if (!video) return;
+            video.pause();
+        };
+
+        this.size = (w, h) => {
+            if (!video) return;
+            video.height = h;
+            video.width = video.height * (params.width / params.height);
+            if (video.width < w) {
+                video.width = w;
+                video.height = video.width * (params.height / params.width);
+            }
+            cover.size(video.width, video.height).center();
+            video.object.size(video.width, video.height).center();
         };
     }
 }
@@ -4498,6 +4501,51 @@ class Scroll extends Component {
 }
 
 /**
+ * Scroll lock.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class ScrollLock extends Component {
+
+    static instance() {
+        if (!this.singleton) this.singleton = new ScrollLock();
+        return this.singleton;
+    }
+
+    constructor() {
+        super();
+
+        this.locked = 0;
+
+        function preventDefault(e) {
+            e.preventDefault();
+        }
+
+        this.lock = () => {
+            if (!this.locked) {
+                document.body.style.overflow = 'hidden';
+                document.body.addEventListener('touchmove', preventDefault, { passive: false });
+            }
+            this.locked++;
+        };
+
+        this.unlock = () => {
+            this.locked--;
+            if (!this.locked) {
+                document.body.style.overflow = '';
+                document.body.removeEventListener('touchmove', preventDefault, { passive: false });
+            }
+        };
+
+        this.destroy = () => {
+            document.body.removeEventListener('touchmove', preventDefault, { passive: false });
+            return super.destroy();
+        };
+    }
+}
+
+/**
  * Slide interaction.
  *
  * @author Patrick Schroen / https://github.com/pschroen
@@ -4612,8 +4660,8 @@ class Slide extends Component {
             axes.forEach(axis => {
                 if (!self.max[axis]) return;
                 const progress = self[axis] / self.max[axis],
-                    i = Math.round(progress);
-                if (scrollTarget[axis] === i * self.max[axis]) return;
+                    slide = Math.round(progress);
+                if (scrollTarget[axis] === slide * self.max[axis]) return;
                 if (scrollInertia[axis] !== 0) {
                     scrollInertia[axis] *= 0.9;
                     if (Math.abs(scrollInertia[axis]) < 0.001) scrollInertia[axis] = 0;
@@ -4622,7 +4670,7 @@ class Slide extends Component {
                 const limit = self.max[axis] * 0.035;
                 scrollTarget[axis] += Interpolation.Sine.Out(Math.round(self.progress) - self.progress) * limit;
                 if (Math.abs(scrollTarget[axis] - self[axis]) > limit) scrollTarget[axis] -= (scrollTarget[axis] - self[axis]) * 0.5;
-                else if (Math.abs(scrollTarget[axis] - self[axis]) < 0.001) scrollTarget[axis] = i * self.max[axis];
+                else if (Math.abs(scrollTarget[axis] - self[axis]) < 0.001) scrollTarget[axis] = slide * self.max[axis];
                 self.delta[axis] = scrollTarget[axis] - self[axis];
                 self.delta[axis] = self.delta[axis] < 0 ? Math.max(self.delta[axis], -limit) : Math.min(self.delta[axis], limit);
                 self[axis] += self.delta[axis];
@@ -4642,23 +4690,23 @@ class Slide extends Component {
             }
         }
 
-        this.goto = i => {
+        this.moveTo = slide => {
             const obj = {};
-            obj.x = i * this.max.x;
-            obj.y = i * this.max.y;
+            obj.x = slide * this.max.x;
+            obj.y = slide * this.max.y;
             TweenManager.tween(scrollTarget, obj, 2500, 'easeOutQuint');
         };
 
         this.next = () => {
             const progress = (this.x + this.y) / (this.max.x + this.max.y),
-                i = Math.round(progress);
-            this.goto(i + 1);
+                slide = Math.round(progress);
+            this.moveTo(slide + 1);
         };
 
         this.prev = () => {
             const progress = (this.x + this.y) / (this.max.x + this.max.y),
-                i = Math.round(progress);
-            this.goto(i - 1);
+                slide = Math.round(progress);
+            this.moveTo(slide - 1);
         };
 
         this.destroy = () => {
@@ -5268,28 +5316,7 @@ class Vector3 {
     }
 
     setLength(length) {
-        this.normalize().multiply(length);
-        return this;
-    }
-
-    addVectors(a, b) {
-        this.x = a.x + b.x;
-        this.y = a.y + b.y;
-        this.z = a.z + b.z;
-        return this;
-    }
-
-    subVectors(a, b) {
-        this.x = a.x - b.x;
-        this.y = a.y - b.y;
-        this.z = a.z - b.z;
-        return this;
-    }
-
-    multiplyVectors(a, b) {
-        this.x = a.x * b.x;
-        this.y = a.y * b.y;
-        this.z = a.z * b.z;
+        this.normalize().multiplyScalar(length);
         return this;
     }
 
@@ -5300,6 +5327,20 @@ class Vector3 {
         return this;
     }
 
+    addScalar(s) {
+        this.x += s;
+        this.y += s;
+        this.z += s;
+        return this;
+    }
+
+    addVectors(a, b) {
+        this.x = a.x + b.x;
+        this.y = a.y + b.y;
+        this.z = a.z + b.z;
+        return this;
+    }
+
     sub(v) {
         this.x -= v.x;
         this.y -= v.y;
@@ -5307,24 +5348,59 @@ class Vector3 {
         return this;
     }
 
+    subScalar(s) {
+        this.x -= s;
+        this.y -= s;
+        this.z -= s;
+        return this;
+    }
+
+    subVectors(a, b) {
+        this.x = a.x - b.x;
+        this.y = a.y - b.y;
+        this.z = a.z - b.z;
+        return this;
+    }
+
     multiply(v) {
-        this.x *= v;
-        this.y *= v;
-        this.z *= v;
+        this.x *= v.x;
+        this.y *= v.y;
+        this.z *= v.z;
+        return this;
+    }
+
+    multiplyScalar(s) {
+        this.x *= s;
+        this.y *= s;
+        this.z *= s;
+        return this;
+    }
+
+    multiplyVectors(a, b) {
+        this.x = a.x * b.x;
+        this.y = a.y * b.y;
+        this.z = a.z * b.z;
         return this;
     }
 
     divide(v) {
-        this.x /= v;
-        this.y /= v;
-        this.z /= v;
+        this.x /= v.x;
+        this.y /= v.y;
+        this.z /= v.z;
+        return this;
+    }
+
+    divideScalar(s) {
+        this.x /= s;
+        this.y /= s;
+        this.z /= s;
         return this;
     }
 
     limit(max) {
         if (this.length() > max) {
             this.normalize();
-            this.multiply(max);
+            this.multiplyScalar(max);
         }
     }
 
@@ -6045,17 +6121,17 @@ class EulerIntegrator {
             while (p) {
                 if (!p.fixed && p.enabled) {
                     p.old.pos.copy(p.pos);
-                    p.acc.multiply(p.massInv);
+                    p.acc.multiplyScalar(p.massInv);
                     vel.copy(p.vel);
                     acc.copy(p.acc);
                     if (this.useDeltaTime) {
-                        p.pos.add(vel.multiply(dt)).add(acc.multiply(0.5 * dtSq));
-                        p.vel.add(p.acc.multiply(dt));
+                        p.pos.add(vel.multiplyScalar(dt)).add(acc.multiplyScalar(0.5 * dtSq));
+                        p.vel.add(p.acc.multiplyScalar(dt));
                     } else {
-                        p.pos.add(vel).add(acc.multiply(0.5));
+                        p.pos.add(vel).add(acc.multiplyScalar(0.5));
                         p.vel.add(p.acc);
                     }
-                    if (drag) p.vel.multiply(drag);
+                    if (drag) p.vel.multiplyScalar(drag);
                     p.acc.clear();
                 }
                 if (p.saveTo) p.saveTo.copy(p.pos);
@@ -6312,29 +6388,69 @@ class RandomEulerRotation {
 
         function initRotation() {
             rot = {};
-            rot.x = Math.random(0, 2);
-            rot.y = Math.random(0, 2);
-            rot.z = Math.random(0, 2);
-            rot.vx = Math.random(-5, 5) * 0.0025;
-            rot.vy = Math.random(-5, 5) * 0.0025;
-            rot.vz = Math.random(-5, 5) * 0.0025;
+            rot.x = Utils.random(0, 2);
+            rot.y = Utils.random(0, 2);
+            rot.z = Utils.random(0, 2);
+            rot.vx = Utils.random(-5, 5) * 0.0025;
+            rot.vy = Utils.random(-5, 5) * 0.0025;
+            rot.vz = Utils.random(-5, 5) * 0.0025;
         }
 
         this.update = () => {
-            const time = Render.TIME;
+            const t = Render.TIME;
             for (let i = 0; i < 3; i++) {
                 const v = euler[i];
                 switch (rot[v]) {
                     case 0:
-                        container.rotation[v] += Math.cos(Math.sin(time * 0.25)) * rot['v' + v] * this.speed;
+                        container.rotation[v] += Math.cos(Math.sin(t * 0.25)) * rot['v' + v] * this.speed;
                         break;
                     case 1:
-                        container.rotation[v] += Math.cos(Math.sin(time * 0.25)) * rot['v' + v] * this.speed;
+                        container.rotation[v] += Math.cos(Math.sin(t * 0.25)) * rot['v' + v] * this.speed;
                         break;
                     case 2:
-                        container.rotation[v] += Math.cos(Math.cos(time * 0.25)) * rot['v' + v] * this.speed;
+                        container.rotation[v] += Math.cos(Math.cos(t * 0.25)) * rot['v' + v] * this.speed;
                         break;
                 }
+            }
+        };
+    }
+}
+
+/**
+ * Wiggle behavior.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class WiggleBehavior {
+
+    constructor(position, angle = Math.radians(Utils.random(0, 360))) {
+        const wobble = new Vector3(),
+            origin = new Vector3();
+
+        this.target = wobble;
+        this.scale = 1;
+        this.alpha = 0.025;
+        this.speed = 1;
+        this.zMove = 2;
+
+        if (position) origin.copy(position);
+
+        this.update = copy => {
+            const t = Render.TIME;
+            if (copy) origin.copy(position);
+            wobble.x = Math.cos(angle + t * (0.00075 * this.speed)) * (angle + Math.sin(t * (0.00095 * this.speed)) * 200);
+            wobble.y = Math.sin(Math.asin(Math.cos(angle + t * (0.00085 * this.speed)))) * (Math.sin(angle + t * (0.00075 * this.speed)) * 150);
+            wobble.x *= Math.sin(angle + t * (0.00075 * this.speed)) * 2;
+            wobble.y *= Math.cos(angle + t * (0.00065 * this.speed)) * 1.75;
+            wobble.x *= Math.cos(angle + t * (0.00075 * this.speed)) * 1.1;
+            wobble.y *= Math.sin(angle + t * (0.00025 * this.speed)) * 1.15;
+            wobble.z = Math.sin(angle + wobble.x * 0.0025) * (100 * this.zMove);
+            wobble.multiplyScalar(this.scale * 0.1);
+            wobble.add(origin);
+            if (position) {
+                if (this.ease) position.interp(wobble, this.alpha, this.ease);
+                else position.lerp(wobble, this.alpha);
             }
         };
     }
