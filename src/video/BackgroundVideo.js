@@ -19,7 +19,7 @@ class BackgroundVideo extends Interface {
             BackgroundVideo.initialized = true;
         }
 
-        super('BackgroundVideo');
+        super('.BackgroundVideo');
         const self = this;
         let cover, wrapper, video,
             tick = 0;
