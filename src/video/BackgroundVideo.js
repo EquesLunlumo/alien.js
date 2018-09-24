@@ -67,7 +67,7 @@ class BackgroundVideo extends Interface {
 
         this.play = () => {
             if (!video) return;
-            video.play();
+            return video.play();
         };
 
         this.pause = () => {

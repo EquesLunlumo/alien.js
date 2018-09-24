@@ -93,8 +93,9 @@ class Video extends Component {
 
         this.play = () => {
             this.playing = true;
-            this.element.play();
+            const promise = this.element.play();
             this.startRender(step);
+            return promise;
         };
 
         this.pause = () => {
