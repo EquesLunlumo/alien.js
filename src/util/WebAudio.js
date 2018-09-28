@@ -16,10 +16,10 @@ class WebAudio {
 
         class Sound {
 
-            constructor(asset) {
+            constructor(path) {
                 const self = this;
 
-                this.asset = Assets.getPath(asset);
+                this.path = Assets.getPath(path);
                 if (WebAudio.context.createStereoPanner) this.stereo = WebAudio.context.createStereoPanner();
                 this.output = WebAudio.context.createGain();
                 this.volume = 1;
@@ -96,7 +96,7 @@ class WebAudio {
                 if (callback) promise.then(callback);
                 callback = promise.resolve;
                 const sound = this.getSound(id);
-                window.fetch(sound.asset).then(response => {
+                window.fetch(sound.path, Assets.OPTIONS).then(response => {
                     if (!response.ok) return callback();
                     response.arrayBuffer().then(data => {
                         context.decodeAudioData(data, buffer => {
@@ -113,8 +113,8 @@ class WebAudio {
                 sound.ready = () => promise;
             };
 
-            this.createSound = (id, asset, callback) => {
-                sounds[id] = new Sound(asset);
+            this.createSound = (id, path, callback) => {
+                sounds[id] = new Sound(path);
                 if (Device.os === 'ios' && callback) callback();
                 else this.loadSound(id, callback);
                 return sounds[id];
