@@ -54,8 +54,7 @@ class CSSTransition {
                 object.transform(transformProps);
                 Timer.create(() => {
                     if (killed()) return;
-                    clearCSSTween();
-                    if (callback) callback();
+                    tweenComplete();
                 }, time + delay);
             }, 35);
         }
@@ -72,6 +71,15 @@ class CSSTransition {
                 props,
                 transition
             };
+        }
+
+        function tweenComplete() {
+            object.cssTween = null;
+            Timer.create(() => {
+                if (killed()) return;
+                if (!object.cssTween) clearCSSTween();
+            }, 1000);
+            if (callback) callback();
         }
 
         function clearCSSTween() {
