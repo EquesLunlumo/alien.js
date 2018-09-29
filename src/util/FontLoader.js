@@ -10,6 +10,17 @@ import { Component } from './Component.js';
 class FontLoader extends Component {
 
     constructor(fonts, callback) {
+
+        fonts = fonts.map(font => {
+            if (typeof font !== 'object') return {
+                style: 'normal',
+                variant: 'normal',
+                weight: 'normal',
+                font: font.replace(/"/g, '\'')
+            };
+            return font;
+        });
+
         super();
         const self = this;
         let context;
@@ -17,14 +28,13 @@ class FontLoader extends Component {
         initFonts();
 
         function initFonts() {
-            if (!Array.isArray(fonts)) fonts = [fonts];
             context = document.createElement('canvas').getContext('2d');
-            fonts.forEach(font => renderText(font.replace(/"/g, '\'')));
+            fonts.forEach(font => renderText(font));
             finish();
         }
 
-        function renderText(font) {
-            context.font = `12px "${font}"`;
+        function renderText({ style = 'normal', variant = 'normal', weight = 'normal', font }) {
+            context.font = `${style} ${variant} ${weight} 12px "${font}"`;
             context.fillText('LOAD', 0, 0);
         }
 
