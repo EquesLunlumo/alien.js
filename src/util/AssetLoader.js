@@ -18,9 +18,9 @@ class AssetLoader extends Component {
                 const keys = assets.map(path => {
                     return Utils.basename(path);
                 });
-                return keys.reduce((o, k, i) => {
-                    o[k] = assets[i];
-                    return o;
+                return keys.reduce((object, key, i) => {
+                    object[key] = assets[i];
+                    return object;
                 }, {});
             })();
         }
