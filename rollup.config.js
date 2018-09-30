@@ -17,7 +17,8 @@ export default {
         process.env.uglify ? uglify({
             output: {
                 preamble: `//   _  /._  _  r${pkg.version.split('.')[1]} ${timestamp()}\n//  /_|///_'/ /`
-            }
+            },
+            safari10: true
         }) : {}
     ]
 };
