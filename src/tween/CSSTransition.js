@@ -14,6 +14,8 @@ class CSSTransition {
         const self = this;
         let transformProps, transitionProps;
 
+        this.playing = true;
+
         initProperties();
         initCSSTween();
 
@@ -74,10 +76,10 @@ class CSSTransition {
         }
 
         function tweenComplete() {
-            object.cssTween = null;
+            self.playing = false;
             Timer.create(() => {
                 if (killed()) return;
-                if (!object.cssTween) clearCSSTween();
+                if (object.cssTween && !object.cssTween.playing) clearCSSTween();
             }, 1000);
             if (callback) callback();
         }
