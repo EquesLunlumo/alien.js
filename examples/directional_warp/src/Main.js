@@ -238,7 +238,7 @@ class World extends Component {
             World.element = renderer.domElement;
             World.camera = camera;
             World.time = { value: 0 };
-            World.resolution = { value: new THREE.Vector2(Stage.width * World.dpr, Stage.height * World.dpr) };
+            World.resolution = { value: new THREE.Vector2() };
         }
 
         function addListeners() {
@@ -289,6 +289,8 @@ class Progress extends Interface {
         const size = 90;
         let canvas, circle;
 
+        this.progress = 0;
+
         initHTML();
         initCanvas();
         initCircle();
@@ -296,7 +298,6 @@ class Progress extends Interface {
 
         function initHTML() {
             self.size(size);
-            self.progress = 0;
         }
 
         function initCanvas() {

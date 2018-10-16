@@ -1,7 +1,7 @@
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-	typeof define === 'function' && define.amd ? define(factory) :
-	(global.Project = factory());
+    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+    typeof define === 'function' && define.amd ? define(factory) :
+    (global.Project = factory());
 }(this, (function () { 'use strict';
 
 /**
@@ -3828,6 +3828,8 @@ class Progress extends Interface {
         const size = 90;
         let canvas, circle;
 
+        this.progress = 0;
+
         initHTML();
         initCanvas();
         initCircle();
@@ -3835,7 +3837,6 @@ class Progress extends Interface {
 
         function initHTML() {
             self.size(size);
-            self.progress = 0;
         }
 
         function initCanvas() {

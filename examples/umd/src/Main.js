@@ -104,6 +104,8 @@ class Progress extends Interface {
         const size = 90;
         let canvas, circle;
 
+        this.progress = 0;
+
         initHTML();
         initCanvas();
         initCircle();
@@ -111,7 +113,6 @@ class Progress extends Interface {
 
         function initHTML() {
             self.size(size);
-            self.progress = 0;
         }
 
         function initCanvas() {

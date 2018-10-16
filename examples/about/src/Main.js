@@ -1525,8 +1525,6 @@ class Fluid extends Component {
                 depthBuffer: false,
                 stencilBuffer: false
             };
-            if (buffer1) buffer1.dispose();
-            if (buffer2) buffer2.dispose();
             buffer1 = new THREE.WebGLRenderTarget(Stage.width * World.dpr, Stage.height * World.dpr, params);
             buffer2 = new THREE.WebGLRenderTarget(Stage.width * World.dpr, Stage.height * World.dpr, params);
         }
@@ -1555,11 +1553,6 @@ class Fluid extends Component {
             viewScene.add(viewMesh);
         }
 
-        function updateShaders() {
-            pass.uniforms.texture.value = buffer1.texture;
-            view.uniforms.texture.value = buffer1.texture;
-        }
-
         function addListeners() {
             self.events.add(Events.RESIZE, resize);
             self.events.add(Mouse.input, Interaction.START, down);
@@ -1568,9 +1561,8 @@ class Fluid extends Component {
         }
 
         function resize() {
-            initFramebuffers();
-            updateShaders();
-            World.frame.value = 0;
+            buffer1.setSize(Stage.width * World.dpr, Stage.height * World.dpr);
+            buffer2.setSize(Stage.width * World.dpr, Stage.height * World.dpr);
         }
 
         function down() {
@@ -1602,7 +1594,6 @@ class Fluid extends Component {
             buffer2 = buffer;
             renderer.render(viewScene, camera);
             AudioController.updatePosition();
-            World.frame.value++;
         }
 
         this.animateIn = () => {
@@ -1660,7 +1651,7 @@ class World extends Component {
             World.camera = camera;
             World.time = { value: 0 };
             World.frame = { value: 0 };
-            World.resolution = { value: new THREE.Vector2(Stage.width * World.dpr, Stage.height * World.dpr) };
+            World.resolution = { value: new THREE.Vector2() };
         }
 
         function addListeners() {
@@ -1670,11 +1661,13 @@ class World extends Component {
 
         function resize() {
             renderer.setSize(Stage.width, Stage.height);
+            World.frame.value = 0;
             World.resolution.value.set(Stage.width * World.dpr, Stage.height * World.dpr);
         }
 
         function loop(t, delta) {
             World.time.value += delta * 0.001;
+            World.frame.value++;
         }
 
         this.destroy = () => {
@@ -1768,6 +1761,8 @@ class Loader extends Interface {
         const self = this;
         let alienkitty, number, title, loader;
 
+        this.progress = 0;
+
         initHTML();
         initView();
         initNumber();
@@ -1776,7 +1771,6 @@ class Loader extends Interface {
 
         function initHTML() {
             self.size('100%').css({ left: 0, top: 0 });
-            self.progress = 0;
         }
 
         function initView() {

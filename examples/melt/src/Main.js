@@ -225,8 +225,6 @@ class World extends Component {
                 depthBuffer: false,
                 stencilBuffer: false
             };
-            if (buffer1) buffer1.dispose();
-            if (buffer2) buffer2.dispose();
             buffer1 = new THREE.WebGLRenderTarget(Stage.width * World.dpr, Stage.height * World.dpr, params);
             buffer2 = new THREE.WebGLRenderTarget(Stage.width * World.dpr, Stage.height * World.dpr, params);
         }
@@ -254,27 +252,20 @@ class World extends Component {
             viewScene.add(viewMesh);
         }
 
-        function updateShaders() {
-            pass.uniforms.texture2.value = renderTarget.texture;
-            pass.uniforms.texture1.value = buffer1.texture;
-            view.uniforms.texture.value = buffer1.texture;
-        }
-
         function addListeners() {
             self.events.add(Events.RESIZE, resize);
         }
 
         function resize() {
             renderer.setSize(Stage.width, Stage.height);
-            renderTarget.dispose();
-            renderTarget = Utils3D.createRT(Stage.width * World.dpr, Stage.height * World.dpr);
+            renderTarget.setSize(Stage.width * World.dpr, Stage.height * World.dpr);
+            buffer1.setSize(Stage.width * World.dpr, Stage.height * World.dpr);
+            buffer2.setSize(Stage.width * World.dpr, Stage.height * World.dpr);
             camera.left = -Stage.width / 2;
             camera.right = Stage.width / 2;
             camera.top = Stage.height / 2;
             camera.bottom = -Stage.height / 2;
             camera.updateProjectionMatrix();
-            initFramebuffers();
-            updateShaders();
             passMesh.scale.set(Stage.width, Stage.height, 1);
             viewMesh.scale.set(Stage.width, Stage.height, 1);
             World.frame.value = 0;
@@ -340,6 +331,8 @@ class Progress extends Interface {
         const size = 90;
         let canvas, circle;
 
+        this.progress = 0;
+
         initHTML();
         initCanvas();
         initCircle();
@@ -347,7 +340,6 @@ class Progress extends Interface {
 
         function initHTML() {
             self.size(size);
-            self.progress = 0;
         }
 
         function initCanvas() {

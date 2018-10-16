@@ -187,7 +187,7 @@ class World extends Component {
     constructor() {
         super();
         const self = this;
-        let renderer, scene, camera, shader, effects;
+        let renderer, scene, camera, effects, shader;
 
         World.dpr = Math.min(2, Device.pixelRatio);
 
@@ -205,9 +205,14 @@ class World extends Component {
             World.element = renderer.domElement;
             World.camera = camera;
             World.shader = shader;
-            World.effects = effects;
             World.time = { value: 0 };
-            World.resolution = { value: new THREE.Vector2(Stage.width * World.dpr, Stage.height * World.dpr) };
+            World.resolution = { value: new THREE.Vector2() };
+            effects = self.initClass(Effects, Stage, {
+                renderer,
+                scene,
+                camera,
+                dpr: World.dpr
+            });
             shader = self.initClass(Shader, vertBasicPass, fragNoiseDizzy, {
                 time: World.time,
                 resolution: World.resolution,
@@ -215,13 +220,8 @@ class World extends Component {
                 depthWrite: false,
                 depthTest: false
             });
-            effects = self.initClass(Effects, Stage, {
-                renderer,
-                scene,
-                camera,
-                dpr: World.dpr
-            });
             effects.add(shader);
+            World.effects = effects;
         }
 
         function addListeners() {
@@ -272,6 +272,8 @@ class Progress extends Interface {
         const size = 90;
         let canvas, circle;
 
+        this.progress = 0;
+
         initHTML();
         initCanvas();
         initCircle();
@@ -279,7 +281,6 @@ class Progress extends Interface {
 
         function initHTML() {
             self.size(size);
-            self.progress = 0;
         }
 
         function initCanvas() {

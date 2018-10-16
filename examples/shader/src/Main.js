@@ -151,14 +151,14 @@ class World extends Component {
             scene = new THREE.Scene();
             camera = new THREE.PerspectiveCamera(65, Stage.width / Stage.height, 0.01, 200);
             camera.position.set(0.85, 1, -1.5);
-            camera.target = new THREE.Vector3(0, 0, 0);
+            camera.target = new THREE.Vector3();
             camera.lookAt(camera.target);
             World.scene = scene;
             World.renderer = renderer;
             World.element = renderer.domElement;
             World.camera = camera;
             World.time = { value: 0 };
-            World.resolution = { value: new THREE.Vector2(Stage.width * World.dpr, Stage.height * World.dpr) };
+            World.resolution = { value: new THREE.Vector2() };
         }
 
         function addListeners() {
