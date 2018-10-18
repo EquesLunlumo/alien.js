@@ -33,8 +33,8 @@ class Effects extends Component {
             renderTarget1 = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
             renderTarget2 = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
             scene = new THREE.Scene();
-            camera = new THREE.OrthographicCamera(self.stage.width / -2, self.stage.width / 2, self.stage.height / 2, self.stage.height / -2, 1, 1000);
-            mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), new THREE.MeshBasicMaterial());
+            camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+            mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2));
             scene.add(mesh);
         }
 
@@ -43,15 +43,8 @@ class Effects extends Component {
         }
 
         function resize() {
-            renderTarget1.dispose();
-            renderTarget2.dispose();
-            renderTarget1 = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
-            renderTarget2 = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
-            camera.left = self.stage.width / -2;
-            camera.right = self.stage.width / 2;
-            camera.top = self.stage.height / 2;
-            camera.bottom = self.stage.height / -2;
-            camera.updateProjectionMatrix();
+            renderTarget1.setSize(self.stage.width * self.dpr, self.stage.height * self.dpr);
+            renderTarget2.setSize(self.stage.width * self.dpr, self.stage.height * self.dpr);
         }
 
         this.add = (pass, index) => {
@@ -84,6 +77,12 @@ class Effects extends Component {
             mesh.material = this.passes[this.passes.length - 1].material;
             mesh.material.uniforms.texture.value = renderTarget1.texture;
             this.renderer.render(scene, camera, rt || this.rt);
+        };
+
+        this.setSize = (width, height) => {
+            this.events.remove(Events.RESIZE, resize);
+            renderTarget1.setSize(width * this.dpr, height * this.dpr);
+            renderTarget2.setSize(width * this.dpr, height * this.dpr);
         };
 
         this.destroy = () => {
