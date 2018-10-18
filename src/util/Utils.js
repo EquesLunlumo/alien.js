@@ -44,12 +44,6 @@ class Utils {
         return object;
     }
 
-    static toArray(object) {
-        return Object.keys(object).map(key => {
-            return object[key];
-        });
-    }
-
     static cloneArray(array) {
         return array.slice(0);
     }
