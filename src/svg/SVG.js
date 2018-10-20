@@ -4,94 +4,62 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Utils } from '../util/Utils.js';
 import { Interface } from '../util/Interface.js';
 
-class SVG {
+class SVG extends Interface {
 
-    constructor(name, type, params) {
-        const self = this;
-        let svg;
+    constructor(name = '.svg', type = 'svg') {
+        super(name, 'svg', type);
 
-        createSVG();
+        this.x = 0;
+        this.y = 0;
+        this.px = 0;
+        this.py = 0;
+        this.width = 0;
+        this.height = 0;
+    }
 
-        function createSVG() {
-            switch (type) {
-                case 'svg':
-                    createView();
-                    break;
-                case 'radialGradient':
-                    createGradient();
-                    break;
-                case 'linearGradient':
-                    createGradient();
-                    break;
-                default:
-                    createElement();
-                    break;
-            }
+    size(w, h = w) {
+        this.width = w;
+        this.height = h;
+        this.element.setAttribute('width', w);
+        this.element.setAttribute('height', h);
+        return this;
+    }
+
+    transform(props) {
+        for (let key in props) if (typeof props[key] === 'number') this[key] = props[key];
+        let transforms = '';
+        if (this.x || this.y) transforms += 'translate(' + (this.x + this.px) + ' ' + (this.y + this.py) + ')';
+        if (typeof this.scale !== 'undefined') {
+            transforms += 'scale(' + this.scale + ')';
+        } else if (typeof this.scaleX !== 'undefined' || typeof this.scaleY !== 'undefined') {
+            const scaleX = this.scaleX || 1,
+                scaleY = this.scaleY || 1;
+            let scale = '';
+            scale += scaleX + ' ';
+            scale += scaleY;
+            transforms += 'scale(' + scale + ')';
         }
+        if (typeof this.rotation !== 'undefined') transforms += 'rotate(' + this.rotation + ')';
+        if (this.x || this.y) transforms += 'translate(-' + (this.x + this.px) + ' -' + (this.y + this.py) + ')';
+        this.element.setAttribute('transform', transforms);
+        return this;
+    }
 
-        function createView() {
-            svg = new Interface(name, 'svg');
-            svg.element.setAttribute('preserveAspectRatio', 'xMinYMid meet');
-            svg.element.setAttribute('version', '1.1');
-            svg.element.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-            if (params.width) {
-                svg.element.setAttribute('viewBox', '0 0 ' + params.width + ' ' + params.height);
-                svg.element.style.width = params.width + 'px';
-                svg.element.style.height = params.height + 'px';
-            }
-            self.object = svg;
+    transformPoint(x, y) {
+        this.px = typeof x === 'number' ? x : this.width * (parseFloat(x) / 100);
+        this.py = typeof y === 'number' ? y : this.height * (parseFloat(y) / 100);
+        return this;
+    }
+
+    attr(props, value) {
+        if (typeof props !== 'object') {
+            this[props] = value;
+            return super.attr(props, value);
         }
-
-        function createElement() {
-            svg = new Interface(name, 'svg', type);
-            if (type === 'circle') setCircle();
-            else if (type === 'radialGradient') setGradient();
-            self.object = svg;
-        }
-
-        function setCircle() {
-            ['cx', 'cy', 'r'].forEach(attr => {
-                if (params.stroke && attr === 'r') svg.element.setAttributeNS(null, attr, params.width / 2 - params.stroke);
-                else svg.element.setAttributeNS(null, attr, params.width / 2);
-            });
-        }
-
-        function setGradient() {
-            ['cx', 'cy', 'r', 'fx', 'fy', 'name'].forEach(attr => {
-                svg.element.setAttributeNS(null, attr === 'name' ? 'id' : attr, params[attr]);
-            });
-            svg.element.setAttributeNS(null, 'gradientUnits', 'userSpaceOnUse');
-        }
-
-        function createColorStop(obj) {
-            const stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-            ['offset', 'style'].forEach(attr => {
-                stop.setAttributeNS(null, attr, attr === 'style' ? 'stop-color:' + obj[attr] : obj[attr]);
-            });
-            return stop;
-        }
-
-        function createGradient() {
-            createElement();
-            params.colors.forEach(param => {
-                svg.element.appendChild(createColorStop(param));
-            });
-        }
-
-        this.addTo = element => {
-            if (element.points) element = element.points;
-            else if (element.element) element = element.element;
-            else if (element.object) element = element.object.element;
-            element.appendChild(svg.element);
-        };
-
-        this.destroy = () => {
-            this.object.destroy();
-            return Utils.nullObject(this);
-        };
+        for (let key in props) if (typeof props[key] === 'number') this[key] = props[key];
+        return super.attr(props, value);
     }
 }
 

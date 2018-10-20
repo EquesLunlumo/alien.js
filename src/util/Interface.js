@@ -28,13 +28,12 @@ class Interface {
                     const qualifiedName = detached || 'svg';
                     detached = true;
                     this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName);
-                    this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
                 } else {
                     this.element = document.createElement(type);
                     if (name.charAt(0) !== '.') this.element.id = name;
                     else this.element.className = name.substr(1);
+                    this.element.style.position = 'absolute';
                 }
-                this.element.style.position = 'absolute';
                 if (!detached) document.body.appendChild(this.element);
             } else {
                 this.element = name;
