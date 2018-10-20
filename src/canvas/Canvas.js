@@ -27,7 +27,7 @@ class Canvas {
 
         size(w, h);
 
-        function size(w, h) {
+        function size(w, h = w) {
             const ratio = retina ? 2 : 1;
             self.element.width = w * ratio;
             self.element.height = h * ratio;
