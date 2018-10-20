@@ -261,7 +261,7 @@ class Interface {
 
     css(props, value) {
         if (typeof props !== 'object') {
-            if (!value) {
+            if (typeof value === 'undefined') {
                 let style = this.element.style[props];
                 if (typeof style !== 'number') {
                     if (~style.indexOf('px')) style = Number(style.slice(0, -2));
@@ -365,10 +365,18 @@ class Interface {
         return this;
     }
 
-    attr(attr, value) {
-        if (typeof value === 'undefined') return this.element.getAttribute(attr);
-        if (value === '') this.element.removeAttribute(attr);
-        else this.element.setAttribute(attr, value);
+    attr(props, value) {
+        if (typeof props !== 'object') {
+            if (typeof value === 'undefined') return this.element.getAttribute(props);
+            if (value === '') this.element.removeAttribute(props);
+            else this.element.setAttribute(props, value);
+            return this;
+        }
+        for (let key in props) {
+            const val = props[key];
+            if (!(typeof val === 'string' || typeof val === 'number')) continue;
+            this.element.setAttribute(key, val);
+        }
         return this;
     }
 
