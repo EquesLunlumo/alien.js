@@ -125,15 +125,19 @@ class ProgressIndeterminate extends Interface {
 
         function initCircle() {
             circle = svg.initClass(SVG, '.circle', 'circle');
+            circle.attr('fill', 'none');
             circle.attr('cx', size / 2);
             circle.attr('cy', size / 2);
             circle.attr('r', radius);
             circle.css('stroke', Config.UI_COLOR);
             circle.css('stroke-width', '1.5px');
+            circle.css('stroke-dasharray', `0,${length}`);
+            circle.css('stroke-dashoffset', -length * offset);
         }
 
         function loop() {
-            circle.css('stroke-dasharray', `${length * data.length},${length - (length * data.length)}`);
+            const dash = length * data.length;
+            circle.css('stroke-dasharray', `${dash},${length - dash}`);
             circle.css('stroke-dashoffset', -length * (data.start + offset));
         }
 
@@ -192,6 +196,7 @@ class Progress extends Interface {
 
         function initCircle() {
             circle = svg.initClass(SVG, '.circle', 'circle');
+            circle.attr('fill', 'none');
             circle.attr('cx', size / 2);
             circle.attr('cy', size / 2);
             circle.attr('r', radius);
@@ -204,7 +209,8 @@ class Progress extends Interface {
         function loop() {
             if (self.complete) return;
             if (self.progress >= 1) complete();
-            circle.css('stroke-dasharray', `${length * self.progress},${length - (length * self.progress)}`);
+            const dash = length * self.progress;
+            circle.css('stroke-dasharray', `${dash},${length - dash}`);
         }
 
         function complete() {
