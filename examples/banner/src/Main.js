@@ -16,7 +16,7 @@ class Main extends Interface {
     constructor() {
         super();
         const self = this;
-        let loader, wrapper, alienkitty, eyelid1, eyelid2;
+        let wrapper, alienkitty, eyelid1, eyelid2;
 
         this.playing = false;
 
@@ -46,7 +46,7 @@ class Main extends Interface {
         }
 
         function initLoader() {
-            loader = self.initClass(AssetLoader, Config.ASSETS);
+            const loader = self.initClass(AssetLoader, Config.ASSETS);
             self.events.add(loader, Events.COMPLETE, loadComplete);
         }
 

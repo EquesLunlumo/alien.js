@@ -503,7 +503,7 @@ class Loader extends Interface {
     constructor() {
         super('Loader');
         const self = this;
-        let slide, loader, progress;
+        let progress;
 
         initHTML();
         initLoader();
@@ -514,8 +514,8 @@ class Loader extends Interface {
         }
 
         function initLoader() {
-            slide = self.initClass(SlideLoader, Config.LIST);
-            loader = self.initClass(MultiLoader);
+            const slide = self.initClass(SlideLoader, Config.LIST),
+                loader = self.initClass(MultiLoader);
             loader.push(self.initClass(AssetLoader, Config.ASSETS));
             loader.push(slide);
             self.events.add(loader, Events.PROGRESS, loadUpdate);

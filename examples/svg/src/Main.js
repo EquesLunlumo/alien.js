@@ -235,7 +235,7 @@ class Loader extends Interface {
     constructor() {
         super('Loader');
         const self = this;
-        let loader, progress;
+        let progress;
 
         initHTML();
         initLoader();
@@ -246,7 +246,7 @@ class Loader extends Interface {
         }
 
         function initLoader() {
-            loader = self.initClass(AssetLoader, Config.ASSETS);
+            const loader = self.initClass(AssetLoader, Config.ASSETS);
             self.events.add(loader, Events.PROGRESS, loadUpdate);
         }
 
