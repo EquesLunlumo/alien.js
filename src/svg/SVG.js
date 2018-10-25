@@ -8,8 +8,8 @@ import { Interface } from '../util/Interface.js';
 
 class SVG extends Interface {
 
-    constructor(name = '.svg', type = 'svg') {
-        super(name, 'svg', type);
+    constructor(type = 'svg') {
+        super(null, 'svg', type);
 
         this.x = 0;
         this.y = 0;

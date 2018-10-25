@@ -34,9 +34,9 @@ class AlienKitty extends Interface {
         }
 
         function initAlienKitty() {
-            alienkitty = svg.initClass(SVG, '.alienkitty', 'image').size(90, 86);
-            eyelid1 = svg.initClass(SVG, '.eyelid1', 'image').size(24, 14).attr({ x: 35, y: 25 }).transformPoint('50%', 0).transform({ scaleX: 1.5, scaleY: 0.01 });
-            eyelid2 = svg.initClass(SVG, '.eyelid2', 'image').size(24, 14).attr({ x: 53, y: 26 }).transformPoint(0, 0).transform({ scaleX: 1, scaleY: 0.01 });
+            alienkitty = svg.initClass(SVG, 'image').size(90, 86);
+            eyelid1 = svg.initClass(SVG, 'image').size(24, 14).attr({ x: 35, y: 25 }).transformPoint('50%', 0).transform({ scaleX: 1.5, scaleY: 0.01 });
+            eyelid2 = svg.initClass(SVG, 'image').size(24, 14).attr({ x: 53, y: 26 }).transformPoint(0, 0).transform({ scaleX: 1, scaleY: 0.01 });
         }
 
         function addListeners() {
@@ -124,7 +124,7 @@ class ProgressIndeterminate extends Interface {
         }
 
         function initCircle() {
-            circle = svg.initClass(SVG, '.circle', 'circle');
+            circle = svg.initClass(SVG, 'circle');
             circle.attr('fill', 'none');
             circle.attr('cx', size / 2);
             circle.attr('cy', size / 2);
@@ -195,7 +195,7 @@ class Progress extends Interface {
         }
 
         function initCircle() {
-            circle = svg.initClass(SVG, '.circle', 'circle');
+            circle = svg.initClass(SVG, 'circle');
             circle.attr('fill', 'none');
             circle.attr('cx', size / 2);
             circle.attr('cy', size / 2);

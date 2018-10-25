@@ -21,7 +21,7 @@ class Interface {
         this.timers = [];
         this.loops = [];
         if (typeof name !== 'undefined') {
-            if (typeof name === 'string') {
+            if (typeof name === 'string' || !name) {
                 this.name = name;
                 this.type = type;
                 if (type === 'svg') {
