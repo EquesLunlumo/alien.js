@@ -358,7 +358,7 @@ class Loader extends Interface {
         initProgress();
 
         function initHTML() {
-            self.size('100%');
+            self.css({ position: 'static' });
         }
 
         function initLoader() {

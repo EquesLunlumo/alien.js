@@ -627,7 +627,7 @@ class FooterSide extends Interface {
         initTitle();
 
         function initHTML() {
-            self.size('100%').mouseEnabled(false);
+            self.css({ position: 'static' }).mouseEnabled(false);
         }
 
         function initTitle() {
@@ -863,10 +863,6 @@ class HeaderExamples extends Interface {
 
         function initHTML() {
             self.mouseEnabled(false);
-            self.css({
-                left: 0,
-                top: 0
-            });
         }
 
         function initViews() {
@@ -1312,7 +1308,7 @@ class Nav extends Interface {
         addListeners();
 
         function initHTML() {
-            self.size('100%').mouseEnabled(false);
+            self.css({ position: 'static' }).mouseEnabled(false);
         }
 
         function initBackground() {
@@ -1355,11 +1351,7 @@ class UI extends Interface {
 
         function initContainer() {
             Stage.add(self);
-            self.size('100%').mouseEnabled(false);
-            self.css({
-                left: 0,
-                top: 0
-            });
+            self.css({ position: 'static' }).mouseEnabled(false);
         }
 
         function initViews() {
@@ -1770,7 +1762,7 @@ class Loader extends Interface {
         initLoader();
 
         function initHTML() {
-            self.size('100%').css({ left: 0, top: 0 });
+            self.css({ position: 'static' });
         }
 
         function initView() {
