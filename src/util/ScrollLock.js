@@ -1,5 +1,5 @@
 /**
- * Scroll lock.
+ * Scroll lock controller.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
