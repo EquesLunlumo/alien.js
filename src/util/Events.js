@@ -54,18 +54,19 @@ class Events {
         if (!Events.initialized) {
             Events.emitter        = new Emitter();
             Events.VISIBILITY     = 'visibility';
-            Events.KEYBOARD_PRESS = 'keyboard_press';
-            Events.KEYBOARD_DOWN  = 'keyboard_down';
-            Events.KEYBOARD_UP    = 'keyboard_up';
-            Events.RESIZE         = 'resize';
             Events.COMPLETE       = 'complete';
             Events.PROGRESS       = 'progress';
             Events.UPDATE         = 'update';
             Events.LOADED         = 'loaded';
             Events.ERROR          = 'error';
             Events.READY          = 'ready';
-            Events.HOVER          = 'hover';
+            Events.RESIZE         = 'resize';
             Events.CLICK          = 'click';
+            Events.HOVER          = 'hover';
+            Events.FULLSCREEN     = 'fullscreen';
+            Events.KEYBOARD_PRESS = 'keyboard_press';
+            Events.KEYBOARD_DOWN  = 'keyboard_down';
+            Events.KEYBOARD_UP    = 'keyboard_up';
 
             Events.initialized = true;
         }

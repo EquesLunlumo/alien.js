@@ -20,6 +20,7 @@ export { Assets } from './util/Assets.js';
 export { AssetLoader } from './util/AssetLoader.js';
 export { MultiLoader } from './util/MultiLoader.js';
 export { FontLoader } from './util/FontLoader.js';
+export { Fullscreen } from './util/Fullscreen.js';
 export { StateDispatcher } from './util/StateDispatcher.js';
 export { Storage } from './util/Storage.js';
 export { WebAudio } from './util/WebAudio.js';
