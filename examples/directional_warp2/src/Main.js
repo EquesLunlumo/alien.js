@@ -38,7 +38,7 @@ class Data {
     static init() {
         const self = this;
 
-        // StateDispatcher @param {boolean} [forceHash = undefined] Force hash navigation
+        // StateDispatcher @param {boolean} [hash = undefined] Use hash navigation
         this.dispatcher = Stage.initClass(StateDispatcher, true);
 
         addListeners();

@@ -9,7 +9,7 @@ import { Component } from './Component.js';
 
 class StateDispatcher extends Component {
 
-    constructor(forceHash) {
+    constructor(hash) {
         super();
         const self = this;
         let storePath, storeState,
@@ -17,11 +17,11 @@ class StateDispatcher extends Component {
 
         this.locked = false;
 
+        addListeners();
         storePath = getPath();
-        createListener();
 
-        function createListener() {
-            if (forceHash) window.addEventListener('hashchange', hashChange);
+        function addListeners() {
+            if (hash) window.addEventListener('hashchange', hashChange);
             else window.addEventListener('popstate', popState);
         }
 
@@ -34,21 +34,21 @@ class StateDispatcher extends Component {
         }
 
         function getPath() {
-            if (forceHash) return location.hash.slice(3);
-            return rootPath !== '/' ? location.pathname.split(rootPath)[1] : location.pathname.slice(1) || '';
+            if (hash) return location.hash.slice(3);
+            return (rootPath !== '/' ? location.pathname.split(rootPath)[1] : location.pathname.slice(1)) || '';
         }
 
         function handleStateChange(state, path) {
-            if (path !== storePath) {
-                if (!self.locked) {
-                    storePath = path;
-                    storeState = state;
-                    self.events.fire(Events.UPDATE, { value: state, path }, true);
-                } else if (storePath) {
-                    if (forceHash) location.hash = '!/' + storePath;
-                    else history.pushState(storeState, null, rootPath + storePath);
-                }
+            if (path === storePath) return;
+            if (self.locked) {
+                if (!storePath) return;
+                if (hash) location.hash = '!/' + storePath;
+                else history.pushState(storeState, null, rootPath + storePath);
+                return;
             }
+            storePath = path;
+            storeState = state;
+            self.events.fire(Events.UPDATE, { value: state, path }, true);
         }
 
         this.getState = () => {
@@ -56,17 +56,20 @@ class StateDispatcher extends Component {
             return { value: storeState, path };
         };
 
+        this.setRoot = root => {
+            rootPath = root.charAt(0) === '/' ? root : '/' + root;
+        };
+
         this.setState = (state, path) => {
             if (typeof state !== 'object') {
                 path = state;
                 state = null;
             }
-            if (path !== storePath) {
-                storePath = path;
-                storeState = state;
-                if (forceHash) location.hash = '!/' + path;
-                else history.pushState(state, null, rootPath + path);
-            }
+            if (path === storePath) return;
+            storePath = path;
+            storeState = state;
+            if (hash) location.hash = '!/' + path;
+            else history.pushState(state, null, rootPath + path);
         };
 
         this.replaceState = (state, path) => {
@@ -74,12 +77,11 @@ class StateDispatcher extends Component {
                 path = state;
                 state = null;
             }
-            if (path !== storePath) {
-                storePath = path;
-                storeState = state;
-                if (forceHash) history.replaceState(null, null, '#!/' + path);
-                else history.replaceState(state, null, rootPath + path);
-            }
+            if (path === storePath) return;
+            storePath = path;
+            storeState = state;
+            if (hash) location.hash = '!/' + path;
+            else history.replaceState(state, null, rootPath + path);
         };
 
         this.setTitle = title => document.title = title;
@@ -88,12 +90,7 @@ class StateDispatcher extends Component {
 
         this.unlock = () => this.locked = false;
 
-        this.forceHash = () => forceHash = true;
-
-        this.setPathRoot = path => {
-            if (path.charAt(0) === '/') rootPath = path;
-            else rootPath = '/' + path;
-        };
+        this.useHash = () => hash = true;
 
         this.destroy = () => {
             window.removeEventListener('hashchange', hashChange);
