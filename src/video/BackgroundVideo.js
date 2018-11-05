@@ -4,7 +4,6 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Events } from '../util/Events.js';
 import { Device } from '../util/Device.js';
 import { Interface } from '../util/Interface.js';
 import { Video } from './Video.js';
@@ -45,6 +44,7 @@ class BackgroundVideo extends Interface {
             video = wrapper.initClass(Video, {
                 src: params.src,
                 loop: params.loop !== false,
+                events: ['timeupdate'],
                 width: params.width,
                 height: params.height,
                 preload: true
@@ -54,20 +54,20 @@ class BackgroundVideo extends Interface {
         }
 
         function addListeners() {
-            self.events.add(video, Events.UPDATE, videoUpdate);
+            self.events.add(video, Video.UPDATE, update);
         }
 
-        function videoUpdate() {
+        function update() {
             if (tick++ < 10) return;
-            self.events.remove(video, Events.UPDATE, videoUpdate);
+            self.events.remove(video, Video.UPDATE, update);
             wrapper.tween({ opacity: params.opacity || 1 }, 500, 'easeOutSine', () => {
                 if (!params.opacity) wrapper.clearOpacity();
             });
         }
 
-        this.play = () => {
+        this.play = async () => {
             if (!video) return;
-            return video.play();
+            return await video.play();
         };
 
         this.pause = () => {

@@ -4,7 +4,6 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Events } from '../util/Events.js';
 import { Component } from '../util/Component.js';
 import { Interface } from '../util/Interface.js';
 import { Assets } from '../util/Assets.js';
@@ -12,135 +11,184 @@ import { Assets } from '../util/Assets.js';
 class Video extends Component {
 
     constructor(params) {
+
+        if (!Video.initialized) {
+            Video.PLAY = 'video_play';
+            Video.PAUSE = 'video_pause';
+            Video.ENDED = 'video_ended';
+            Video.PLAYING = 'video_playing';
+            Video.PROGRESS = 'video_progress';
+            Video.WAITING = 'video_waiting';
+            Video.UPDATE = 'video_update';
+
+            Video.initialized = true;
+        }
+
         super();
         const self = this;
-        const event = {};
-        let lastTime, buffering,
-            tick = 0;
+        const ready = Promise.create(),
+            loaded = Promise.create();
+        let object, video, loadingState, listeners,
+            initialPlay = true;
 
-        this.playing = false;
-        this.loaded = { start: 0, end: 0, percent: 0 };
-
+        initParameters();
         createElement();
-        if (params.preload !== false) preload();
-        else this.element.preload = 'none';
+        addListeners();
+
+        function initParameters() {
+            const defaults = {
+                preload: false,
+                autoplay: false,
+                muted: true,
+                loop: false,
+                inline: true,
+                controls: false,
+                currentTime: 0,
+                playback: 1,
+                width: 640,
+                height: 360,
+                events: []
+            };
+            params = Object.assign(defaults, params);
+        }
 
         function createElement() {
-            const src = params.src;
-            self.element = document.createElement('video');
-            if (src) self.element.src = Assets.getPath(src);
-            self.element.controls = params.controls;
-            self.element.id = params.id || '';
-            self.element.width = params.width;
-            self.element.height = params.height;
-            self.element.loop = params.loop;
-            self.element.muted = true;
-            self.element.playsinline = true;
-            self.object = new Interface(self.element);
+            video = document.createElement('video');
+            video.src = Assets.getPath(params.src);
+            video.crossorigin = 'anonymous';
+            video.preload = params.preload;
+            video.autoplay = params.autoplay;
+            video.muted = params.autoplay || params.muted;
+            video.loop = params.loop;
+            video.playsinline = params.inline;
+            video.controls = params.controls;
+            video.width = params.width;
+            video.height = params.height;
+            video.defaultMuted = params.muted;
+            video.defaultPlaybackRate = params.playback;
+
+            self.element = video;
+            object = new Interface(video);
+            self.object = object;
             self.width = params.width;
             self.height = params.height;
-            self.object.size(self.width, self.height);
+
+            if (params.preload) startPreload();
+            if (params.autoplay) startPlayback();
         }
 
-        function preload() {
-            self.element.preload = 'auto';
-            self.element.load();
+        function addListeners() {
+            listeners = { play, pause, ended, playing, progress, waiting, timeupdate, loadeddata };
+            params.events.push('loadeddata');
+            params.events.forEach(event => video.addEventListener(event, listeners[event], true));
         }
 
-        function step() {
-            if (!self.element) return self.stopRender(step);
-            self.duration = self.element.duration;
-            self.time = self.element.currentTime;
-            if (self.element.currentTime === lastTime) {
-                tick++;
-                if (tick > 30 && !buffering) {
-                    buffering = true;
-                    self.events.fire(Events.ERROR, null, true);
-                }
-            } else {
-                tick = 0;
-                if (buffering) {
-                    self.events.fire(Events.READY, null, true);
-                    buffering = false;
-                }
+        function startPreload() {
+            loadingState = true;
+            return ready;
+        }
+
+        async function startPlayback() {
+            loadingState = false;
+            await ready;
+            if (initialPlay) {
+                initialPlay = false;
+                video.currentTime = params.currentTime;
             }
-            lastTime = self.element.currentTime;
-            if (self.element.currentTime >= (self.duration || self.element.duration) - 0.001) {
-                if (!self.element.loop) {
-                    self.stopRender(step);
-                    self.events.fire(Events.COMPLETE, null, true);
-                } else {
-                    self.element.currentTime = 0;
-                }
-            }
-            event.time = self.element.currentTime;
-            event.duration = self.element.duration;
-            event.loaded = self.loaded;
-            self.events.fire(Events.UPDATE, event, true);
+            return video.play();
         }
 
-        function handleProgress() {
-            if (!self.ready()) return;
-            const bf = self.element.buffered,
-                time = self.element.currentTime;
-            let range = 0;
-            while (!(bf.start(range) <= time && time <= bf.end(range))) range += 1;
-            self.loaded.start = bf.start(range) / self.element.duration;
-            self.loaded.end = bf.end(range) / self.element.duration;
-            self.loaded.percent = self.loaded.end - self.loaded.start;
-            self.events.fire(Events.PROGRESS, self.loaded, true);
+        function play(e) {
+            if (loadingState) loadingState = false;
+            else self.events.fire(Video.PLAY, e, true);
         }
 
-        this.play = () => {
-            this.playing = true;
-            const promise = this.element.play();
-            this.startRender(step);
-            return promise;
+        function pause(e) {
+            self.events.fire(Video.PAUSE, e, true);
+        }
+
+        function ended(e) {
+            self.events.fire(Video.ENDED, e, true);
+        }
+
+        function playing(e) {
+            self.events.fire(Video.PLAYING, e, true);
+        }
+
+        function progress(e) {
+            self.events.fire(Video.PROGRESS, e, true);
+        }
+
+        function waiting(e) {
+            self.events.fire(Video.WAITING, e, true);
+        }
+
+        function timeupdate(e) {
+            self.events.fire(Video.UPDATE, e, true);
+        }
+
+        function loadeddata() {
+            if (video.readyState >= 2) ready.resolve();
+            if (video.readyState >= 4) loaded.resolve();
+        }
+
+        this.load = async () => {
+            return await startPreload();
+        };
+
+        this.play = async () => {
+            return await startPlayback();
         };
 
         this.pause = () => {
-            this.playing = false;
-            this.stopRender(step);
-            this.element.pause();
+            video.pause();
         };
 
         this.stop = () => {
-            this.pause();
-            if (this.ready()) this.element.currentTime = 0;
+            video.pause();
+            this.seek(0);
+        };
+
+        this.seek = t => {
+            if (video.fastSeek) video.fastSeek(t);
+            else video.currentTime = t;
+        };
+
+        this.seekExact = t => {
+            video.currentTime = t;
         };
 
         this.volume = v => {
-            this.element.volume = v;
-            if (this.element.muted) this.element.muted = false;
+            video.volume = v;
+            if (video.muted) video.muted = false;
         };
 
         this.mute = () => {
-            this.element.muted = true;
+            video.muted = true;
         };
 
         this.unmute = () => {
-            this.element.muted = false;
+            video.muted = false;
         };
 
         this.ready = () => {
-            return this.element.readyState > this.element.HAVE_CURRENT_DATA;
+            return ready;
+        };
+
+        this.loaded = () => {
+            return loaded;
         };
 
         this.size = (w, h) => {
-            this.element.width = this.width = w;
-            this.element.height = this.height = h;
-            this.object.size(w, h);
-        };
-
-        this.trackProgress = () => {
-            this.element.addEventListener('progress', handleProgress);
+            video.width = this.width = w;
+            video.height = this.height = h;
         };
 
         this.destroy = () => {
-            this.element.removeEventListener('progress', handleProgress);
+            params.events.forEach(event => video.removeEventListener(event, listeners[event], true));
             this.stop();
-            this.element.src = '';
-            this.object.destroy();
+            video.src = '';
+            object.destroy();
             return super.destroy();
         };
     }

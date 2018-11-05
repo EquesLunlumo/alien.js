@@ -120,7 +120,8 @@ class VideoTexture extends Component {
     constructor() {
         super();
         const self = this;
-        let video, texture, promise;
+        const ready = Promise.create();
+        let video, texture;
 
         initVideo();
         this.startRender(loop, 40);
@@ -134,7 +135,6 @@ class VideoTexture extends Component {
                 loop: true
             });
             video.object.mouseEnabled(false);
-            video.object.attr('crossorigin', 'anonymous');
             if (Device.mobile) Stage.bind('touchend', start);
             texture = new THREE.Texture(video.element);
             texture.minFilter = THREE.LinearFilter;
@@ -146,19 +146,17 @@ class VideoTexture extends Component {
             video.play();
         }
 
-        function loop() {
-            if (video.ready()) {
-                texture.needsUpdate = true;
-                if (!self.loaded) {
-                    self.loaded = true;
-                    promise.resolve();
-                }
+        async function loop() {
+            await video.ready();
+            texture.needsUpdate = true;
+            if (!self.loaded) {
+                self.loaded = true;
+                ready.resolve();
             }
         }
 
         this.ready = () => {
-            promise = Promise.create();
-            return promise;
+            return ready;
         };
 
         this.destroy = () => {
