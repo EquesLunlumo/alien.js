@@ -177,10 +177,11 @@ class Space extends Component {
         this.object3D = new THREE.Object3D();
         World.scene.add(this.object3D);
 
-        function initTextures() {
+        async function initTextures() {
             if (Tests.useVideoTextures()) video = self.initClass(VideoTexture);
             else img = Assets.createImage(Config.ASSETS['galaxy']);
-            return Promise.all([video ? video.ready() : Assets.loadImage(img)]).then(finishSetup);
+            await video ? video.ready() : Assets.loadImage(img);
+            finishSetup();
         }
 
         function finishSetup() {
@@ -469,13 +470,12 @@ class Main {
             Mouse.init();
         }
 
-        function initLoader() {
+        async function initLoader() {
             Config.ASSETS['galaxy'] = Tests.useVideoTextures() ? 'assets/videos/galaxy.mp4' : 'assets/videos/galaxy.jpg';
 
-            FontLoader.loadFonts(['Oswald', 'Karla']).then(() => {
-                loader = Stage.initClass(Loader);
-                Stage.events.add(loader, Events.COMPLETE, loadComplete);
-            });
+            await FontLoader.loadFonts(['Oswald', 'Karla']);
+            loader = Stage.initClass(Loader);
+            Stage.events.add(loader, Events.COMPLETE, loadComplete);
         }
 
         function loadComplete() {
@@ -489,15 +489,14 @@ class Main {
             Stage.events.add(Events.COMPLETE, complete);
         }
 
-        function complete() {
+        async function complete() {
             World.instance();
             Stage.add(World);
 
             space = Stage.initClass(Space);
-            space.ready().then(() => {
-                World.instance().animateIn();
-                space.animateIn();
-            });
+            await space.ready();
+            World.instance().animateIn();
+            space.animateIn();
         }
     }
 }
