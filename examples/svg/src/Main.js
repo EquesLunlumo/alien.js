@@ -149,8 +149,12 @@ class ProgressIndeterminate extends Interface {
                     TweenManager.tween(data, { start: 1 }, 1000, 'easeInOutCubic', () => {
                         data.start = 0;
                         this.delayedCall(() => {
-                            if (this.animatedIn) start();
-                            else this.stopRender(loop);
+                            if (this.animatedIn) {
+                                start();
+                            } else {
+                                this.stopRender(loop);
+                                this.animatedIn = false;
+                            }
                         }, 500);
                     }, () => {
                         data.length = 1 - data.start;

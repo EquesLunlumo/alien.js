@@ -132,7 +132,7 @@ class ExampleLoader extends Component {
 
         function initLoader() {
             window.get(`https://rawgit.com/pschroen/alien.js/master/${item.path}dist/assets/js/app.js?${Utils.timestamp()}`).then(data => {
-                window.eval(`(function(){${data.replace('new Main;', `Global.EXAMPLE=Stage;Global.STAGE.add(Stage);Global.STAGE.element.insertBefore(Stage.element, Global.STAGE.element.firstChild);Assets.CDN='https://rawgit.com/pschroen/alien.js/master/${item.path}dist/';new Main;`)}})();`);
+                window.eval(`(()=>{${data.replace('new Main;', `Global.EXAMPLE=Stage;Global.STAGE.add(Stage);Global.STAGE.element.insertBefore(Stage.element, Global.STAGE.element.firstChild);Assets.CDN='https://rawgit.com/pschroen/alien.js/master/${item.path}dist/';new Main;`)}})();`);
                 Global.EXAMPLE.css({ left: 0, top: 0 });
                 loadComplete();
             }).catch(() => {
