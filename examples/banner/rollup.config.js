@@ -1,5 +1,6 @@
 import { timestamp, babel, uglify } from 'rollup-plugin-bundleutils';
 
+import resolve from 'rollup-plugin-node-resolve';
 import glslify from 'rollup-plugin-glslify';
 import { eslint } from 'rollup-plugin-eslint';
 
@@ -24,6 +25,7 @@ export default {
         format: 'es'
     },
     plugins: [
+        resolve(),
         glslify({ basedir: 'src/shaders' }),
         eslint(),
         babel(),

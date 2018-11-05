@@ -4,6 +4,8 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+//import 'regenerator-runtime/runtime'; // Babel support for async/await
+
 import { Events, Stage, Interface, Utils, AssetLoader } from '../alien.js/src/Alien.js';
 
 Config.ASSETS = [
