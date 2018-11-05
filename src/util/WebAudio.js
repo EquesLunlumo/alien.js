@@ -7,6 +7,7 @@
 import { Device } from './Device.js';
 import { Assets } from './Assets.js';
 import { TweenManager } from '../tween/TweenManager.js';
+import { Stage } from '../view/Stage.js';
 
 if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
 
@@ -218,7 +219,7 @@ class WebAudio {
             };
         }
 
-        window.WebAudio = this;
+        Stage.WebAudio = this;
     }
 }
 

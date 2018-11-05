@@ -8,6 +8,7 @@ import { Utils } from './Utils.js';
 import { Events } from './Events.js';
 import { Component } from './Component.js';
 import { Assets } from './Assets.js';
+import { Stage } from '../view/Stage.js';
 
 class AssetLoader extends Component {
 
@@ -39,8 +40,8 @@ class AssetLoader extends Component {
                 return;
             }
             if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
-                if (!window.AudioContext || !window.WebAudio) return increment();
-                window.WebAudio.createSound(key, path, increment);
+                if (!window.AudioContext || !Stage.WebAudio) return increment();
+                Stage.WebAudio.createSound(key, path, increment);
                 return;
             }
             window.get(Assets.getPath(path), Assets.OPTIONS).then(data => {

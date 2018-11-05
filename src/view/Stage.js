@@ -7,9 +7,6 @@
 import { Events } from '../util/Events.js';
 import { Device } from '../util/Device.js';
 import { Interface } from '../util/Interface.js';
-import { Accelerometer } from '../mobile/Accelerometer.js';
-import { Mouse } from '../util/Mouse.js';
-import { WebAudio } from '../util/WebAudio.js';
 
 const Stage = new (class extends Interface {
 
@@ -85,9 +82,9 @@ const Stage = new (class extends Interface {
         };
 
         this.destroy = () => {
-            if (Accelerometer.active) Accelerometer.stop();
-            if (Mouse.active) Mouse.stop();
-            if (WebAudio.active) WebAudio.stop();
+            if (this.Accelerometer && this.Accelerometer.active) this.Accelerometer.stop();
+            if (this.Mouse && this.Mouse.active) this.Mouse.stop();
+            if (this.WebAudio && this.WebAudio.active) this.WebAudio.stop();
             window.removeEventListener('focus', focus);
             window.removeEventListener('blur', blur);
             window.removeEventListener('keydown', keyDown);

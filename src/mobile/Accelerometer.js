@@ -5,6 +5,7 @@
  */
 
 import { Device } from '../util/Device.js';
+import { Stage } from '../view/Stage.js';
 
 class Accelerometer {
 
@@ -127,6 +128,8 @@ class Accelerometer {
                 window.removeEventListener('deviceorientation', updateOrientation);
             };
         }
+
+        Stage.Accelerometer = this;
     }
 }
 

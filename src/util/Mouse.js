@@ -53,6 +53,8 @@ class Mouse {
                 Stage.events.remove(this.input, Interaction.MOVE, update);
             };
         }
+
+        Stage.Mouse = this;
     }
 }
 
