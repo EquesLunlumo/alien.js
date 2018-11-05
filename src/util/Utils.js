@@ -40,7 +40,7 @@ class Utils {
 
     static mergeObject(...objects) {
         const object = {};
-        for (let obj of objects) for (let key in obj) object[key] = obj[key];
+        for (let obj of objects) Object.assign(object, obj);
         return object;
     }
 
