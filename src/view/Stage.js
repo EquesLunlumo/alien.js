@@ -5,6 +5,7 @@
  */
 
 import { Events } from '../util/Events.js';
+import { Device } from '../util/Device.js';
 import { Interface } from '../util/Interface.js';
 import { Accelerometer } from '../mobile/Accelerometer.js';
 import { Mouse } from '../util/Mouse.js';
@@ -22,7 +23,6 @@ const Stage = new (class extends Interface {
 
         function initHTML() {
             self.css({ overflow: 'hidden' });
-            self.preventScroll();
         }
 
         function addListeners() {
@@ -33,6 +33,7 @@ const Stage = new (class extends Interface {
             window.addEventListener('keypress', keyPress);
             window.addEventListener('resize', resize);
             window.addEventListener('orientationchange', resize);
+            if (Device.mobile) window.addEventListener('touchstart', preventScroll, { passive: false });
             resize();
         }
 
@@ -68,6 +69,21 @@ const Stage = new (class extends Interface {
             Events.emitter.fire(Events.RESIZE, e);
         }
 
+        function preventScroll(e) {
+            let target = e.target;
+            if (target.nodeName === 'INPUT' || target.nodeName === 'TEXTAREA' || target.nodeName === 'SELECT' || target.nodeName === 'A') return;
+            let prevent = true;
+            while (target.parentNode && prevent) {
+                if (target.scrollParent) prevent = false;
+                target = target.parentNode;
+            }
+            if (prevent) e.preventDefault();
+        }
+
+        this.allowScroll = () => {
+            if (Device.mobile) window.removeEventListener('touchstart', preventScroll, { passive: false });
+        };
+
         this.destroy = () => {
             if (Accelerometer.active) Accelerometer.stop();
             if (Mouse.active) Mouse.stop();
@@ -79,6 +95,7 @@ const Stage = new (class extends Interface {
             window.removeEventListener('keypress', keyPress);
             window.removeEventListener('resize', resize);
             window.removeEventListener('orientationchange', resize);
+            if (Device.mobile) window.removeEventListener('touchstart', preventScroll, { passive: false });
             return super.destroy();
         };
     }

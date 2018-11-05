@@ -580,35 +580,19 @@ class Interface {
             this.element.removeEventListener('touchmove', touchMove);
         };
 
-        this.element.addEventListener('touchstart', touchStart, { passive: true });
-        this.element.addEventListener('touchend', touchEnd, { passive: true });
-        this.element.addEventListener('touchcancel', touchEnd, { passive: true });
+        if (Device.mobile) {
+            this.element.addEventListener('touchstart', touchStart, { passive: true });
+            this.element.addEventListener('touchend', touchEnd, { passive: true });
+            this.element.addEventListener('touchcancel', touchEnd, { passive: true });
+        }
         return this;
     }
 
-    preventScroll() {
-        if (!Device.mobile) return;
-        const preventScroll = e => {
-            let target = e.target;
-            if (target.nodeName === 'INPUT' || target.nodeName === 'TEXTAREA' || target.nodeName === 'SELECT' || target.nodeName === 'A') return;
-            let prevent = true;
-            while (target.parentNode && prevent) {
-                if (target.scrollParent) prevent = false;
-                target = target.parentNode;
-            }
-            if (prevent) e.preventDefault();
-        };
-        this.element.addEventListener('touchstart', preventScroll, { passive: false });
-    }
-
     overflowScroll(direction) {
-        if (!Device.mobile) return;
         const x = !!direction.x,
             y = !!direction.y,
-            overflow = {
-                '-webkit-overflow-scrolling': 'touch'
-            };
-        if (!x && !y || x && y) overflow.overflow = 'scroll';
+            overflow = {};
+        if ((!x && !y) || (x && y)) overflow.overflow = 'scroll';
         if (!x && y) {
             overflow.overflowY = 'scroll';
             overflow.overflowX = 'hidden';
@@ -617,21 +601,23 @@ class Interface {
             overflow.overflowX = 'scroll';
             overflow.overflowY = 'hidden';
         }
+        if (Device.mobile) {
+            overflow['-webkit-overflow-scrolling'] = 'touch';
+            this.element.scrollParent = true;
+            this.element.preventEvent = e => e.stopPropagation();
+            this.bind('touchmove', this.element.preventEvent);
+        }
         this.css(overflow);
-        this.element.scrollParent = true;
-        this.element.preventEvent = e => e.stopPropagation();
-        this.bind('touchmove', this.element.preventEvent);
     }
 
     removeOverflowScroll() {
-        if (!Device.mobile) return;
         this.css({
             overflow: 'hidden',
             overflowX: '',
             overflowY: '',
             '-webkit-overflow-scrolling': ''
         });
-        this.unbind('touchmove', this.element.preventEvent);
+        if (Device.mobile) this.unbind('touchmove', this.element.preventEvent);
     }
 
     split(by = '') {
