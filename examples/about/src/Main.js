@@ -1308,7 +1308,7 @@ class Nav extends Interface {
         addListeners();
 
         function initHTML() {
-            self.css({ position: 'static' }).mouseEnabled(false);
+            self.size('100%').mouseEnabled(false);
         }
 
         function initBackground() {
@@ -1350,8 +1350,8 @@ class UI extends Interface {
         this.startRender(loop);
 
         function initContainer() {
+            self.size('100%').css({ left: 0, top: 0 }).mouseEnabled(false);
             Stage.add(self);
-            self.css({ position: 'static' }).mouseEnabled(false);
         }
 
         function initViews() {
@@ -1555,6 +1555,7 @@ class Fluid extends Component {
         function resize() {
             buffer1.setSize(Stage.width * World.dpr, Stage.height * World.dpr);
             buffer2.setSize(Stage.width * World.dpr, Stage.height * World.dpr);
+            World.frame.value = 0;
         }
 
         function down() {
@@ -1586,6 +1587,7 @@ class Fluid extends Component {
             buffer2 = buffer;
             renderer.render(viewScene, camera);
             AudioController.updatePosition();
+            World.frame.value++;
         }
 
         this.animateIn = () => {
@@ -1653,13 +1655,11 @@ class World extends Component {
 
         function resize() {
             renderer.setSize(Stage.width, Stage.height);
-            World.frame.value = 0;
             World.resolution.value.set(Stage.width * World.dpr, Stage.height * World.dpr);
         }
 
         function loop(t, delta) {
             World.time.value += delta * 0.001;
-            World.frame.value++;
         }
 
         this.destroy = () => {
