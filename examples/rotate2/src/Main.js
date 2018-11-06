@@ -146,12 +146,13 @@ class VideoTexture extends Component {
             video.play();
         }
 
-        async function loop() {
-            await video.ready();
-            texture.needsUpdate = true;
-            if (!self.loaded) {
-                self.loaded = true;
-                ready.resolve();
+        function loop() {
+            if (video.playing) {
+                texture.needsUpdate = true;
+                if (!self.loaded) {
+                    self.loaded = true;
+                    ready.resolve();
+                }
             }
         }
 

@@ -31,6 +31,8 @@ class Video extends Component {
         let object, video, loadingState, listeners,
             initialPlay = true;
 
+        this.playing = false;
+
         initParameters();
         createElement();
         addListeners();
@@ -137,10 +139,13 @@ class Video extends Component {
         };
 
         this.play = async () => {
-            return await startPlayback();
+            const promise = await startPlayback();
+            this.playing = true;
+            return promise;
         };
 
         this.pause = () => {
+            this.playing = false;
             video.pause();
         };
 
