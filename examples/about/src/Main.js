@@ -112,7 +112,7 @@ class Data {
             Global.EXAMPLE_INDEX++;
             if (Global.EXAMPLE_INDEX > Config.EXAMPLES.length - 1) Global.EXAMPLE_INDEX = 0;
             let item = Config.EXAMPLES[Global.EXAMPLE_INDEX];
-            while (!(item.slug || item.path === '')) {
+            while (!(item.id || item.path === '')) {
                 Global.EXAMPLE_INDEX++;
                 if (Global.EXAMPLE_INDEX > Config.EXAMPLES.length - 1) Global.EXAMPLE_INDEX = 0;
                 item = Config.EXAMPLES[Global.EXAMPLE_INDEX];
@@ -772,7 +772,7 @@ class HeaderExample extends Interface {
                     clear: 'left',
                     cursor: 'pointer'
                 });
-            } else if (!(item.slug || item.path || item.path === '')) {
+            } else if (!(item.id || item.path || item.path === '')) {
                 self.size(40, 15);
                 self.css({
                     position: 'relative',
@@ -869,7 +869,7 @@ class HeaderExamples extends Interface {
             self.initClass(HeaderExample);
             let width = 0,
                 height = 0;
-            const examples = Assets.getData('config').examples;
+            const examples = Assets.getData('data').examples;
             examples.forEach(item => {
                 const button = self.initClass(HeaderExample, new Example(item));
                 self.events.add(button, Events.CLICK, switchExample);
@@ -1861,8 +1861,8 @@ class Loader extends Interface {
 class Example {
 
     constructor(item) {
-        this.slug = item.slug;
-        this.path = this.slug ? `examples/${this.slug}/` : item.path;
+        this.id = item.id;
+        this.path = this.id ? `examples/${this.id}/` : item.path;
         this.title = item.title;
         this.pageTitle = `${this.title} / Alien.js Example`;
         this.description = item.description;
@@ -1908,11 +1908,11 @@ class Main {
         function initLoader() {
             Promise.all([
                 FontLoader.loadFonts(['Roboto Mono', 'Oswald', 'Karla']),
-                AssetLoader.loadAssets([`assets/data/config.json?${Utils.timestamp()}`])
+                AssetLoader.loadAssets([`assets/data/data.json?${Utils.timestamp()}`])
             ]).then(() => {
-                const examples = Assets.getData('config').examples;
+                const examples = Assets.getData('data').examples;
                 examples.forEach(item => {
-                    if (item.slug || item.path || item.path === '') Config.EXAMPLES.push(new Example(item));
+                    if (item.id || item.path || item.path === '') Config.EXAMPLES.push(new Example(item));
                 });
 
                 Data.init();

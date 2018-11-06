@@ -547,13 +547,13 @@ class Loader extends Interface {
 class Work {
 
     constructor(item) {
-        this.slug = item.slug;
-        this.path = `work/${this.slug}/`;
+        this.id = item.id;
+        this.path = `work/${this.id}/`;
         this.title = item.title;
         this.pageTitle = `${this.title} / Alien.js Example Project`;
         this.description = item.description;
-        this.src = `assets/videos/${this.slug}.mp4`;
-        this.img = `assets/videos/${this.slug}.jpg`;
+        this.src = `assets/videos/${this.id}.mp4`;
+        this.img = `assets/videos/${this.id}.jpg`;
     }
 }
 
@@ -575,9 +575,9 @@ class Main {
         function initLoader() {
             Promise.all([
                 FontLoader.loadFonts(['Oswald', 'Karla']),
-                AssetLoader.loadAssets([`assets/data/config.json?${Utils.timestamp()}`])
+                AssetLoader.loadAssets([`assets/data/data.json?${Utils.timestamp()}`])
             ]).then(() => {
-                const work = Assets.getData('config').work;
+                const work = Assets.getData('data').work;
                 work.forEach(item => Config.LIST.push(new Work(item)));
 
                 Data.init();
