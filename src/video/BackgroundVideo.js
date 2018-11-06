@@ -44,7 +44,7 @@ class BackgroundVideo extends Interface {
             video = wrapper.initClass(Video, {
                 src: params.src,
                 loop: params.loop !== false,
-                events: ['timeupdate'],
+                events: ['timeupdate', 'ended'],
                 width: params.width,
                 height: params.height,
                 preload: true
