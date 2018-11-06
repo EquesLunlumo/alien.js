@@ -18,7 +18,7 @@ Assets.OPTIONS = {
 
 class Copy extends Interface {
 
-    constructor(copy, size = 14, color = 'white') {
+    constructor(copy, size = 13.5, color = 'white') {
         super('.Copy');
         const self = this;
         let text;
