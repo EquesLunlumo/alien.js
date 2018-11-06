@@ -16,37 +16,59 @@ class FontLoader extends Component {
                 style: 'normal',
                 variant: 'normal',
                 weight: 'normal',
-                font: font.replace(/"/g, '\'')
+                family: font.replace(/"/g, '\'')
             };
             return font;
         });
 
         super();
         const self = this;
-        let context;
+        let context,
+            loaded = 0;
 
         initFonts();
 
         function initFonts() {
             context = document.createElement('canvas').getContext('2d');
-            fonts.forEach(font => renderText(font));
-            finish();
+            fonts.forEach(font => {
+                font.specifier = (({ style = 'normal', variant = 'normal', weight = 'normal', family }) => {
+                    return `${style} ${variant} ${weight} 12px "${family}"`;
+                })(font);
+            });
+            if (document.fonts) {
+                fonts.forEach(font => {
+                    document.fonts.load(font.specifier).then(() => {
+                        renderText(font.specifier);
+                        fontLoaded();
+                    }).catch(() => {
+                        fontLoaded();
+                    });
+                });
+            } else {
+                fonts.forEach(font => renderText(font.specifier));
+                self.delayedCall(() => {
+                    self.percent = 1;
+                    self.events.fire(Events.PROGRESS, { percent: self.percent }, true);
+                    self.events.fire(Events.COMPLETE, null, true);
+                    if (callback) callback();
+                }, 500);
+            }
         }
 
-        function renderText({ style = 'normal', variant = 'normal', weight = 'normal', font }) {
-            context.font = `${style} ${variant} ${weight} 12px "${font}"`;
+        function renderText(specifier) {
+            context.font = specifier;
             context.fillText('LOAD', 0, 0);
         }
 
-        function finish() {
-            const ready = () => {
-                self.percent = 1;
-                self.events.fire(Events.PROGRESS, { percent: self.percent }, true);
-                self.events.fire(Events.COMPLETE, null, true);
-                if (callback) callback();
-            };
-            if (document.fonts && document.fonts.ready) document.fonts.ready.then(ready);
-            else self.delayedCall(ready, 500);
+        function fontLoaded() {
+            self.percent = ++loaded / fonts.length;
+            self.events.fire(Events.PROGRESS, { percent: self.percent }, true);
+            if (loaded === fonts.length) complete();
+        }
+
+        function complete() {
+            self.events.fire(Events.COMPLETE, null, true);
+            if (callback) callback();
         }
     }
 

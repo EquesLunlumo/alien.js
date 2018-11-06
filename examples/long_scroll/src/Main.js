@@ -318,9 +318,9 @@ class Main {
         function init() {
             Promise.all([
                 FontLoader.loadFonts([
-                    { font: 'Roboto', style: 'normal', weight: '400' },
-                    { font: 'Oswald', style: 'normal', weight: '200' },
-                    { font: 'Karla', style: 'normal', weight: '400' }
+                    { family: 'Roboto', style: 'normal', weight: '400' },
+                    { family: 'Oswald', style: 'normal', weight: '200' },
+                    { family: 'Karla', style: 'normal', weight: '400' }
                 ]),
                 AssetLoader.loadAssets([`assets/data/data.json?${Utils.timestamp()}`])
             ]).then(() => {
