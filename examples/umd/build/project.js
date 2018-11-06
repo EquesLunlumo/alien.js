@@ -1,7 +1,7 @@
 (function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-    typeof define === 'function' && define.amd ? define(factory) :
-    (global.Project = factory());
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+	typeof define === 'function' && define.amd ? define(factory) :
+	(global.Project = factory());
 }(this, (function () { 'use strict';
 
 /**
@@ -221,14 +221,8 @@ class Utils {
 
     static mergeObject(...objects) {
         const object = {};
-        for (let obj of objects) for (let key in obj) object[key] = obj[key];
+        for (let obj of objects) Object.assign(object, obj);
         return object;
-    }
-
-    static toArray(object) {
-        return Object.keys(object).map(key => {
-            return object[key];
-        });
     }
 
     static cloneArray(array) {
@@ -457,18 +451,19 @@ class Events {
         if (!Events.initialized) {
             Events.emitter        = new Emitter();
             Events.VISIBILITY     = 'visibility';
-            Events.KEYBOARD_PRESS = 'keyboard_press';
-            Events.KEYBOARD_DOWN  = 'keyboard_down';
-            Events.KEYBOARD_UP    = 'keyboard_up';
-            Events.RESIZE         = 'resize';
             Events.COMPLETE       = 'complete';
             Events.PROGRESS       = 'progress';
             Events.UPDATE         = 'update';
             Events.LOADED         = 'loaded';
             Events.ERROR          = 'error';
             Events.READY          = 'ready';
-            Events.HOVER          = 'hover';
+            Events.RESIZE         = 'resize';
             Events.CLICK          = 'click';
+            Events.HOVER          = 'hover';
+            Events.FULLSCREEN     = 'fullscreen';
+            Events.KEYBOARD_PRESS = 'keyboard_press';
+            Events.KEYBOARD_DOWN  = 'keyboard_down';
+            Events.KEYBOARD_UP    = 'keyboard_up';
 
             Events.initialized = true;
         }
@@ -570,8 +565,10 @@ class Device {
             return 'unknown';
         })();
         this.mobile = this.detect(['iphone', 'ipad', 'android', 'blackberry']);
-        this.tablet = Math.max(window.screen ? screen.width : window.innerWidth, window.screen ? screen.height : window.innerHeight) > 1000;
-        this.phone = !this.tablet;
+        if (this.mobile) {
+            this.tablet = Math.max(window.screen ? screen.width : window.innerWidth, window.screen ? screen.height : window.innerHeight) > 1000;
+            this.phone = !this.tablet;
+        }
         this.webgl = (() => {
             try {
                 const names = ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'],
@@ -1318,6 +1315,8 @@ class CSSTransition {
         const self = this;
         let transformProps, transitionProps;
 
+        this.playing = true;
+
         initProperties();
         initCSSTween();
 
@@ -1358,8 +1357,7 @@ class CSSTransition {
                 object.transform(transformProps);
                 Timer.create(() => {
                     if (killed()) return;
-                    clearCSSTween();
-                    if (callback) callback();
+                    tweenComplete();
                 }, time + delay);
             }, 35);
         }
@@ -1376,6 +1374,15 @@ class CSSTransition {
                 props,
                 transition
             };
+        }
+
+        function tweenComplete() {
+            self.playing = false;
+            Timer.create(() => {
+                if (killed()) return;
+                if (object.cssTween && !object.cssTween.playing) clearCSSTween();
+            }, 1000);
+            if (callback) callback();
         }
 
         function clearCSSTween() {
@@ -1406,20 +1413,19 @@ class Interface {
         this.timers = [];
         this.loops = [];
         if (typeof name !== 'undefined') {
-            if (typeof name === 'string') {
+            if (typeof name === 'string' || !name) {
                 this.name = name;
                 this.type = type;
                 if (type === 'svg') {
                     const qualifiedName = detached || 'svg';
                     detached = true;
                     this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName);
-                    this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
                 } else {
                     this.element = document.createElement(type);
                     if (name.charAt(0) !== '.') this.element.id = name;
                     else this.element.className = name.substr(1);
+                    this.element.style.position = 'absolute';
                 }
-                this.element.style.position = 'absolute';
                 if (!detached) document.body.appendChild(this.element);
             } else {
                 this.element = name;
@@ -1646,7 +1652,7 @@ class Interface {
 
     css(props, value) {
         if (typeof props !== 'object') {
-            if (!value) {
+            if (typeof value === 'undefined') {
                 let style = this.element.style[props];
                 if (typeof style !== 'number') {
                     if (~style.indexOf('px')) style = Number(style.slice(0, -2));
@@ -1750,10 +1756,18 @@ class Interface {
         return this;
     }
 
-    attr(attr, value) {
-        if (typeof value === 'undefined') return this.element.getAttribute(attr);
-        if (value === '') this.element.removeAttribute(attr);
-        else this.element.setAttribute(attr, value);
+    attr(props, value) {
+        if (typeof props !== 'object') {
+            if (typeof value === 'undefined') return this.element.getAttribute(props);
+            if (value === '') this.element.removeAttribute(props);
+            else this.element.setAttribute(props, value);
+            return this;
+        }
+        for (let key in props) {
+            const val = props[key];
+            if (!(typeof val === 'string' || typeof val === 'number')) continue;
+            this.element.setAttribute(key, val);
+        }
         return this;
     }
 
@@ -1958,35 +1972,19 @@ class Interface {
             this.element.removeEventListener('touchmove', touchMove);
         };
 
-        this.element.addEventListener('touchstart', touchStart, { passive: true });
-        this.element.addEventListener('touchend', touchEnd, { passive: true });
-        this.element.addEventListener('touchcancel', touchEnd, { passive: true });
+        if (Device.mobile) {
+            this.element.addEventListener('touchstart', touchStart, { passive: true });
+            this.element.addEventListener('touchend', touchEnd, { passive: true });
+            this.element.addEventListener('touchcancel', touchEnd, { passive: true });
+        }
         return this;
     }
 
-    preventScroll() {
-        if (!Device.mobile) return;
-        const preventScroll = e => {
-            let target = e.target;
-            if (target.nodeName === 'INPUT' || target.nodeName === 'TEXTAREA' || target.nodeName === 'SELECT' || target.nodeName === 'A') return;
-            let prevent = true;
-            while (target.parentNode && prevent) {
-                if (target.scrollParent) prevent = false;
-                target = target.parentNode;
-            }
-            if (prevent) e.preventDefault();
-        };
-        this.element.addEventListener('touchstart', preventScroll, { passive: false });
-    }
-
     overflowScroll(direction) {
-        if (!Device.mobile) return;
         const x = !!direction.x,
             y = !!direction.y,
-            overflow = {
-                '-webkit-overflow-scrolling': 'touch'
-            };
-        if (!x && !y || x && y) overflow.overflow = 'scroll';
+            overflow = {};
+        if ((!x && !y) || (x && y)) overflow.overflow = 'scroll';
         if (!x && y) {
             overflow.overflowY = 'scroll';
             overflow.overflowX = 'hidden';
@@ -1995,21 +1993,23 @@ class Interface {
             overflow.overflowX = 'scroll';
             overflow.overflowY = 'hidden';
         }
+        if (Device.mobile) {
+            overflow['-webkit-overflow-scrolling'] = 'touch';
+            this.element.scrollParent = true;
+            this.element.preventEvent = e => e.stopPropagation();
+            this.bind('touchmove', this.element.preventEvent);
+        }
         this.css(overflow);
-        this.element.scrollParent = true;
-        this.element.preventEvent = e => e.stopPropagation();
-        this.bind('touchmove', this.element.preventEvent);
     }
 
     removeOverflowScroll() {
-        if (!Device.mobile) return;
         this.css({
             overflow: 'hidden',
             overflowX: '',
             overflowY: '',
             '-webkit-overflow-scrolling': ''
         });
-        this.unbind('touchmove', this.element.preventEvent);
+        if (Device.mobile) this.unbind('touchmove', this.element.preventEvent);
     }
 
     split(by = '') {
@@ -2035,411 +2035,6 @@ class Interface {
 }
 
 /**
- * Accelerometer helper class.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-class Accelerometer {
-
-    static init() {
-
-        if (!this.active) {
-            this.active = true;
-            this.x = 0;
-            this.y = 0;
-            this.z = 0;
-            this.alpha = 0;
-            this.beta = 0;
-            this.gamma = 0;
-            this.heading = 0;
-            this.rotationRate = {};
-            this.rotationRate.alpha = 0;
-            this.rotationRate.beta = 0;
-            this.rotationRate.gamma = 0;
-            this.toRadians = Device.os === 'ios' ? Math.PI / 180 : 1;
-
-            const updateAccel = e => {
-                switch (window.orientation) {
-                    case 0:
-                        this.x = -e.accelerationIncludingGravity.x;
-                        this.y = e.accelerationIncludingGravity.y;
-                        this.z = e.accelerationIncludingGravity.z;
-                        if (e.rotationRate) {
-                            this.rotationRate.alpha = e.rotationRate.beta * this.toRadians;
-                            this.rotationRate.beta = -e.rotationRate.alpha * this.toRadians;
-                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
-                        }
-                        break;
-                    case 180:
-                        this.x = e.accelerationIncludingGravity.x;
-                        this.y = -e.accelerationIncludingGravity.y;
-                        this.z = e.accelerationIncludingGravity.z;
-                        if (e.rotationRate) {
-                            this.rotationRate.alpha = -e.rotationRate.beta * this.toRadians;
-                            this.rotationRate.beta = e.rotationRate.alpha * this.toRadians;
-                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
-                        }
-                        break;
-                    case 90:
-                        this.x = e.accelerationIncludingGravity.y;
-                        this.y = e.accelerationIncludingGravity.x;
-                        this.z = e.accelerationIncludingGravity.z;
-                        if (e.rotationRate) {
-                            this.rotationRate.alpha = e.rotationRate.alpha * this.toRadians;
-                            this.rotationRate.beta = e.rotationRate.beta * this.toRadians;
-                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
-                        }
-                        break;
-                    case -90:
-                        this.x = -e.accelerationIncludingGravity.y;
-                        this.y = -e.accelerationIncludingGravity.x;
-                        this.z = e.accelerationIncludingGravity.z;
-                        if (e.rotationRate) {
-                            this.rotationRate.alpha = -e.rotationRate.alpha * this.toRadians;
-                            this.rotationRate.beta = -e.rotationRate.beta * this.toRadians;
-                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
-                        }
-                        break;
-                }
-            };
-
-            const updateOrientation = e => {
-                for (let key in e) if (~key.toLowerCase().indexOf('heading')) this.heading = e[key];
-                switch (window.orientation) {
-                    case 0:
-                        this.alpha = e.beta * this.toRadians;
-                        this.beta = -e.alpha * this.toRadians;
-                        this.gamma = e.gamma * this.toRadians;
-                        break;
-                    case 180:
-                        this.alpha = -e.beta * this.toRadians;
-                        this.beta = e.alpha * this.toRadians;
-                        this.gamma = e.gamma * this.toRadians;
-                        break;
-                    case 90:
-                        this.alpha = e.alpha * this.toRadians;
-                        this.beta = e.beta * this.toRadians;
-                        this.gamma = e.gamma * this.toRadians;
-                        break;
-                    case -90:
-                        this.alpha = -e.alpha * this.toRadians;
-                        this.beta = -e.beta * this.toRadians;
-                        this.gamma = e.gamma * this.toRadians;
-                        break;
-                }
-                this.tilt = e.beta * this.toRadians;
-                this.yaw = e.alpha * this.toRadians;
-                this.roll = -e.gamma * this.toRadians;
-                if (Device.os === 'Android') this.heading = compassHeading(e.alpha, e.beta, e.gamma);
-            };
-
-            const compassHeading = (alpha, beta, gamma) => {
-                const degtorad = Math.PI / 180,
-                    x = beta ? beta * degtorad : 0,
-                    y = gamma ? gamma * degtorad : 0,
-                    z = alpha ? alpha * degtorad : 0,
-                    cY = Math.cos(y),
-                    cZ = Math.cos(z),
-                    sX = Math.sin(x),
-                    sY = Math.sin(y),
-                    sZ = Math.sin(z),
-                    Vx = -cZ * sY - sZ * sX * cY,
-                    Vy = -sZ * sY + cZ * sX * cY;
-                let compassHeading = Math.atan(Vx / Vy);
-                if (Vy < 0) compassHeading += Math.PI;
-                else if (Vx < 0) compassHeading += 2 * Math.PI;
-                return compassHeading * (180 / Math.PI);
-            };
-
-            window.addEventListener('devicemotion', updateAccel);
-            window.addEventListener('deviceorientation', updateOrientation);
-
-            this.stop = () => {
-                this.active = false;
-                window.removeEventListener('devicemotion', updateAccel);
-                window.removeEventListener('deviceorientation', updateOrientation);
-            };
-        }
-    }
-}
-
-/**
- * Mouse interaction.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-class Mouse {
-
-    static init() {
-
-        if (!this.active) {
-            this.active = true;
-            this.x = 0;
-            this.y = 0;
-            this.normal = {
-                x: 0,
-                y: 0
-            };
-            this.tilt = {
-                x: 0,
-                y: 0
-            };
-            this.inverseNormal = {
-                x: 0,
-                y: 0
-            };
-
-            const update = e => {
-                this.x = e.x;
-                this.y = e.y;
-                this.normal.x = e.x / Stage.width;
-                this.normal.y = e.y / Stage.height;
-                this.tilt.x = this.normal.x * 2 - 1;
-                this.tilt.y = 1 - this.normal.y * 2;
-                this.inverseNormal.x = this.normal.x;
-                this.inverseNormal.y = 1 - this.normal.y;
-            };
-
-            this.input = Stage.initClass(Interaction);
-            Stage.events.add(this.input, Interaction.START, update);
-            Stage.events.add(this.input, Interaction.MOVE, update);
-            update({
-                x: Stage.width / 2,
-                y: Stage.height / 2
-            });
-
-            this.stop = () => {
-                this.active = false;
-                Stage.events.remove(this.input, Interaction.START, update);
-                Stage.events.remove(this.input, Interaction.MOVE, update);
-            };
-        }
-    }
-}
-
-/**
- * Web audio engine.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
-
-class WebAudio {
-
-    static init() {
-
-        class Sound {
-
-            constructor(asset) {
-                const self = this;
-
-                this.asset = Assets.getPath(asset);
-                if (WebAudio.context.createStereoPanner) this.stereo = WebAudio.context.createStereoPanner();
-                this.output = WebAudio.context.createGain();
-                this.volume = 1;
-                this.rate = 1;
-                if (this.stereo) this.stereo.connect(this.output);
-                this.output.connect(WebAudio.output);
-                this.output.gain.setValueAtTime(0, WebAudio.context.currentTime);
-
-                this.gain = {
-                    set value(value) {
-                        self.volume = value;
-                        self.output.gain.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
-                    },
-                    get value() {
-                        return self.volume;
-                    }
-                };
-
-                this.playbackRate = {
-                    set value(value) {
-                        self.rate = value;
-                        if (self.source) self.source.playbackRate.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
-                    },
-                    get value() {
-                        return self.rate;
-                    }
-                };
-
-                this.stereoPan = {
-                    set value(value) {
-                        self.pan = value;
-                        if (self.stereo) self.stereo.pan.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
-                    },
-                    get value() {
-                        return self.pan;
-                    }
-                };
-
-                this.stop = () => {
-                    if (this.source) {
-                        this.source.stop();
-                        this.playing = false;
-                    }
-                };
-            }
-        }
-
-        if (!this.active) {
-            this.active = true;
-
-            const self = this;
-            const sounds = {};
-            let context;
-
-            if (window.AudioContext) {
-                context = new AudioContext();
-                this.output = context.createGain();
-                this.volume = 1;
-                this.output.connect(context.destination);
-                this.gain = {
-                    set value(value) {
-                        self.volume = value;
-                        self.output.gain.linearRampToValueAtTime(value, context.currentTime + 0.015);
-                    },
-                    get value() {
-                        return self.volume;
-                    }
-                };
-                this.context = context;
-            }
-
-            this.loadSound = (id, callback) => {
-                const promise = Promise.create();
-                if (callback) promise.then(callback);
-                callback = promise.resolve;
-                const sound = this.getSound(id);
-                window.fetch(sound.asset).then(response => {
-                    if (!response.ok) return callback();
-                    response.arrayBuffer().then(data => {
-                        context.decodeAudioData(data, buffer => {
-                            sound.buffer = buffer;
-                            sound.complete = true;
-                            callback();
-                        }, () => {
-                            callback();
-                        });
-                    });
-                }).catch(() => {
-                    callback();
-                });
-                sound.ready = () => promise;
-            };
-
-            this.createSound = (id, asset, callback) => {
-                sounds[id] = new Sound(asset);
-                if (Device.os === 'ios' && callback) callback();
-                else this.loadSound(id, callback);
-                return sounds[id];
-            };
-
-            this.getSound = id => {
-                return sounds[id];
-            };
-
-            this.trigger = id => {
-                if (!context) return;
-                if (context.state === 'suspended') context.resume();
-                const sound = this.getSound(id);
-                if (!sound.ready) this.loadSound(id);
-                sound.ready().then(() => {
-                    if (sound.complete) {
-                        if (sound.stopping && sound.loop) {
-                            sound.stopping = false;
-                            return;
-                        }
-                        sound.playing = true;
-                        sound.source = context.createBufferSource();
-                        sound.source.buffer = sound.buffer;
-                        sound.source.loop = sound.loop;
-                        sound.source.playbackRate.setValueAtTime(sound.rate, context.currentTime);
-                        sound.source.connect(sound.stereo ? sound.stereo : sound.output);
-                        sound.source.start();
-                        sound.output.gain.linearRampToValueAtTime(sound.volume, context.currentTime + 0.015);
-                    }
-                });
-            };
-
-            this.play = (id, volume = 1, loop) => {
-                if (!context) return;
-                if (typeof volume === 'boolean') {
-                    loop = volume;
-                    volume = 1;
-                }
-                const sound = this.getSound(id);
-                if (sound) {
-                    sound.volume = volume;
-                    sound.loop = !!loop;
-                    this.trigger(id);
-                }
-            };
-
-            this.fadeInAndPlay = (id, volume, loop, time, ease, delay = 0) => {
-                if (!context) return;
-                const sound = this.getSound(id);
-                if (sound) {
-                    sound.volume = 0;
-                    sound.loop = !!loop;
-                    this.trigger(id);
-                    TweenManager.tween(sound.gain, { value: volume }, time, ease, delay);
-                }
-            };
-
-            this.fadeOutAndStop = (id, time, ease, delay = 0) => {
-                if (!context) return;
-                const sound = this.getSound(id);
-                if (sound && sound.playing) {
-                    TweenManager.tween(sound.gain, { value: 0 }, time, ease, delay, () => {
-                        if (!sound.stopping) return;
-                        sound.stopping = false;
-                        sound.stop();
-                    });
-                    sound.stopping = true;
-                }
-            };
-
-            this.remove = id => {
-                const sound = this.getSound(id);
-                if (sound && sound.source) {
-                    sound.source.buffer = null;
-                    sound.source.stop();
-                    sound.source.disconnect();
-                    sound.source = null;
-                    sound.playing = false;
-                    delete sounds[id];
-                }
-            };
-
-            this.mute = () => {
-                if (!context) return;
-                TweenManager.tween(this.gain, { value: 0 }, 300, 'easeOutSine');
-            };
-
-            this.unmute = () => {
-                if (!context) return;
-                TweenManager.tween(this.gain, { value: 1 }, 500, 'easeOutSine');
-            };
-
-            this.stop = () => {
-                this.active = false;
-                if (!context) return;
-                for (let id in sounds) {
-                    const sound = sounds[id];
-                    if (sound) sound.stop();
-                }
-                context.close();
-            };
-        }
-
-        window.WebAudio = this;
-    }
-}
-
-/**
  * Stage instance.
  *
  * @author Patrick Schroen / https://github.com/pschroen
@@ -2457,7 +2052,6 @@ const Stage = new (class extends Interface {
 
         function initHTML() {
             self.css({ overflow: 'hidden' });
-            self.preventScroll();
         }
 
         function addListeners() {
@@ -2468,6 +2062,7 @@ const Stage = new (class extends Interface {
             window.addEventListener('keypress', keyPress);
             window.addEventListener('resize', resize);
             window.addEventListener('orientationchange', resize);
+            if (Device.mobile) window.addEventListener('touchstart', preventScroll, { passive: false });
             resize();
         }
 
@@ -2503,10 +2098,25 @@ const Stage = new (class extends Interface {
             Events.emitter.fire(Events.RESIZE, e);
         }
 
+        function preventScroll(e) {
+            let target = e.target;
+            if (target.nodeName === 'INPUT' || target.nodeName === 'TEXTAREA' || target.nodeName === 'SELECT' || target.nodeName === 'A') return;
+            let prevent = true;
+            while (target.parentNode && prevent) {
+                if (target.scrollParent) prevent = false;
+                target = target.parentNode;
+            }
+            if (prevent) e.preventDefault();
+        }
+
+        this.allowScroll = () => {
+            if (Device.mobile) window.removeEventListener('touchstart', preventScroll, { passive: false });
+        };
+
         this.destroy = () => {
-            if (Accelerometer.active) Accelerometer.stop();
-            if (Mouse.active) Mouse.stop();
-            if (WebAudio.active) WebAudio.stop();
+            if (this.Accelerometer && this.Accelerometer.active) this.Accelerometer.stop();
+            if (this.Mouse && this.Mouse.active) this.Mouse.stop();
+            if (this.WebAudio && this.WebAudio.active) this.WebAudio.stop();
             window.removeEventListener('focus', focus);
             window.removeEventListener('blur', blur);
             window.removeEventListener('keydown', keyDown);
@@ -2514,6 +2124,7 @@ const Stage = new (class extends Interface {
             window.removeEventListener('keypress', keyPress);
             window.removeEventListener('resize', resize);
             window.removeEventListener('orientationchange', resize);
+            if (Device.mobile) window.removeEventListener('touchstart', preventScroll, { passive: false });
             return super.destroy();
         };
     }
@@ -2525,305 +2136,23 @@ const Stage = new (class extends Interface {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-class Vector2 {
-
-    constructor(x, y) {
-        this.x = typeof x === 'number' ? x : 0;
-        this.y = typeof y === 'number' ? y : 0;
-        this.type = 'vector2';
-    }
-
-    set(x, y) {
-        this.x = x || 0;
-        this.y = y || 0;
-        return this;
-    }
-
-    clear() {
-        this.x = 0;
-        this.y = 0;
-        return this;
-    }
-
-    copyTo(v) {
-        v.x = this.x;
-        v.y = this.y;
-        return this;
-    }
-
-    copy(v) {
-        this.x = v.x || 0;
-        this.y = v.y || 0;
-        return this;
-    }
-
-    lengthSq() {
-        return this.x * this.x + this.y * this.y || 0.00001;
-    }
-
-    length() {
-        return Math.sqrt(this.lengthSq());
-    }
-
-    normalize() {
-        const length = this.length();
-        this.x /= length;
-        this.y /= length;
-        return this;
-    }
-
-    setLength(length) {
-        this.normalize().multiplyScalar(length);
-        return this;
-    }
-
-    add(v) {
-        this.x += v.x;
-        this.y += v.y;
-        return this;
-    }
-
-    addScalar(s) {
-        this.x += s;
-        this.y += s;
-        return this;
-    }
-
-    addVectors(a, b) {
-        this.x = a.x + b.x;
-        this.y = a.y + b.y;
-        return this;
-    }
-
-    sub(v) {
-        this.x -= v.x;
-        this.y -= v.y;
-        return this;
-    }
-
-    subScalar(s) {
-        this.x -= s;
-        this.y -= s;
-        return this;
-    }
-
-    subVectors(a, b) {
-        this.x = a.x - b.x;
-        this.y = a.y - b.y;
-        return this;
-    }
-
-    multiply(v) {
-        this.x *= v.x;
-        this.y *= v.y;
-        return this;
-    }
-
-    multiplyScalar(s) {
-        this.x *= s;
-        this.y *= s;
-        return this;
-    }
-
-    multiplyVectors(a, b) {
-        this.x = a.x * b.x;
-        this.y = a.y * b.y;
-        return this;
-    }
-
-    divide(v) {
-        this.x /= v.x;
-        this.y /= v.y;
-        return this;
-    }
-
-    divideScalar(s) {
-        this.x /= s;
-        this.y /= s;
-        return this;
-    }
-
-    perpendicular() {
-        const tx = this.x,
-            ty = this.y;
-        this.x = -ty;
-        this.y = tx;
-        return this;
-    }
-
-    lerp(v, alpha) {
-        this.x += (v.x - this.x) * alpha;
-        this.y += (v.y - this.y) * alpha;
-        return this;
-    }
-
-    deltaLerp(v, alpha, delta = 1) {
-        for (let i = 0; i < delta; i++) this.lerp(v, alpha);
-        return this;
-    }
-
-    interp(v, alpha, ease, dist = 5000) {
-        if (!this.calc) this.calc = new Vector2();
-        this.calc.subVectors(this, v);
-        const fn = Interpolation.convertEase(ease),
-            a = fn(Math.clamp(Math.range(this.calc.lengthSq(), 0, dist * dist, 1, 0), 0, 1) * (alpha / 10));
-        return this.lerp(v, a);
-    }
-
-    setAngleRadius(a, r) {
-        this.x = Math.cos(a) * r;
-        this.y = Math.sin(a) * r;
-        return this;
-    }
-
-    addAngleRadius(a, r) {
-        this.x += Math.cos(a) * r;
-        this.y += Math.sin(a) * r;
-        return this;
-    }
-
-    dot(a, b = this) {
-        return a.x * b.x + a.y * b.y;
-    }
-
-    clone() {
-        return new Vector2(this.x, this.y);
-    }
-
-    distanceTo(v, noSq) {
-        const dx = this.x - v.x,
-            dy = this.y - v.y;
-        if (!noSq) return Math.sqrt(dx * dx + dy * dy);
-        return dx * dx + dy * dy;
-    }
-
-    solveAngle(a, b = this) {
-        return Math.atan2(a.y - b.y, a.x - b.x);
-    }
-
-    equals(v) {
-        return this.x === v.x && this.y === v.y;
-    }
-
-    toString(split = ' ') {
-        return this.x + split + this.y;
-    }
-}
-
 /**
  * Interaction helper class.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-class Interaction extends Component {
+/**
+ * Accelerometer helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
-    constructor(object = Stage) {
-
-        if (!Interaction.initialized) {
-            Interaction.CLICK = 'interaction_click';
-            Interaction.START = 'interaction_start';
-            Interaction.MOVE  = 'interaction_move';
-            Interaction.DRAG  = 'interaction_drag';
-            Interaction.END   = 'interaction_end';
-
-            const events = {
-                    touchstart: [],
-                    touchmove: [],
-                    touchend: []
-                },
-                touchStart = e => events.touchstart.forEach(callback => callback(e)),
-                touchMove = e => events.touchmove.forEach(callback => callback(e)),
-                touchEnd = e => events.touchend.forEach(callback => callback(e));
-
-            Interaction.bind = (event, callback) => events[event].push(callback);
-            Interaction.unbind = (event, callback) => events[event].remove(callback);
-
-            Stage.bind('touchstart', touchStart);
-            Stage.bind('touchmove', touchMove);
-            Stage.bind('touchend', touchEnd);
-            Stage.bind('touchcancel', touchEnd);
-
-            Interaction.initialized = true;
-        }
-
-        super();
-        const self = this;
-        let distance, timeDown, timeMove;
-
-        this.x = 0;
-        this.y = 0;
-        this.hold = new Vector2();
-        this.last = new Vector2();
-        this.delta = new Vector2();
-        this.move = new Vector2();
-        this.velocity = new Vector2();
-
-        addListeners();
-
-        function addListeners() {
-            if (object === Stage) Interaction.bind('touchstart', down);
-            else object.bind('touchstart', down);
-            Interaction.bind('touchmove', move);
-            Interaction.bind('touchend', up);
-        }
-
-        function down(e) {
-            self.isTouching = true;
-            self.x = e.x;
-            self.y = e.y;
-            self.hold.x = self.last.x = e.x;
-            self.hold.y = self.last.y = e.y;
-            self.delta.x = self.move.x = self.velocity.x = 0;
-            self.delta.y = self.move.y = self.velocity.y = 0;
-            distance = 0;
-            self.events.fire(Interaction.START, e, true);
-            timeDown = timeMove = Render.TIME;
-        }
-
-        function move(e) {
-            if (self.isTouching) {
-                self.move.x = e.x - self.hold.x;
-                self.move.y = e.y - self.hold.y;
-            }
-            self.x = e.x;
-            self.y = e.y;
-            self.delta.x = e.x - self.last.x;
-            self.delta.y = e.y - self.last.y;
-            self.last.x = e.x;
-            self.last.y = e.y;
-            distance += self.delta.length();
-            const delta = Math.max(0.001, Render.TIME - (timeMove || Render.TIME));
-            timeMove = Render.TIME;
-            self.velocity.x = Math.abs(self.delta.x) / delta;
-            self.velocity.y = Math.abs(self.delta.y) / delta;
-            self.events.fire(Interaction.MOVE, e, true);
-            if (self.isTouching) self.events.fire(Interaction.DRAG, e, true);
-        }
-
-        function up(e) {
-            if (!self.isTouching) return;
-            self.isTouching = false;
-            self.move.x = 0;
-            self.move.y = 0;
-            const delta = Math.max(0.001, Render.TIME - (timeMove || Render.TIME));
-            if (delta > 100) {
-                self.delta.x = 0;
-                self.delta.y = 0;
-            }
-            self.events.fire(Interaction.END, e, true);
-            if (distance < 20 && Render.TIME - timeDown < 2000) self.events.fire(Interaction.CLICK, e, true);
-        }
-
-        this.destroy = () => {
-            Interaction.unbind('touchstart', down);
-            Interaction.unbind('touchmove', move);
-            Interaction.unbind('touchend', up);
-            if (object !== Stage && object.unbind) object.unbind('touchstart', down);
-            return super.destroy();
-        };
-    }
-}
+/**
+ * Mouse interaction.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
 
 /**
  * Asset loader with promise method.
@@ -2840,41 +2169,41 @@ class AssetLoader extends Component {
                 const keys = assets.map(path => {
                     return Utils.basename(path);
                 });
-                return keys.reduce((o, k, i) => {
-                    o[k] = assets[i];
-                    return o;
+                return keys.reduce((object, key, i) => {
+                    object[key] = assets[i];
+                    return object;
                 }, {});
             })();
         }
 
         super();
         const self = this;
-        const total = Object.keys(assets).length;
-        let loaded = 0;
+        let total = Object.keys(assets).length,
+            loaded = 0;
 
         for (let key in assets) loadAsset(key, assets[key]);
 
         function loadAsset(key, path) {
             const ext = Utils.extension(path);
             if (ext.includes(['jpg', 'jpeg', 'png', 'gif', 'svg'])) {
-                Assets.createImage(path, assetLoaded);
+                Assets.createImage(path, increment);
                 return;
             }
             if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
-                if (!window.AudioContext || !window.WebAudio) return assetLoaded();
-                window.WebAudio.createSound(key, path, assetLoaded);
+                if (!window.AudioContext || !Stage.WebAudio) return increment();
+                Stage.WebAudio.createSound(key, path, increment);
                 return;
             }
             window.get(Assets.getPath(path), Assets.OPTIONS).then(data => {
                 if (ext === 'json') Assets.storeData(key, data);
                 if (ext === 'js') window.eval(data.replace('use strict', ''));
-                assetLoaded();
+                increment();
             }).catch(() => {
-                assetLoaded();
+                increment();
             });
         }
 
-        function assetLoaded() {
+        function increment() {
             self.percent = ++loaded / total;
             self.events.fire(Events.PROGRESS, { percent: self.percent }, true);
             if (loaded === total) complete();
@@ -2884,6 +2213,14 @@ class AssetLoader extends Component {
             self.events.fire(Events.COMPLETE, null, true);
             if (callback) callback();
         }
+
+        this.add = (num = 1) => {
+            total += num;
+        };
+
+        this.trigger = (num = 1) => {
+            for (let i = 0; i < num; i++) increment();
+        };
     }
 
     static loadAssets(assets, callback) {
@@ -2907,6 +2244,12 @@ class AssetLoader extends Component {
  */
 
 /**
+ * Fullscreen controller.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+/**
  * State dispatcher.
  *
  * @author Patrick Schroen / https://github.com/pschroen
@@ -2917,6 +2260,14 @@ class AssetLoader extends Component {
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
+
+/**
+ * Web audio engine.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
 
 /**
  * Canvas values.
@@ -3410,7 +2761,7 @@ class Canvas {
 
         size(w, h);
 
-        function size(w, h) {
+        function size(w, h = w) {
             const ratio = retina ? 2 : 1;
             self.element.width = w * ratio;
             self.element.height = h * ratio;
@@ -3587,7 +2938,7 @@ class CanvasTexture extends CanvasObject {
  */
 
 /**
- * Scroll lock.
+ * Scroll lock controller.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
@@ -3890,18 +3241,18 @@ class Loader extends Interface {
     constructor() {
         super('Loader');
         const self = this;
-        let loader, progress;
+        let progress;
 
         initHTML();
         initLoader();
         initProgress();
 
         function initHTML() {
-            self.size('100%');
+            self.css({ position: 'static' });
         }
 
         function initLoader() {
-            loader = self.initClass(AssetLoader, Config.ASSETS);
+            const loader = self.initClass(AssetLoader, Config.ASSETS);
             self.events.add(loader, Events.PROGRESS, loadUpdate);
         }
 

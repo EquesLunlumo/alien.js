@@ -221,14 +221,8 @@ class Utils {
 
     static mergeObject(...objects) {
         const object = {};
-        for (let obj of objects) for (let key in obj) object[key] = obj[key];
+        for (let obj of objects) Object.assign(object, obj);
         return object;
-    }
-
-    static toArray(object) {
-        return Object.keys(object).map(key => {
-            return object[key];
-        });
     }
 
     static cloneArray(array) {
@@ -457,18 +451,19 @@ class Events {
         if (!Events.initialized) {
             Events.emitter        = new Emitter();
             Events.VISIBILITY     = 'visibility';
-            Events.KEYBOARD_PRESS = 'keyboard_press';
-            Events.KEYBOARD_DOWN  = 'keyboard_down';
-            Events.KEYBOARD_UP    = 'keyboard_up';
-            Events.RESIZE         = 'resize';
             Events.COMPLETE       = 'complete';
             Events.PROGRESS       = 'progress';
             Events.UPDATE         = 'update';
             Events.LOADED         = 'loaded';
             Events.ERROR          = 'error';
             Events.READY          = 'ready';
-            Events.HOVER          = 'hover';
+            Events.RESIZE         = 'resize';
             Events.CLICK          = 'click';
+            Events.HOVER          = 'hover';
+            Events.FULLSCREEN     = 'fullscreen';
+            Events.KEYBOARD_PRESS = 'keyboard_press';
+            Events.KEYBOARD_DOWN  = 'keyboard_down';
+            Events.KEYBOARD_UP    = 'keyboard_up';
 
             Events.initialized = true;
         }
@@ -570,8 +565,10 @@ class Device {
             return 'unknown';
         })();
         this.mobile = this.detect(['iphone', 'ipad', 'android', 'blackberry']);
-        this.tablet = Math.max(window.screen ? screen.width : window.innerWidth, window.screen ? screen.height : window.innerHeight) > 1000;
-        this.phone = !this.tablet;
+        if (this.mobile) {
+            this.tablet = Math.max(window.screen ? screen.width : window.innerWidth, window.screen ? screen.height : window.innerHeight) > 1000;
+            this.phone = !this.tablet;
+        }
         this.webgl = (() => {
             try {
                 const names = ['webgl', 'experimental-webgl', 'webkit-3d', 'moz-webgl'],
@@ -1318,6 +1315,8 @@ class CSSTransition {
         const self = this;
         let transformProps, transitionProps;
 
+        this.playing = true;
+
         initProperties();
         initCSSTween();
 
@@ -1358,8 +1357,7 @@ class CSSTransition {
                 object.transform(transformProps);
                 Timer.create(() => {
                     if (killed()) return;
-                    clearCSSTween();
-                    if (callback) callback();
+                    tweenComplete();
                 }, time + delay);
             }, 35);
         }
@@ -1376,6 +1374,15 @@ class CSSTransition {
                 props,
                 transition
             };
+        }
+
+        function tweenComplete() {
+            self.playing = false;
+            Timer.create(() => {
+                if (killed()) return;
+                if (object.cssTween && !object.cssTween.playing) clearCSSTween();
+            }, 1000);
+            if (callback) callback();
         }
 
         function clearCSSTween() {
@@ -1406,20 +1413,19 @@ class Interface {
         this.timers = [];
         this.loops = [];
         if (typeof name !== 'undefined') {
-            if (typeof name === 'string') {
+            if (typeof name === 'string' || !name) {
                 this.name = name;
                 this.type = type;
                 if (type === 'svg') {
                     const qualifiedName = detached || 'svg';
                     detached = true;
                     this.element = document.createElementNS('http://www.w3.org/2000/svg', qualifiedName);
-                    this.element.setAttributeNS('http://www.w3.org/2000/xmlns/', 'xmlns:xlink', 'http://www.w3.org/1999/xlink');
                 } else {
                     this.element = document.createElement(type);
                     if (name.charAt(0) !== '.') this.element.id = name;
                     else this.element.className = name.substr(1);
+                    this.element.style.position = 'absolute';
                 }
-                this.element.style.position = 'absolute';
                 if (!detached) document.body.appendChild(this.element);
             } else {
                 this.element = name;
@@ -1646,7 +1652,7 @@ class Interface {
 
     css(props, value) {
         if (typeof props !== 'object') {
-            if (!value) {
+            if (typeof value === 'undefined') {
                 let style = this.element.style[props];
                 if (typeof style !== 'number') {
                     if (~style.indexOf('px')) style = Number(style.slice(0, -2));
@@ -1750,10 +1756,18 @@ class Interface {
         return this;
     }
 
-    attr(attr, value) {
-        if (typeof value === 'undefined') return this.element.getAttribute(attr);
-        if (value === '') this.element.removeAttribute(attr);
-        else this.element.setAttribute(attr, value);
+    attr(props, value) {
+        if (typeof props !== 'object') {
+            if (typeof value === 'undefined') return this.element.getAttribute(props);
+            if (value === '') this.element.removeAttribute(props);
+            else this.element.setAttribute(props, value);
+            return this;
+        }
+        for (let key in props) {
+            const val = props[key];
+            if (!(typeof val === 'string' || typeof val === 'number')) continue;
+            this.element.setAttribute(key, val);
+        }
         return this;
     }
 
@@ -1958,35 +1972,19 @@ class Interface {
             this.element.removeEventListener('touchmove', touchMove);
         };
 
-        this.element.addEventListener('touchstart', touchStart, { passive: true });
-        this.element.addEventListener('touchend', touchEnd, { passive: true });
-        this.element.addEventListener('touchcancel', touchEnd, { passive: true });
+        if (Device.mobile) {
+            this.element.addEventListener('touchstart', touchStart, { passive: true });
+            this.element.addEventListener('touchend', touchEnd, { passive: true });
+            this.element.addEventListener('touchcancel', touchEnd, { passive: true });
+        }
         return this;
     }
 
-    preventScroll() {
-        if (!Device.mobile) return;
-        const preventScroll = e => {
-            let target = e.target;
-            if (target.nodeName === 'INPUT' || target.nodeName === 'TEXTAREA' || target.nodeName === 'SELECT' || target.nodeName === 'A') return;
-            let prevent = true;
-            while (target.parentNode && prevent) {
-                if (target.scrollParent) prevent = false;
-                target = target.parentNode;
-            }
-            if (prevent) e.preventDefault();
-        };
-        this.element.addEventListener('touchstart', preventScroll, { passive: false });
-    }
-
     overflowScroll(direction) {
-        if (!Device.mobile) return;
         const x = !!direction.x,
             y = !!direction.y,
-            overflow = {
-                '-webkit-overflow-scrolling': 'touch'
-            };
-        if (!x && !y || x && y) overflow.overflow = 'scroll';
+            overflow = {};
+        if ((!x && !y) || (x && y)) overflow.overflow = 'scroll';
         if (!x && y) {
             overflow.overflowY = 'scroll';
             overflow.overflowX = 'hidden';
@@ -1995,21 +1993,23 @@ class Interface {
             overflow.overflowX = 'scroll';
             overflow.overflowY = 'hidden';
         }
+        if (Device.mobile) {
+            overflow['-webkit-overflow-scrolling'] = 'touch';
+            this.element.scrollParent = true;
+            this.element.preventEvent = e => e.stopPropagation();
+            this.bind('touchmove', this.element.preventEvent);
+        }
         this.css(overflow);
-        this.element.scrollParent = true;
-        this.element.preventEvent = e => e.stopPropagation();
-        this.bind('touchmove', this.element.preventEvent);
     }
 
     removeOverflowScroll() {
-        if (!Device.mobile) return;
         this.css({
             overflow: 'hidden',
             overflowX: '',
             overflowY: '',
             '-webkit-overflow-scrolling': ''
         });
-        this.unbind('touchmove', this.element.preventEvent);
+        if (Device.mobile) this.unbind('touchmove', this.element.preventEvent);
     }
 
     split(by = '') {
@@ -2035,411 +2035,6 @@ class Interface {
 }
 
 /**
- * Accelerometer helper class.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-class Accelerometer {
-
-    static init() {
-
-        if (!this.active) {
-            this.active = true;
-            this.x = 0;
-            this.y = 0;
-            this.z = 0;
-            this.alpha = 0;
-            this.beta = 0;
-            this.gamma = 0;
-            this.heading = 0;
-            this.rotationRate = {};
-            this.rotationRate.alpha = 0;
-            this.rotationRate.beta = 0;
-            this.rotationRate.gamma = 0;
-            this.toRadians = Device.os === 'ios' ? Math.PI / 180 : 1;
-
-            const updateAccel = e => {
-                switch (window.orientation) {
-                    case 0:
-                        this.x = -e.accelerationIncludingGravity.x;
-                        this.y = e.accelerationIncludingGravity.y;
-                        this.z = e.accelerationIncludingGravity.z;
-                        if (e.rotationRate) {
-                            this.rotationRate.alpha = e.rotationRate.beta * this.toRadians;
-                            this.rotationRate.beta = -e.rotationRate.alpha * this.toRadians;
-                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
-                        }
-                        break;
-                    case 180:
-                        this.x = e.accelerationIncludingGravity.x;
-                        this.y = -e.accelerationIncludingGravity.y;
-                        this.z = e.accelerationIncludingGravity.z;
-                        if (e.rotationRate) {
-                            this.rotationRate.alpha = -e.rotationRate.beta * this.toRadians;
-                            this.rotationRate.beta = e.rotationRate.alpha * this.toRadians;
-                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
-                        }
-                        break;
-                    case 90:
-                        this.x = e.accelerationIncludingGravity.y;
-                        this.y = e.accelerationIncludingGravity.x;
-                        this.z = e.accelerationIncludingGravity.z;
-                        if (e.rotationRate) {
-                            this.rotationRate.alpha = e.rotationRate.alpha * this.toRadians;
-                            this.rotationRate.beta = e.rotationRate.beta * this.toRadians;
-                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
-                        }
-                        break;
-                    case -90:
-                        this.x = -e.accelerationIncludingGravity.y;
-                        this.y = -e.accelerationIncludingGravity.x;
-                        this.z = e.accelerationIncludingGravity.z;
-                        if (e.rotationRate) {
-                            this.rotationRate.alpha = -e.rotationRate.alpha * this.toRadians;
-                            this.rotationRate.beta = -e.rotationRate.beta * this.toRadians;
-                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
-                        }
-                        break;
-                }
-            };
-
-            const updateOrientation = e => {
-                for (let key in e) if (~key.toLowerCase().indexOf('heading')) this.heading = e[key];
-                switch (window.orientation) {
-                    case 0:
-                        this.alpha = e.beta * this.toRadians;
-                        this.beta = -e.alpha * this.toRadians;
-                        this.gamma = e.gamma * this.toRadians;
-                        break;
-                    case 180:
-                        this.alpha = -e.beta * this.toRadians;
-                        this.beta = e.alpha * this.toRadians;
-                        this.gamma = e.gamma * this.toRadians;
-                        break;
-                    case 90:
-                        this.alpha = e.alpha * this.toRadians;
-                        this.beta = e.beta * this.toRadians;
-                        this.gamma = e.gamma * this.toRadians;
-                        break;
-                    case -90:
-                        this.alpha = -e.alpha * this.toRadians;
-                        this.beta = -e.beta * this.toRadians;
-                        this.gamma = e.gamma * this.toRadians;
-                        break;
-                }
-                this.tilt = e.beta * this.toRadians;
-                this.yaw = e.alpha * this.toRadians;
-                this.roll = -e.gamma * this.toRadians;
-                if (Device.os === 'Android') this.heading = compassHeading(e.alpha, e.beta, e.gamma);
-            };
-
-            const compassHeading = (alpha, beta, gamma) => {
-                const degtorad = Math.PI / 180,
-                    x = beta ? beta * degtorad : 0,
-                    y = gamma ? gamma * degtorad : 0,
-                    z = alpha ? alpha * degtorad : 0,
-                    cY = Math.cos(y),
-                    cZ = Math.cos(z),
-                    sX = Math.sin(x),
-                    sY = Math.sin(y),
-                    sZ = Math.sin(z),
-                    Vx = -cZ * sY - sZ * sX * cY,
-                    Vy = -sZ * sY + cZ * sX * cY;
-                let compassHeading = Math.atan(Vx / Vy);
-                if (Vy < 0) compassHeading += Math.PI;
-                else if (Vx < 0) compassHeading += 2 * Math.PI;
-                return compassHeading * (180 / Math.PI);
-            };
-
-            window.addEventListener('devicemotion', updateAccel);
-            window.addEventListener('deviceorientation', updateOrientation);
-
-            this.stop = () => {
-                this.active = false;
-                window.removeEventListener('devicemotion', updateAccel);
-                window.removeEventListener('deviceorientation', updateOrientation);
-            };
-        }
-    }
-}
-
-/**
- * Mouse interaction.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-class Mouse {
-
-    static init() {
-
-        if (!this.active) {
-            this.active = true;
-            this.x = 0;
-            this.y = 0;
-            this.normal = {
-                x: 0,
-                y: 0
-            };
-            this.tilt = {
-                x: 0,
-                y: 0
-            };
-            this.inverseNormal = {
-                x: 0,
-                y: 0
-            };
-
-            const update = e => {
-                this.x = e.x;
-                this.y = e.y;
-                this.normal.x = e.x / Stage.width;
-                this.normal.y = e.y / Stage.height;
-                this.tilt.x = this.normal.x * 2 - 1;
-                this.tilt.y = 1 - this.normal.y * 2;
-                this.inverseNormal.x = this.normal.x;
-                this.inverseNormal.y = 1 - this.normal.y;
-            };
-
-            this.input = Stage.initClass(Interaction);
-            Stage.events.add(this.input, Interaction.START, update);
-            Stage.events.add(this.input, Interaction.MOVE, update);
-            update({
-                x: Stage.width / 2,
-                y: Stage.height / 2
-            });
-
-            this.stop = () => {
-                this.active = false;
-                Stage.events.remove(this.input, Interaction.START, update);
-                Stage.events.remove(this.input, Interaction.MOVE, update);
-            };
-        }
-    }
-}
-
-/**
- * Web audio engine.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
-
-class WebAudio {
-
-    static init() {
-
-        class Sound {
-
-            constructor(asset) {
-                const self = this;
-
-                this.asset = Assets.getPath(asset);
-                if (WebAudio.context.createStereoPanner) this.stereo = WebAudio.context.createStereoPanner();
-                this.output = WebAudio.context.createGain();
-                this.volume = 1;
-                this.rate = 1;
-                if (this.stereo) this.stereo.connect(this.output);
-                this.output.connect(WebAudio.output);
-                this.output.gain.setValueAtTime(0, WebAudio.context.currentTime);
-
-                this.gain = {
-                    set value(value) {
-                        self.volume = value;
-                        self.output.gain.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
-                    },
-                    get value() {
-                        return self.volume;
-                    }
-                };
-
-                this.playbackRate = {
-                    set value(value) {
-                        self.rate = value;
-                        if (self.source) self.source.playbackRate.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
-                    },
-                    get value() {
-                        return self.rate;
-                    }
-                };
-
-                this.stereoPan = {
-                    set value(value) {
-                        self.pan = value;
-                        if (self.stereo) self.stereo.pan.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
-                    },
-                    get value() {
-                        return self.pan;
-                    }
-                };
-
-                this.stop = () => {
-                    if (this.source) {
-                        this.source.stop();
-                        this.playing = false;
-                    }
-                };
-            }
-        }
-
-        if (!this.active) {
-            this.active = true;
-
-            const self = this;
-            const sounds = {};
-            let context;
-
-            if (window.AudioContext) {
-                context = new AudioContext();
-                this.output = context.createGain();
-                this.volume = 1;
-                this.output.connect(context.destination);
-                this.gain = {
-                    set value(value) {
-                        self.volume = value;
-                        self.output.gain.linearRampToValueAtTime(value, context.currentTime + 0.015);
-                    },
-                    get value() {
-                        return self.volume;
-                    }
-                };
-                this.context = context;
-            }
-
-            this.loadSound = (id, callback) => {
-                const promise = Promise.create();
-                if (callback) promise.then(callback);
-                callback = promise.resolve;
-                const sound = this.getSound(id);
-                window.fetch(sound.asset).then(response => {
-                    if (!response.ok) return callback();
-                    response.arrayBuffer().then(data => {
-                        context.decodeAudioData(data, buffer => {
-                            sound.buffer = buffer;
-                            sound.complete = true;
-                            callback();
-                        }, () => {
-                            callback();
-                        });
-                    });
-                }).catch(() => {
-                    callback();
-                });
-                sound.ready = () => promise;
-            };
-
-            this.createSound = (id, asset, callback) => {
-                sounds[id] = new Sound(asset);
-                if (Device.os === 'ios' && callback) callback();
-                else this.loadSound(id, callback);
-                return sounds[id];
-            };
-
-            this.getSound = id => {
-                return sounds[id];
-            };
-
-            this.trigger = id => {
-                if (!context) return;
-                if (context.state === 'suspended') context.resume();
-                const sound = this.getSound(id);
-                if (!sound.ready) this.loadSound(id);
-                sound.ready().then(() => {
-                    if (sound.complete) {
-                        if (sound.stopping && sound.loop) {
-                            sound.stopping = false;
-                            return;
-                        }
-                        sound.playing = true;
-                        sound.source = context.createBufferSource();
-                        sound.source.buffer = sound.buffer;
-                        sound.source.loop = sound.loop;
-                        sound.source.playbackRate.setValueAtTime(sound.rate, context.currentTime);
-                        sound.source.connect(sound.stereo ? sound.stereo : sound.output);
-                        sound.source.start();
-                        sound.output.gain.linearRampToValueAtTime(sound.volume, context.currentTime + 0.015);
-                    }
-                });
-            };
-
-            this.play = (id, volume = 1, loop) => {
-                if (!context) return;
-                if (typeof volume === 'boolean') {
-                    loop = volume;
-                    volume = 1;
-                }
-                const sound = this.getSound(id);
-                if (sound) {
-                    sound.volume = volume;
-                    sound.loop = !!loop;
-                    this.trigger(id);
-                }
-            };
-
-            this.fadeInAndPlay = (id, volume, loop, time, ease, delay = 0) => {
-                if (!context) return;
-                const sound = this.getSound(id);
-                if (sound) {
-                    sound.volume = 0;
-                    sound.loop = !!loop;
-                    this.trigger(id);
-                    TweenManager.tween(sound.gain, { value: volume }, time, ease, delay);
-                }
-            };
-
-            this.fadeOutAndStop = (id, time, ease, delay = 0) => {
-                if (!context) return;
-                const sound = this.getSound(id);
-                if (sound && sound.playing) {
-                    TweenManager.tween(sound.gain, { value: 0 }, time, ease, delay, () => {
-                        if (!sound.stopping) return;
-                        sound.stopping = false;
-                        sound.stop();
-                    });
-                    sound.stopping = true;
-                }
-            };
-
-            this.remove = id => {
-                const sound = this.getSound(id);
-                if (sound && sound.source) {
-                    sound.source.buffer = null;
-                    sound.source.stop();
-                    sound.source.disconnect();
-                    sound.source = null;
-                    sound.playing = false;
-                    delete sounds[id];
-                }
-            };
-
-            this.mute = () => {
-                if (!context) return;
-                TweenManager.tween(this.gain, { value: 0 }, 300, 'easeOutSine');
-            };
-
-            this.unmute = () => {
-                if (!context) return;
-                TweenManager.tween(this.gain, { value: 1 }, 500, 'easeOutSine');
-            };
-
-            this.stop = () => {
-                this.active = false;
-                if (!context) return;
-                for (let id in sounds) {
-                    const sound = sounds[id];
-                    if (sound) sound.stop();
-                }
-                context.close();
-            };
-        }
-
-        window.WebAudio = this;
-    }
-}
-
-/**
  * Stage instance.
  *
  * @author Patrick Schroen / https://github.com/pschroen
@@ -2457,7 +2052,6 @@ const Stage = new (class extends Interface {
 
         function initHTML() {
             self.css({ overflow: 'hidden' });
-            self.preventScroll();
         }
 
         function addListeners() {
@@ -2468,6 +2062,7 @@ const Stage = new (class extends Interface {
             window.addEventListener('keypress', keyPress);
             window.addEventListener('resize', resize);
             window.addEventListener('orientationchange', resize);
+            if (Device.mobile) window.addEventListener('touchstart', preventScroll, { passive: false });
             resize();
         }
 
@@ -2503,10 +2098,25 @@ const Stage = new (class extends Interface {
             Events.emitter.fire(Events.RESIZE, e);
         }
 
+        function preventScroll(e) {
+            let target = e.target;
+            if (target.nodeName === 'INPUT' || target.nodeName === 'TEXTAREA' || target.nodeName === 'SELECT' || target.nodeName === 'A') return;
+            let prevent = true;
+            while (target.parentNode && prevent) {
+                if (target.scrollParent) prevent = false;
+                target = target.parentNode;
+            }
+            if (prevent) e.preventDefault();
+        }
+
+        this.allowScroll = () => {
+            if (Device.mobile) window.removeEventListener('touchstart', preventScroll, { passive: false });
+        };
+
         this.destroy = () => {
-            if (Accelerometer.active) Accelerometer.stop();
-            if (Mouse.active) Mouse.stop();
-            if (WebAudio.active) WebAudio.stop();
+            if (this.Accelerometer && this.Accelerometer.active) this.Accelerometer.stop();
+            if (this.Mouse && this.Mouse.active) this.Mouse.stop();
+            if (this.WebAudio && this.WebAudio.active) this.WebAudio.stop();
             window.removeEventListener('focus', focus);
             window.removeEventListener('blur', blur);
             window.removeEventListener('keydown', keyDown);
@@ -2514,6 +2124,7 @@ const Stage = new (class extends Interface {
             window.removeEventListener('keypress', keyPress);
             window.removeEventListener('resize', resize);
             window.removeEventListener('orientationchange', resize);
+            if (Device.mobile) window.removeEventListener('touchstart', preventScroll, { passive: false });
             return super.destroy();
         };
     }
@@ -2826,6 +2437,195 @@ class Interaction extends Component {
 }
 
 /**
+ * Accelerometer helper class.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Accelerometer {
+
+    static init() {
+
+        if (!this.active) {
+            this.active = true;
+            this.x = 0;
+            this.y = 0;
+            this.z = 0;
+            this.alpha = 0;
+            this.beta = 0;
+            this.gamma = 0;
+            this.heading = 0;
+            this.rotationRate = {};
+            this.rotationRate.alpha = 0;
+            this.rotationRate.beta = 0;
+            this.rotationRate.gamma = 0;
+            this.toRadians = Device.os === 'ios' ? Math.PI / 180 : 1;
+
+            const updateAccel = e => {
+                switch (window.orientation) {
+                    case 0:
+                        this.x = -e.accelerationIncludingGravity.x;
+                        this.y = e.accelerationIncludingGravity.y;
+                        this.z = e.accelerationIncludingGravity.z;
+                        if (e.rotationRate) {
+                            this.rotationRate.alpha = e.rotationRate.beta * this.toRadians;
+                            this.rotationRate.beta = -e.rotationRate.alpha * this.toRadians;
+                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
+                        }
+                        break;
+                    case 180:
+                        this.x = e.accelerationIncludingGravity.x;
+                        this.y = -e.accelerationIncludingGravity.y;
+                        this.z = e.accelerationIncludingGravity.z;
+                        if (e.rotationRate) {
+                            this.rotationRate.alpha = -e.rotationRate.beta * this.toRadians;
+                            this.rotationRate.beta = e.rotationRate.alpha * this.toRadians;
+                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
+                        }
+                        break;
+                    case 90:
+                        this.x = e.accelerationIncludingGravity.y;
+                        this.y = e.accelerationIncludingGravity.x;
+                        this.z = e.accelerationIncludingGravity.z;
+                        if (e.rotationRate) {
+                            this.rotationRate.alpha = e.rotationRate.alpha * this.toRadians;
+                            this.rotationRate.beta = e.rotationRate.beta * this.toRadians;
+                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
+                        }
+                        break;
+                    case -90:
+                        this.x = -e.accelerationIncludingGravity.y;
+                        this.y = -e.accelerationIncludingGravity.x;
+                        this.z = e.accelerationIncludingGravity.z;
+                        if (e.rotationRate) {
+                            this.rotationRate.alpha = -e.rotationRate.alpha * this.toRadians;
+                            this.rotationRate.beta = -e.rotationRate.beta * this.toRadians;
+                            this.rotationRate.gamma = e.rotationRate.gamma * this.toRadians;
+                        }
+                        break;
+                }
+            };
+
+            const updateOrientation = e => {
+                for (let key in e) if (~key.toLowerCase().indexOf('heading')) this.heading = e[key];
+                switch (window.orientation) {
+                    case 0:
+                        this.alpha = e.beta * this.toRadians;
+                        this.beta = -e.alpha * this.toRadians;
+                        this.gamma = e.gamma * this.toRadians;
+                        break;
+                    case 180:
+                        this.alpha = -e.beta * this.toRadians;
+                        this.beta = e.alpha * this.toRadians;
+                        this.gamma = e.gamma * this.toRadians;
+                        break;
+                    case 90:
+                        this.alpha = e.alpha * this.toRadians;
+                        this.beta = e.beta * this.toRadians;
+                        this.gamma = e.gamma * this.toRadians;
+                        break;
+                    case -90:
+                        this.alpha = -e.alpha * this.toRadians;
+                        this.beta = -e.beta * this.toRadians;
+                        this.gamma = e.gamma * this.toRadians;
+                        break;
+                }
+                this.tilt = e.beta * this.toRadians;
+                this.yaw = e.alpha * this.toRadians;
+                this.roll = -e.gamma * this.toRadians;
+                if (Device.os === 'Android') this.heading = compassHeading(e.alpha, e.beta, e.gamma);
+            };
+
+            const compassHeading = (alpha, beta, gamma) => {
+                const degtorad = Math.PI / 180,
+                    x = beta ? beta * degtorad : 0,
+                    y = gamma ? gamma * degtorad : 0,
+                    z = alpha ? alpha * degtorad : 0,
+                    cY = Math.cos(y),
+                    cZ = Math.cos(z),
+                    sX = Math.sin(x),
+                    sY = Math.sin(y),
+                    sZ = Math.sin(z),
+                    Vx = -cZ * sY - sZ * sX * cY,
+                    Vy = -sZ * sY + cZ * sX * cY;
+                let compassHeading = Math.atan(Vx / Vy);
+                if (Vy < 0) compassHeading += Math.PI;
+                else if (Vx < 0) compassHeading += 2 * Math.PI;
+                return compassHeading * (180 / Math.PI);
+            };
+
+            window.addEventListener('devicemotion', updateAccel);
+            window.addEventListener('deviceorientation', updateOrientation);
+
+            this.stop = () => {
+                this.active = false;
+                window.removeEventListener('devicemotion', updateAccel);
+                window.removeEventListener('deviceorientation', updateOrientation);
+            };
+        }
+
+        Stage.Accelerometer = this;
+    }
+}
+
+/**
+ * Mouse interaction.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Mouse {
+
+    static init() {
+
+        if (!this.active) {
+            this.active = true;
+            this.x = 0;
+            this.y = 0;
+            this.normal = {
+                x: 0,
+                y: 0
+            };
+            this.tilt = {
+                x: 0,
+                y: 0
+            };
+            this.inverseNormal = {
+                x: 0,
+                y: 0
+            };
+
+            const update = e => {
+                this.x = e.x;
+                this.y = e.y;
+                this.normal.x = e.x / Stage.width;
+                this.normal.y = e.y / Stage.height;
+                this.tilt.x = this.normal.x * 2 - 1;
+                this.tilt.y = 1 - this.normal.y * 2;
+                this.inverseNormal.x = this.normal.x;
+                this.inverseNormal.y = 1 - this.normal.y;
+            };
+
+            this.input = Stage.initClass(Interaction);
+            Stage.events.add(this.input, Interaction.START, update);
+            Stage.events.add(this.input, Interaction.MOVE, update);
+            update({
+                x: Stage.width / 2,
+                y: Stage.height / 2
+            });
+
+            this.stop = () => {
+                this.active = false;
+                Stage.events.remove(this.input, Interaction.START, update);
+                Stage.events.remove(this.input, Interaction.MOVE, update);
+            };
+        }
+
+        Stage.Mouse = this;
+    }
+}
+
+/**
  * Asset loader with promise method.
  *
  * @author Patrick Schroen / https://github.com/pschroen
@@ -2840,41 +2640,41 @@ class AssetLoader extends Component {
                 const keys = assets.map(path => {
                     return Utils.basename(path);
                 });
-                return keys.reduce((o, k, i) => {
-                    o[k] = assets[i];
-                    return o;
+                return keys.reduce((object, key, i) => {
+                    object[key] = assets[i];
+                    return object;
                 }, {});
             })();
         }
 
         super();
         const self = this;
-        const total = Object.keys(assets).length;
-        let loaded = 0;
+        let total = Object.keys(assets).length,
+            loaded = 0;
 
         for (let key in assets) loadAsset(key, assets[key]);
 
         function loadAsset(key, path) {
             const ext = Utils.extension(path);
             if (ext.includes(['jpg', 'jpeg', 'png', 'gif', 'svg'])) {
-                Assets.createImage(path, assetLoaded);
+                Assets.createImage(path, increment);
                 return;
             }
             if (ext.includes(['mp3', 'm4a', 'ogg', 'wav', 'aif'])) {
-                if (!window.AudioContext || !window.WebAudio) return assetLoaded();
-                window.WebAudio.createSound(key, path, assetLoaded);
+                if (!window.AudioContext || !Stage.WebAudio) return increment();
+                Stage.WebAudio.createSound(key, path, increment);
                 return;
             }
             window.get(Assets.getPath(path), Assets.OPTIONS).then(data => {
                 if (ext === 'json') Assets.storeData(key, data);
                 if (ext === 'js') window.eval(data.replace('use strict', ''));
-                assetLoaded();
+                increment();
             }).catch(() => {
-                assetLoaded();
+                increment();
             });
         }
 
-        function assetLoaded() {
+        function increment() {
             self.percent = ++loaded / total;
             self.events.fire(Events.PROGRESS, { percent: self.percent }, true);
             if (loaded === total) complete();
@@ -2884,6 +2684,14 @@ class AssetLoader extends Component {
             self.events.fire(Events.COMPLETE, null, true);
             if (callback) callback();
         }
+
+        this.add = (num = 1) => {
+            total += num;
+        };
+
+        this.trigger = (num = 1) => {
+            for (let i = 0; i < num; i++) increment();
+        };
     }
 
     static loadAssets(assets, callback) {
@@ -2941,33 +2749,65 @@ class MultiLoader extends Component {
 class FontLoader extends Component {
 
     constructor(fonts, callback) {
+
+        fonts = fonts.map(font => {
+            if (typeof font !== 'object') return {
+                style: 'normal',
+                variant: 'normal',
+                weight: 'normal',
+                family: font.replace(/"/g, '\'')
+            };
+            return font;
+        });
+
         super();
         const self = this;
-        let context;
+        let context,
+            loaded = 0;
 
         initFonts();
 
         function initFonts() {
-            if (!Array.isArray(fonts)) fonts = [fonts];
             context = document.createElement('canvas').getContext('2d');
-            fonts.forEach(font => renderText(font.replace(/"/g, '\'')));
-            finish();
+            fonts.forEach(font => {
+                font.specifier = (({ style = 'normal', variant = 'normal', weight = 'normal', family }) => {
+                    return `${style} ${variant} ${weight} 12px "${family}"`;
+                })(font);
+            });
+            if (document.fonts) {
+                fonts.forEach(font => {
+                    document.fonts.load(font.specifier).then(() => {
+                        renderText(font.specifier);
+                        fontLoaded();
+                    }).catch(() => {
+                        fontLoaded();
+                    });
+                });
+            } else {
+                fonts.forEach(font => renderText(font.specifier));
+                self.delayedCall(() => {
+                    self.percent = 1;
+                    self.events.fire(Events.PROGRESS, { percent: self.percent }, true);
+                    self.events.fire(Events.COMPLETE, null, true);
+                    if (callback) callback();
+                }, 500);
+            }
         }
 
-        function renderText(font) {
-            context.font = `12px "${font}"`;
+        function renderText(specifier) {
+            context.font = specifier;
             context.fillText('LOAD', 0, 0);
         }
 
-        function finish() {
-            const ready = () => {
-                self.percent = 1;
-                self.events.fire(Events.PROGRESS, { percent: self.percent }, true);
-                self.events.fire(Events.COMPLETE, null, true);
-                if (callback) callback();
-            };
-            if (document.fonts && document.fonts.ready) document.fonts.ready.then(ready);
-            else self.delayedCall(ready, 500);
+        function fontLoaded() {
+            self.percent = ++loaded / fonts.length;
+            self.events.fire(Events.PROGRESS, { percent: self.percent }, true);
+            if (loaded === fonts.length) complete();
+        }
+
+        function complete() {
+            self.events.fire(Events.COMPLETE, null, true);
+            if (callback) callback();
         }
     }
 
@@ -2980,6 +2820,81 @@ class FontLoader extends Component {
 }
 
 /**
+ * Fullscreen controller.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Fullscreen extends Component {
+
+    static instance() {
+        if (!this.singleton) this.singleton = new Fullscreen();
+        return this.singleton;
+    }
+
+    constructor() {
+        super();
+        const self = this;
+
+        this.opened = false;
+
+        addListeners();
+
+        function addListeners() {
+            [
+                'onfullscreenchange',
+                'onwebkitfullscreenchange',
+                'onmozfullscreenchange',
+                'onmsfullscreenchange',
+                'onfullscreenerror',
+                'onwebkitfullscreenerror',
+                'onmozfullscreenerror',
+                'onmsfullscreenerror'
+            ].forEach(event => {
+                if (typeof document[event] !== 'undefined') document[event] = update;
+            });
+        }
+
+        function update() {
+            const opened = !!(document.fullscreenElement || document.webkitFullscreenElement || document.mozFullScreenElement || document.msFullscreenElement);
+            if (opened === self.opened) return;
+            self.opened = opened;
+            Events.emitter.fire(Events.FULLSCREEN, { fullscreen: self.opened });
+        }
+
+        this.open = element => {
+            element = element || document.body;
+            [
+                'requestFullscreen',
+                'webkitRequestFullscreen',
+                'mozRequestFullScreen',
+                'msRequestFullscreen'
+            ].every(method => {
+                if (typeof element[method] === 'undefined') return true;
+                element[method]();
+            });
+        };
+
+        this.close = () => {
+            [
+                'exitFullscreen',
+                'webkitExitFullscreen',
+                'mozCancelFullScreen',
+                'msExitFullscreen'
+            ].every(method => {
+                if (typeof document[method] === 'undefined') return true;
+                document[method]();
+            });
+        };
+
+        this.destroy = () => {
+            this.close();
+            return super.destroy();
+        };
+    }
+}
+
+/**
  * State dispatcher.
  *
  * @author Patrick Schroen / https://github.com/pschroen
@@ -2987,7 +2902,7 @@ class FontLoader extends Component {
 
 class StateDispatcher extends Component {
 
-    constructor(forceHash) {
+    constructor(hash) {
         super();
         const self = this;
         let storePath, storeState,
@@ -2995,11 +2910,11 @@ class StateDispatcher extends Component {
 
         this.locked = false;
 
+        addListeners();
         storePath = getPath();
-        createListener();
 
-        function createListener() {
-            if (forceHash) window.addEventListener('hashchange', hashChange);
+        function addListeners() {
+            if (hash) window.addEventListener('hashchange', hashChange);
             else window.addEventListener('popstate', popState);
         }
 
@@ -3012,21 +2927,21 @@ class StateDispatcher extends Component {
         }
 
         function getPath() {
-            if (forceHash) return location.hash.slice(3);
-            return rootPath !== '/' ? location.pathname.split(rootPath)[1] : location.pathname.slice(1) || '';
+            if (hash) return location.hash.slice(3);
+            return (rootPath !== '/' ? location.pathname.split(rootPath)[1] : location.pathname.slice(1)) || '';
         }
 
         function handleStateChange(state, path) {
-            if (path !== storePath) {
-                if (!self.locked) {
-                    storePath = path;
-                    storeState = state;
-                    self.events.fire(Events.UPDATE, { value: state, path }, true);
-                } else if (storePath) {
-                    if (forceHash) location.hash = '!/' + storePath;
-                    else history.pushState(storeState, null, rootPath + storePath);
-                }
+            if (path === storePath) return;
+            if (self.locked) {
+                if (!storePath) return;
+                if (hash) location.hash = '!/' + storePath;
+                else history.pushState(storeState, null, rootPath + storePath);
+                return;
             }
+            storePath = path;
+            storeState = state;
+            self.events.fire(Events.UPDATE, { value: state, path }, true);
         }
 
         this.getState = () => {
@@ -3034,17 +2949,20 @@ class StateDispatcher extends Component {
             return { value: storeState, path };
         };
 
+        this.setRoot = root => {
+            rootPath = root.charAt(0) === '/' ? root : '/' + root;
+        };
+
         this.setState = (state, path) => {
             if (typeof state !== 'object') {
                 path = state;
                 state = null;
             }
-            if (path !== storePath) {
-                storePath = path;
-                storeState = state;
-                if (forceHash) location.hash = '!/' + path;
-                else history.pushState(state, null, rootPath + path);
-            }
+            if (path === storePath) return;
+            storePath = path;
+            storeState = state;
+            if (hash) location.hash = '!/' + path;
+            else history.pushState(state, null, rootPath + path);
         };
 
         this.replaceState = (state, path) => {
@@ -3052,12 +2970,11 @@ class StateDispatcher extends Component {
                 path = state;
                 state = null;
             }
-            if (path !== storePath) {
-                storePath = path;
-                storeState = state;
-                if (forceHash) history.replaceState(null, null, '#!/' + path);
-                else history.replaceState(state, null, rootPath + path);
-            }
+            if (path === storePath) return;
+            storePath = path;
+            storeState = state;
+            if (hash) location.hash = '!/' + path;
+            else history.replaceState(state, null, rootPath + path);
         };
 
         this.setTitle = title => document.title = title;
@@ -3066,12 +2983,7 @@ class StateDispatcher extends Component {
 
         this.unlock = () => this.locked = false;
 
-        this.forceHash = () => forceHash = true;
-
-        this.setPathRoot = path => {
-            if (path.charAt(0) === '/') rootPath = path;
-            else rootPath = '/' + path;
-        };
+        this.useHash = () => hash = true;
 
         this.destroy = () => {
             window.removeEventListener('hashchange', hashChange);
@@ -3105,6 +3017,226 @@ class Storage {
             if (value === 'true' || value === 'false') value = value === 'true';
         }
         return value;
+    }
+}
+
+/**
+ * Web audio engine.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
+
+class WebAudio {
+
+    static init() {
+
+        class Sound {
+
+            constructor(path) {
+                const self = this;
+
+                this.path = Assets.getPath(path);
+                if (WebAudio.context.createStereoPanner) this.stereo = WebAudio.context.createStereoPanner();
+                this.output = WebAudio.context.createGain();
+                this.volume = 1;
+                this.rate = 1;
+                if (this.stereo) this.stereo.connect(this.output);
+                this.output.connect(WebAudio.output);
+                this.output.gain.setValueAtTime(0, WebAudio.context.currentTime);
+
+                this.gain = {
+                    set value(value) {
+                        self.volume = value;
+                        self.output.gain.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
+                    },
+                    get value() {
+                        return self.volume;
+                    }
+                };
+
+                this.playbackRate = {
+                    set value(value) {
+                        self.rate = value;
+                        if (self.source) self.source.playbackRate.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
+                    },
+                    get value() {
+                        return self.rate;
+                    }
+                };
+
+                this.stereoPan = {
+                    set value(value) {
+                        self.pan = value;
+                        if (self.stereo) self.stereo.pan.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
+                    },
+                    get value() {
+                        return self.pan;
+                    }
+                };
+
+                this.stop = () => {
+                    if (this.source) {
+                        this.source.stop();
+                        this.playing = false;
+                    }
+                };
+            }
+        }
+
+        if (!this.active) {
+            this.active = true;
+
+            const self = this;
+            const sounds = {};
+            let context;
+
+            if (window.AudioContext) {
+                context = new AudioContext();
+                this.output = context.createGain();
+                this.volume = 1;
+                this.output.connect(context.destination);
+                this.gain = {
+                    set value(value) {
+                        self.volume = value;
+                        self.output.gain.linearRampToValueAtTime(value, context.currentTime + 0.015);
+                    },
+                    get value() {
+                        return self.volume;
+                    }
+                };
+                this.context = context;
+            }
+
+            this.loadSound = (id, callback) => {
+                const promise = Promise.create();
+                if (callback) promise.then(callback);
+                callback = promise.resolve;
+                const sound = this.getSound(id);
+                window.fetch(sound.path, Assets.OPTIONS).then(response => {
+                    if (!response.ok) return callback();
+                    response.arrayBuffer().then(data => {
+                        context.decodeAudioData(data, buffer => {
+                            sound.buffer = buffer;
+                            sound.complete = true;
+                            callback();
+                        }, () => {
+                            callback();
+                        });
+                    });
+                }).catch(() => {
+                    callback();
+                });
+                sound.ready = () => promise;
+            };
+
+            this.createSound = (id, path, callback) => {
+                sounds[id] = new Sound(path);
+                if (Device.os === 'ios' && callback) callback();
+                else this.loadSound(id, callback);
+                return sounds[id];
+            };
+
+            this.getSound = id => {
+                return sounds[id];
+            };
+
+            this.trigger = id => {
+                if (!context) return;
+                if (context.state === 'suspended') context.resume();
+                const sound = this.getSound(id);
+                if (!sound.ready) this.loadSound(id);
+                sound.ready().then(() => {
+                    if (sound.complete) {
+                        if (sound.stopping && sound.loop) {
+                            sound.stopping = false;
+                            return;
+                        }
+                        sound.playing = true;
+                        sound.source = context.createBufferSource();
+                        sound.source.buffer = sound.buffer;
+                        sound.source.loop = sound.loop;
+                        sound.source.playbackRate.setValueAtTime(sound.rate, context.currentTime);
+                        sound.source.connect(sound.stereo ? sound.stereo : sound.output);
+                        sound.source.start();
+                        sound.output.gain.linearRampToValueAtTime(sound.volume, context.currentTime + 0.015);
+                    }
+                });
+            };
+
+            this.play = (id, volume = 1, loop) => {
+                if (!context) return;
+                if (typeof volume === 'boolean') {
+                    loop = volume;
+                    volume = 1;
+                }
+                const sound = this.getSound(id);
+                if (sound) {
+                    sound.volume = volume;
+                    sound.loop = !!loop;
+                    this.trigger(id);
+                }
+            };
+
+            this.fadeInAndPlay = (id, volume, loop, time, ease, delay = 0) => {
+                if (!context) return;
+                const sound = this.getSound(id);
+                if (sound) {
+                    sound.volume = 0;
+                    sound.loop = !!loop;
+                    this.trigger(id);
+                    TweenManager.tween(sound.gain, { value: volume }, time, ease, delay);
+                }
+            };
+
+            this.fadeOutAndStop = (id, time, ease, delay = 0) => {
+                if (!context) return;
+                const sound = this.getSound(id);
+                if (sound && sound.playing) {
+                    TweenManager.tween(sound.gain, { value: 0 }, time, ease, delay, () => {
+                        if (!sound.stopping) return;
+                        sound.stopping = false;
+                        sound.stop();
+                    });
+                    sound.stopping = true;
+                }
+            };
+
+            this.remove = id => {
+                const sound = this.getSound(id);
+                if (sound && sound.source) {
+                    sound.source.buffer = null;
+                    sound.source.stop();
+                    sound.source.disconnect();
+                    sound.source = null;
+                    sound.playing = false;
+                    delete sounds[id];
+                }
+            };
+
+            this.mute = () => {
+                if (!context) return;
+                TweenManager.tween(this.gain, { value: 0 }, 300, 'easeOutSine');
+            };
+
+            this.unmute = () => {
+                if (!context) return;
+                TweenManager.tween(this.gain, { value: 1 }, 500, 'easeOutSine');
+            };
+
+            this.stop = () => {
+                this.active = false;
+                if (!context) return;
+                for (let id in sounds) {
+                    const sound = sounds[id];
+                    if (sound) sound.stop();
+                }
+                context.close();
+            };
+        }
+
+        Stage.WebAudio = this;
     }
 }
 
@@ -3600,7 +3732,7 @@ class Canvas {
 
         size(w, h);
 
-        function size(w, h) {
+        function size(w, h = w) {
             const ratio = retina ? 2 : 1;
             self.element.width = w * ratio;
             self.element.height = h * ratio;
@@ -4043,91 +4175,60 @@ class Color {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-class SVG {
+class SVG extends Interface {
 
-    constructor(name, type, params) {
-        const self = this;
-        let svg;
+    constructor(type = 'svg') {
+        super(null, 'svg', type);
 
-        createSVG();
+        this.x = 0;
+        this.y = 0;
+        this.px = 0;
+        this.py = 0;
+        this.width = 0;
+        this.height = 0;
+    }
 
-        function createSVG() {
-            switch (type) {
-                case 'svg':
-                    createView();
-                    break;
-                case 'radialGradient':
-                    createGradient();
-                    break;
-                case 'linearGradient':
-                    createGradient();
-                    break;
-                default:
-                    createElement();
-                    break;
-            }
+    size(w, h = w) {
+        this.width = w;
+        this.height = h;
+        this.element.setAttribute('width', w);
+        this.element.setAttribute('height', h);
+        return this;
+    }
+
+    transform(props) {
+        for (let key in props) if (typeof props[key] === 'number') this[key] = props[key];
+        let transforms = '';
+        if (this.x || this.y) transforms += 'translate(' + (this.x + this.px) + ' ' + (this.y + this.py) + ')';
+        if (typeof this.scale !== 'undefined') {
+            transforms += 'scale(' + this.scale + ')';
+        } else if (typeof this.scaleX !== 'undefined' || typeof this.scaleY !== 'undefined') {
+            const scaleX = this.scaleX || 1,
+                scaleY = this.scaleY || 1;
+            let scale = '';
+            scale += scaleX + ' ';
+            scale += scaleY;
+            transforms += 'scale(' + scale + ')';
         }
+        if (typeof this.rotation !== 'undefined') transforms += 'rotate(' + this.rotation + ')';
+        if (this.x || this.y) transforms += 'translate(-' + (this.x + this.px) + ' -' + (this.y + this.py) + ')';
+        this.element.setAttribute('transform', transforms);
+        return this;
+    }
 
-        function createView() {
-            svg = new Interface(name, 'svg');
-            svg.element.setAttribute('preserveAspectRatio', 'xMinYMid meet');
-            svg.element.setAttribute('version', '1.1');
-            svg.element.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-            if (params.width) {
-                svg.element.setAttribute('viewBox', '0 0 ' + params.width + ' ' + params.height);
-                svg.element.style.width = params.width + 'px';
-                svg.element.style.height = params.height + 'px';
-            }
-            self.object = svg;
+    transformPoint(x, y) {
+        this.px = typeof x === 'number' ? x : this.width * (parseFloat(x) / 100);
+        this.py = typeof y === 'number' ? y : this.height * (parseFloat(y) / 100);
+        return this;
+    }
+
+    attr(props, value) {
+        if (typeof props !== 'object') {
+            this[props] = value;
+            return super.attr(props, value);
         }
-
-        function createElement() {
-            svg = new Interface(name, 'svg', type);
-            if (type === 'circle') setCircle();
-            else if (type === 'radialGradient') setGradient();
-            self.object = svg;
-        }
-
-        function setCircle() {
-            ['cx', 'cy', 'r'].forEach(attr => {
-                if (params.stroke && attr === 'r') svg.element.setAttributeNS(null, attr, params.width / 2 - params.stroke);
-                else svg.element.setAttributeNS(null, attr, params.width / 2);
-            });
-        }
-
-        function setGradient() {
-            ['cx', 'cy', 'r', 'fx', 'fy', 'name'].forEach(attr => {
-                svg.element.setAttributeNS(null, attr === 'name' ? 'id' : attr, params[attr]);
-            });
-            svg.element.setAttributeNS(null, 'gradientUnits', 'userSpaceOnUse');
-        }
-
-        function createColorStop(obj) {
-            const stop = document.createElementNS('http://www.w3.org/2000/svg', 'stop');
-            ['offset', 'style'].forEach(attr => {
-                stop.setAttributeNS(null, attr, attr === 'style' ? 'stop-color:' + obj[attr] : obj[attr]);
-            });
-            return stop;
-        }
-
-        function createGradient() {
-            createElement();
-            params.colors.forEach(param => {
-                svg.element.appendChild(createColorStop(param));
-            });
-        }
-
-        this.addTo = element => {
-            if (element.points) element = element.points;
-            else if (element.element) element = element.element;
-            else if (element.object) element = element.object.element;
-            element.appendChild(svg.element);
-        };
-
-        this.destroy = () => {
-            this.object.destroy();
-            return Utils.nullObject(this);
-        };
+        for (let key in props) if (typeof props[key] === 'number') this[key] = props[key];
+        return super.attr(props, value);
     }
 }
 
@@ -4140,134 +4241,189 @@ class SVG {
 class Video extends Component {
 
     constructor(params) {
+
+        if (!Video.initialized) {
+            Video.PLAY = 'video_play';
+            Video.PAUSE = 'video_pause';
+            Video.ENDED = 'video_ended';
+            Video.PLAYING = 'video_playing';
+            Video.PROGRESS = 'video_progress';
+            Video.WAITING = 'video_waiting';
+            Video.UPDATE = 'video_update';
+
+            Video.initialized = true;
+        }
+
         super();
         const self = this;
-        const event = {};
-        let lastTime, buffering,
-            tick = 0;
+        const ready = Promise.create(),
+            loaded = Promise.create();
+        let object, video, loadingState, listeners,
+            initialPlay = true;
 
         this.playing = false;
-        this.loaded = { start: 0, end: 0, percent: 0 };
 
+        initParameters();
         createElement();
-        if (params.preload !== false) preload();
-        else this.element.preload = 'none';
+        addListeners();
+
+        function initParameters() {
+            const defaults = {
+                preload: false,
+                autoplay: false,
+                muted: true,
+                loop: false,
+                inline: true,
+                controls: false,
+                currentTime: 0,
+                playback: 1,
+                width: 640,
+                height: 360,
+                events: []
+            };
+            params = Object.assign(defaults, params);
+        }
 
         function createElement() {
-            const src = params.src;
-            self.element = document.createElement('video');
-            if (src) self.element.src = Assets.getPath(src);
-            self.element.controls = params.controls;
-            self.element.id = params.id || '';
-            self.element.width = params.width;
-            self.element.height = params.height;
-            self.element.loop = params.loop;
-            self.element.muted = true;
-            self.element.playsinline = true;
-            self.object = new Interface(self.element);
+            video = document.createElement('video');
+            video.src = Assets.getPath(params.src);
+            video.crossorigin = 'anonymous';
+            video.preload = params.preload;
+            video.autoplay = params.autoplay;
+            video.muted = params.autoplay || params.muted;
+            video.loop = params.loop;
+            video.playsinline = params.inline;
+            video.controls = params.controls;
+            video.width = params.width;
+            video.height = params.height;
+            video.defaultMuted = params.muted;
+            video.defaultPlaybackRate = params.playback;
+
+            self.element = video;
+            object = new Interface(video);
+            self.object = object;
             self.width = params.width;
             self.height = params.height;
-            self.object.size(self.width, self.height);
+
+            if (params.preload) startPreload();
+            if (params.autoplay) startPlayback();
         }
 
-        function preload() {
-            self.element.preload = 'auto';
-            self.element.load();
+        function addListeners() {
+            listeners = { play, pause, ended, playing, progress, waiting, timeupdate, loadeddata };
+            params.events.push('loadeddata');
+            params.events.forEach(event => video.addEventListener(event, listeners[event], true));
         }
 
-        function step() {
-            if (!self.element) return self.stopRender(step);
-            self.duration = self.element.duration;
-            self.time = self.element.currentTime;
-            if (self.element.currentTime === lastTime) {
-                tick++;
-                if (tick > 30 && !buffering) {
-                    buffering = true;
-                    self.events.fire(Events.ERROR, null, true);
-                }
-            } else {
-                tick = 0;
-                if (buffering) {
-                    self.events.fire(Events.READY, null, true);
-                    buffering = false;
-                }
+        function startPreload() {
+            loadingState = true;
+            return ready;
+        }
+
+        async function startPlayback() {
+            loadingState = false;
+            await ready;
+            if (initialPlay) {
+                initialPlay = false;
+                video.currentTime = params.currentTime;
             }
-            lastTime = self.element.currentTime;
-            if (self.element.currentTime >= (self.duration || self.element.duration) - 0.001) {
-                if (!self.element.loop) {
-                    self.stopRender(step);
-                    self.events.fire(Events.COMPLETE, null, true);
-                } else {
-                    self.element.currentTime = 0;
-                }
-            }
-            event.time = self.element.currentTime;
-            event.duration = self.element.duration;
-            event.loaded = self.loaded;
-            self.events.fire(Events.UPDATE, event, true);
+            return video.play();
         }
 
-        function handleProgress() {
-            if (!self.ready()) return;
-            const bf = self.element.buffered,
-                time = self.element.currentTime;
-            let range = 0;
-            while (!(bf.start(range) <= time && time <= bf.end(range))) range += 1;
-            self.loaded.start = bf.start(range) / self.element.duration;
-            self.loaded.end = bf.end(range) / self.element.duration;
-            self.loaded.percent = self.loaded.end - self.loaded.start;
-            self.events.fire(Events.PROGRESS, self.loaded, true);
+        function play(e) {
+            if (loadingState) loadingState = false;
+            else self.events.fire(Video.PLAY, e, true);
         }
 
-        this.play = () => {
+        function pause(e) {
+            self.events.fire(Video.PAUSE, e, true);
+        }
+
+        function ended(e) {
+            self.events.fire(Video.ENDED, e, true);
+        }
+
+        function playing(e) {
+            self.events.fire(Video.PLAYING, e, true);
+        }
+
+        function progress(e) {
+            self.events.fire(Video.PROGRESS, e, true);
+        }
+
+        function waiting(e) {
+            self.events.fire(Video.WAITING, e, true);
+        }
+
+        function timeupdate(e) {
+            self.events.fire(Video.UPDATE, e, true);
+        }
+
+        function loadeddata() {
+            if (video.readyState >= 2) ready.resolve();
+            if (video.readyState >= 4) loaded.resolve();
+        }
+
+        this.load = async () => {
+            return await startPreload();
+        };
+
+        this.play = async () => {
+            const promise = await startPlayback();
             this.playing = true;
-            this.element.play();
-            this.startRender(step);
+            return promise;
         };
 
         this.pause = () => {
             this.playing = false;
-            this.stopRender(step);
-            this.element.pause();
+            video.pause();
         };
 
         this.stop = () => {
-            this.pause();
-            if (this.ready()) this.element.currentTime = 0;
+            video.pause();
+            this.seek(0);
+        };
+
+        this.seek = t => {
+            if (video.fastSeek) video.fastSeek(t);
+            else video.currentTime = t;
+        };
+
+        this.seekExact = t => {
+            video.currentTime = t;
         };
 
         this.volume = v => {
-            this.element.volume = v;
-            if (this.element.muted) this.element.muted = false;
+            video.volume = v;
+            if (video.muted) video.muted = false;
         };
 
         this.mute = () => {
-            this.element.muted = true;
+            video.muted = true;
         };
 
         this.unmute = () => {
-            this.element.muted = false;
+            video.muted = false;
         };
 
         this.ready = () => {
-            return this.element.readyState > this.element.HAVE_CURRENT_DATA;
+            return ready;
+        };
+
+        this.loaded = () => {
+            return loaded;
         };
 
         this.size = (w, h) => {
-            this.element.width = this.width = w;
-            this.element.height = this.height = h;
-            this.object.size(w, h);
-        };
-
-        this.trackProgress = () => {
-            this.element.addEventListener('progress', handleProgress);
+            video.width = this.width = w;
+            video.height = this.height = h;
         };
 
         this.destroy = () => {
-            this.element.removeEventListener('progress', handleProgress);
+            params.events.forEach(event => video.removeEventListener(event, listeners[event], true));
             this.stop();
-            this.element.src = '';
-            this.object.destroy();
+            video.src = '';
+            object.destroy();
             return super.destroy();
         };
     }
@@ -4315,6 +4471,7 @@ class BackgroundVideo extends Interface {
             video = wrapper.initClass(Video, {
                 src: params.src,
                 loop: params.loop !== false,
+                events: ['timeupdate', 'ended'],
                 width: params.width,
                 height: params.height,
                 preload: true
@@ -4324,20 +4481,20 @@ class BackgroundVideo extends Interface {
         }
 
         function addListeners() {
-            self.events.add(video, Events.UPDATE, videoUpdate);
+            self.events.add(video, Video.UPDATE, update);
         }
 
-        function videoUpdate() {
+        function update() {
             if (tick++ < 10) return;
-            self.events.remove(video, Events.UPDATE, videoUpdate);
+            self.events.remove(video, Video.UPDATE, update);
             wrapper.tween({ opacity: params.opacity || 1 }, 500, 'easeOutSine', () => {
                 if (!params.opacity) wrapper.clearOpacity();
             });
         }
 
-        this.play = () => {
+        this.play = async () => {
             if (!video) return;
-            video.play();
+            return await video.play();
         };
 
         this.pause = () => {
@@ -4507,7 +4664,7 @@ class Scroll extends Component {
 }
 
 /**
- * Scroll lock.
+ * Scroll lock controller.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
@@ -6031,8 +6188,8 @@ class Effects extends Component {
             renderTarget1 = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
             renderTarget2 = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
             scene = new THREE.Scene();
-            camera = new THREE.OrthographicCamera(self.stage.width / -2, self.stage.width / 2, self.stage.height / 2, self.stage.height / -2, 1, 1000);
-            mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), new THREE.MeshBasicMaterial());
+            camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+            mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2));
             scene.add(mesh);
         }
 
@@ -6041,15 +6198,8 @@ class Effects extends Component {
         }
 
         function resize() {
-            renderTarget1.dispose();
-            renderTarget2.dispose();
-            renderTarget1 = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
-            renderTarget2 = Utils3D.createRT(self.stage.width * self.dpr, self.stage.height * self.dpr);
-            camera.left = self.stage.width / -2;
-            camera.right = self.stage.width / 2;
-            camera.top = self.stage.height / 2;
-            camera.bottom = self.stage.height / -2;
-            camera.updateProjectionMatrix();
+            renderTarget1.setSize(self.stage.width * self.dpr, self.stage.height * self.dpr);
+            renderTarget2.setSize(self.stage.width * self.dpr, self.stage.height * self.dpr);
         }
 
         this.add = (pass, index) => {
@@ -6082,6 +6232,12 @@ class Effects extends Component {
             mesh.material = this.passes[this.passes.length - 1].material;
             mesh.material.uniforms.texture.value = renderTarget1.texture;
             this.renderer.render(scene, camera, rt || this.rt);
+        };
+
+        this.setSize = (width, height) => {
+            this.events.remove(Events.RESIZE, resize);
+            renderTarget1.setSize(width * this.dpr, height * this.dpr);
+            renderTarget2.setSize(width * this.dpr, height * this.dpr);
         };
 
         this.destroy = () => {
@@ -6482,6 +6638,7 @@ exports.Assets = Assets;
 exports.AssetLoader = AssetLoader;
 exports.MultiLoader = MultiLoader;
 exports.FontLoader = FontLoader;
+exports.Fullscreen = Fullscreen;
 exports.StateDispatcher = StateDispatcher;
 exports.Storage = Storage;
 exports.WebAudio = WebAudio;
