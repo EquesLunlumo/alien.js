@@ -38,13 +38,13 @@
   },
   "devDependencies": {
     "concurrently": "^4.0.1",
-    "eslint": "^5.5.0",
+    "eslint": "^5.8.0",
     "replace": "^1.0.0",
     "rollup": "0.55.3",
-    "rollup-plugin-bundleutils": "^1.0.7",
+    "rollup-plugin-bundleutils": "^1.0.8",
     "rollup-plugin-eslint": "^5.0.0",
-    "rollup-plugin-glslify": "^1.0.6",
+    "rollup-plugin-glslify": "^1.0.7",
     "rollup-watch": "^4.3.1",
-    "serve": "^10.0.1"
+    "serve": "^10.0.2"
   }
 }
