@@ -4,7 +4,9 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Timer, Events, Stage, Interface, Video, Device, Utils, Assets, AssetLoader, FontLoader } from '../alien.js/src/Alien.js';
+import { Events, Stage, Interface, BackgroundVideo, Device, Utils, Assets, AssetLoader, FontLoader } from '../alien.js/src/Alien.js';
+
+BackgroundVideo.test = true; // Load video regardless
 
 //Assets.CDN = Config.CDN;
 Assets.CORS = 'anonymous';
@@ -125,8 +127,8 @@ class ProjectVideo extends Interface {
     constructor(data) {
         super('.Video');
         const self = this;
-        const ratio = 1080 / 1920;
-        let video;
+        const ratio = 540 / 960;
+        let background;
 
         initHTML();
         initVideo();
@@ -141,58 +143,47 @@ class ProjectVideo extends Interface {
         }
 
         function initVideo() {
-            video = self.initClass(Video, {
-                src: `assets/videos/${data.video}`,
-                loop: true
+            background = self.initClass(BackgroundVideo, {
+                src: `assets/videos/${data.id}.mp4`,
+                img: `assets/videos/${data.id}.jpg`,
+                width: 960,
+                height: 540
             });
-            video.play();
+            background.play();
         }
 
         function addListeners() {
-            self.events.add(Events.RESIZE, resize);
-            self.events.add(ProjectLayout.SCROLL, scroll);
             self.interact(null, () => {
-                video.seek(0);
-                video.play();
+                background.video.seek(0);
+                background.video.play();
             });
-            defer(resize);
         }
 
-        function scroll() {
-            const rect = video.element.getBoundingClientRect();
-            if (rect.top >= 0 && rect.left >= 0 && rect.right <= window.innerWidth && rect.bottom <= window.innerHeight) {
-                if (!video.playing) video.play();
-            } else {
-                if (video.playing) video.pause();
-            }
-        }
-
-        function resize() {
+        this.resize = () => {
             let width, height;
             if (Device.mobile && document.documentElement.offsetWidth > document.documentElement.offsetHeight) {
                 width = Projects.WIDTH * 0.7;
                 height = Projects.WIDTH * 0.7 * ratio;
-                self.size(width, height).center(1, 0);
+                this.size(width, height).center(1, 0);
             } else {
                 width = Projects.WIDTH;
                 height = Projects.WIDTH * ratio;
-                self.size(width, height).css({ left: '', top: '', marginLeft: '', marginTop: '' });
+                this.size(width, height).css({ left: '', top: '', marginLeft: '', marginTop: '' });
             }
-            video.size(width, height);
-        }
+            background.size(width, height);
+        };
     }
 }
 
 class ProjectLayout extends Interface {
 
-    constructor(data = Config.DATA[0]) {
+    constructor(data) {
         super('.ProjectLayout');
         const self = this;
-        let timeout;
+        let video;
 
         initHTML();
         initViews();
-        addListeners();
 
         function initHTML() {
             self.css({
@@ -204,29 +195,21 @@ class ProjectLayout extends Interface {
         }
 
         function initViews() {
-            self.initClass(ProjectVideo, data);
+            video = self.initClass(ProjectVideo, data);
             self.initClass(Title, data.title);
             self.initClass(Headline, data.headline);
             self.initClass(Copy, data.text);
         }
 
-        function addListeners() {
-            window.addEventListener('scroll', () => {
-                if (self.debounce) return;
-                self.events.fire(ProjectLayout.SCROLL);
-                self.debounce = true;
-                Timer.clearTimeout(timeout);
-                timeout = self.delayedCall(() => self.debounce = !self.debounce, 30);
-            });
-        }
+        this.resize = () => {
+            video.resize();
+        };
     }
 }
 
-ProjectLayout.SCROLL = 'scroll';
-
 class TitleLayout extends Interface {
 
-    constructor() {
+    constructor(data = Config.DATA) {
         super('TitleLayout');
         const self = this;
 
@@ -244,9 +227,8 @@ class TitleLayout extends Interface {
         }
 
         function initViews() {
-            self.initClass(Title, 'Long Scroll', 90);
-            self.initClass(Copy, 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.')
-                .css({ marginTop: 0, marginBottom: 0, paddingTop: 20, paddingBottom: 55 });
+            self.initClass(Title, data.title, 90);
+            self.initClass(Copy, data.text).css({ marginTop: 0, marginBottom: 0, paddingTop: 20, paddingBottom: 55 });
         }
     }
 }
@@ -256,6 +238,7 @@ class Projects extends Interface {
     constructor() {
         super('Projects');
         const self = this;
+        const projects = [];
 
         initHTML();
         initTitle();
@@ -271,8 +254,9 @@ class Projects extends Interface {
         }
 
         function initProjects() {
-            Config.DATA.forEach(data => {
-                self.initClass(ProjectLayout, data);
+            Config.DATA.projects.forEach(data => {
+                const project = self.initClass(ProjectLayout, data);
+                projects.push(project);
             });
         }
 
@@ -289,6 +273,7 @@ class Projects extends Interface {
                 Projects.WIDTH = document.documentElement.offsetWidth;
                 self.size('100%').css({ left: '', top: '', marginLeft: '', marginTop: '' });
             }
+            projects.forEach(project => project.resize());
         }
     }
 }
@@ -304,19 +289,19 @@ class Container extends Interface {
         super('Container');
         const self = this;
 
-        initHTML();
+        initContainer();
         initView();
 
-        function initHTML() {
+        function initContainer() {
             Stage.allowScroll();
             Stage.css({ position: '', overflow: '', opacity: 0 });
             self.size('100%', 'auto');
             Stage.add(self);
-
-            self.initClass(Projects);
         }
 
         function initView() {
+            self.initClass(Projects);
+
             Stage.tween({ opacity: 1 }, 1500, 'easeInOutSine', () => {
                 Stage.clearOpacity();
             });
