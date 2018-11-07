@@ -57,7 +57,7 @@ class Video extends Component {
         function createElement() {
             video = document.createElement('video');
             video.src = Assets.getPath(params.src);
-            video.crossorigin = 'anonymous';
+            video.crossOrigin = Assets.CORS;
             video.preload = params.preload;
             video.autoplay = params.autoplay;
             video.muted = params.autoplay || params.muted;
