@@ -23,7 +23,7 @@
     "url": "https://github.com/pschroen/alien.js/issues"
   },
   "license": "MIT",
-  "main": "build/alien.module.js",
+  "main": "build/alien.js",
   "scripts": {
     "build": "rollup -c && npm run build-uglify",
     "build-uglify": "rollup -c --environment uglify",

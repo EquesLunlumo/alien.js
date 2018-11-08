@@ -4281,7 +4281,7 @@ class Video extends Component {
         function createElement() {
             video = document.createElement('video');
             video.src = Assets.getPath(params.src);
-            video.crossorigin = 'anonymous';
+            video.crossOrigin = Assets.CORS;
             video.preload = params.preload;
             video.autoplay = params.autoplay;
             video.muted = params.autoplay || params.muted;
@@ -6617,3 +6617,5 @@ class WiggleBehavior {
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
+
+export { Utils, Render, Timer, Events, Device, Component, Interface, Interaction, Accelerometer, Mouse, Assets, AssetLoader, MultiLoader, FontLoader, Fullscreen, StateDispatcher, Storage, WebAudio, TweenManager, Interpolation, MathTween, Canvas, CanvasGraphics, CanvasTexture, CanvasFont, Color, SVG, Video, BackgroundVideo, Scroll, ScrollLock, Slide, SlideLoader, SlideVideo, Webcam, WebcamMotion, LinkedList, ObjectPool, Vector2, Vector3, Utils3D, Interaction3D, Raycaster, ScreenProjection, Shader, Effects, ParticlePhysics, Particle, RandomEulerRotation, WiggleBehavior, EulerIntegrator, Stage };
