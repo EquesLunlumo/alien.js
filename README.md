@@ -9,7 +9,7 @@ Future web framework.
 
 ### Features
 
-* ES6 modules [without transpiling](https://rawgit.com/pschroen/alien.js/master/examples/module/), or use [Rollup](https://rollupjs.org/) with [Tree Shaking](https://github.com/rollup/rollup#tree-shaking), only the classes you use are compiled into your project.
+* ES modules [without transpiling](https://alien.js.org/examples/library/), or use [Rollup](https://rollupjs.org/) with [Tree Shaking](https://github.com/rollup/rollup#tree-shaking), only the classes you use are compiled into your project.
 * Simple design pattern with inheritance, `Interface`, `Component`, etc.
 * Event based or use promises.
 * CSS3 animations.
@@ -24,29 +24,29 @@ Future web framework.
 
 #### ui
 
-[about](https://rawgit.com/pschroen/alien.js/master/examples/about/dist/)  
-[long scroll](https://rawgit.com/pschroen/alien.js/master/examples/long_scroll/dist/)  
+[about](https://alien.js.org/examples/about/public/)  
+[long scroll](https://alien.js.org/examples/long_scroll/public/)  
 [ufo](https://ufo.ai/)
 
 #### shader
 
-glslify [shader](https://rawgit.com/pschroen/alien.js/master/examples/shader/dist/)  
-[colour beam](https://rawgit.com/pschroen/alien.js/master/examples/colour_beam/dist/)  
-[dissolve](https://rawgit.com/pschroen/alien.js/master/examples/dissolve/dist/) (fade transition)  
-[colorize](https://rawgit.com/pschroen/alien.js/master/examples/colorize/dist/) (fade transition)  
-[chromatic aberration](https://rawgit.com/pschroen/alien.js/master/examples/chromatic_aberration/dist/) (simple)  
-[chromatic aberration 2](https://rawgit.com/pschroen/alien.js/master/examples/chromatic_aberration2/dist/) (barrel distortion)  
-[rotate](https://rawgit.com/pschroen/alien.js/master/examples/rotate/dist/)  
-[rotate 2](https://rawgit.com/pschroen/alien.js/master/examples/rotate2/dist/) (pinhole)  
-[mask](https://rawgit.com/pschroen/alien.js/master/examples/mask/dist/) (levels transition)  
-[noise warp](https://rawgit.com/pschroen/alien.js/master/examples/noise_warp/dist/)  
-[noise dizzy](https://rawgit.com/pschroen/alien.js/master/examples/noise_dizzy/dist/)  
-[directional warp](https://rawgit.com/pschroen/alien.js/master/examples/directional_warp/dist/)  
-[directional warp 2](https://rawgit.com/pschroen/alien.js/master/examples/directional_warp2/dist/) (scroll transition)  
-[ripple](https://rawgit.com/pschroen/alien.js/master/examples/ripple/dist/)  
-[perlin](https://rawgit.com/pschroen/alien.js/master/examples/perlin/dist/)  
-[glitch displace](https://rawgit.com/pschroen/alien.js/master/examples/glitch_displace/dist/)  
-[melt](https://rawgit.com/pschroen/alien.js/master/examples/melt/dist/) (feedback buffer)
+glslify [shader](https://alien.js.org/examples/shader/public/)  
+[colour beam](https://alien.js.org/examples/colour_beam/public/)  
+[dissolve](https://alien.js.org/examples/dissolve/public/) (fade transition)  
+[colorize](https://alien.js.org/examples/colorize/public/) (fade transition)  
+[chromatic aberration](https://alien.js.org/examples/chromatic_aberration/public/) (simple)  
+[chromatic aberration 2](https://alien.js.org/examples/chromatic_aberration2/public/) (barrel distortion)  
+[rotate](https://alien.js.org/examples/rotate/public/)  
+[rotate 2](https://alien.js.org/examples/rotate2/public/) (pinhole)  
+[mask](https://alien.js.org/examples/mask/public/) (levels transition)  
+[noise warp](https://alien.js.org/examples/noise_warp/public/)  
+[noise dizzy](https://alien.js.org/examples/noise_dizzy/public/)  
+[directional warp](https://alien.js.org/examples/directional_warp/public/)  
+[directional warp 2](https://alien.js.org/examples/directional_warp2/public/) (scroll transition)  
+[ripple](https://alien.js.org/examples/ripple/public/)  
+[perlin](https://alien.js.org/examples/perlin/public/)  
+[glitch displace](https://alien.js.org/examples/glitch_displace/public/)  
+[melt](https://alien.js.org/examples/melt/public/) (feedback buffer)
 
 ### Example Class structure
 
@@ -111,7 +111,7 @@ class About extends Interface {
         // Overrides
 
         this.destroy = () => {
-            // ...
+            ...
             return super.destroy();
         };
     }
@@ -216,7 +216,7 @@ class Main {
 
         function initCanvas() {
             canvas = CanvasLayer.instance().canvas;
-            // ...
+            ...
         }
     }
 }
@@ -247,7 +247,7 @@ class Data {
         }
 
         this.setSlide = e => {
-            // ...
+            ...
         };
     }
 }
@@ -259,7 +259,7 @@ class Main {
 
         const state = Data.dispatcher.getState();
         if (state.path !== '') {
-            // ...
+            ...
         }
     }
 }
@@ -301,6 +301,28 @@ npm run lint
 npm run build
 npm start
 npm run build
+```
+
+### Installation via npm
+
+```
+npm install alien.js
+```
+
+```js
+import { Stage, Interface, Device } from 'alien.js';
+...
+```
+
+### Installation via ES module without transpiling
+
+Download the [minified library](https://alien.js.org/build/alien.min.js) and include it in your HTML.
+
+```html
+<script type="module">
+import { Stage, Interface, Device } from 'lib/alien.min.js';
+...
+</script>
 ```
 
 ### Roadmap
