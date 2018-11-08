@@ -1,0 +1,25 @@
+{
+  "name": "alien-build-projects",
+  "version": "1.0.0",
+  "author": "Patrick Schroen",
+  "private": true,
+  "scripts": {
+    "build": "find . -name 'rollup.config.js' -maxdepth 2 ! -path './alien.js*' -execdir rollup -c {} \\;",
+    "pngquant": "for x in `find . -name 'rollup.config.js' -maxdepth 2 ! -path './alien.js*' -exec dirname {} \\;`; do echo \"$x\" && cd \"$x\" && rm -rf dist/assets/images && cp -r src/images dist/assets/ && find dist/assets/images -name '**.png' -exec pngquant --strip --ext=.png --force {} \\; && cd ..; done",
+    "pngquant-flat": "for x in `find . -name 'rollup.config.js' -maxdepth 2 ! -path './alien.js*' -exec dirname {} \\;`; do echo \"$x\" && cd \"$x\" && rm -f dist/assets/*.png && cp src/images/*.png dist/assets/ && find dist/assets -name '*.png' -exec pngquant --strip --ext=.png --force {} \\; && cd ..; done"
+  },
+  "engines": {
+    "node": ">=6.9.0"
+  },
+  "devDependencies": {
+    "concurrently": "^4.0.1",
+    "eslint": "^5.8.0",
+    "replace": "^1.0.0",
+    "rollup": "0.55.3",
+    "rollup-plugin-bundleutils": "^1.0.8",
+    "rollup-plugin-eslint": "^5.0.0",
+    "rollup-plugin-glslify": "^1.0.7",
+    "rollup-watch": "^4.3.1",
+    "serve": "^10.0.2"
+  }
+}
