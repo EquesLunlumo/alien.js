@@ -6,10 +6,10 @@
   "main": "build/project.js",
   "scripts": {
     "build": "rollup -c || exit 0",
-    "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"serve -l 8080 dist\" || exit 0",
+    "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"serve -l 8080 public\" || exit 0",
     "start": "npm run dev",
     "lint": "eslint src || exit 0",
-    "pngquant": "rm -rf dist/assets/images && cp -r src/images dist/assets/ && find dist/assets/images -name '**.png' -exec pngquant --strip --ext=.png --force {} \\;"
+    "pngquant": "rm -rf public/assets/images && cp -r src/images public/assets/ && find public/assets/images -name '**.png' -exec pngquant --strip --ext=.png --force {} \\;"
   },
   "engines": {
     "node": ">=6.9.0"
