@@ -303,17 +303,6 @@ npm start
 npm run build
 ```
 
-### Installation via npm
-
-```
-npm install alien.js
-```
-
-```js
-import { Stage, Interface, Device } from 'alien.js';
-// ...
-```
-
 ### Installation via ES module without transpiling
 
 Download the [minified library](https://alien.js.org/build/alien.min.js) and include it in your HTML.
