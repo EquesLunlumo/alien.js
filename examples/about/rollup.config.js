@@ -10,7 +10,7 @@ const pkg = require('./alien.js/package.json');
 replace({
     regex: `'assets/js/.*\.js.*'`,
     replacement: `'assets/js/app.js?v=${Date.now()}'`,
-    paths: ['dist/index.html'],
+    paths: ['public/index.html'],
     recursive: false,
     silent: true
 });
@@ -18,7 +18,7 @@ replace({
 export default {
     input: 'src/Main.js',
     output: {
-        file: 'dist/assets/js/app.js',
+        file: 'public/assets/js/app.js',
         format: 'es'
     },
     plugins: [

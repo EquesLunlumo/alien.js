@@ -4,7 +4,7 @@ import { eslint } from 'rollup-plugin-eslint';
 export default {
     input: 'src/Main.js',
     output: {
-        file: 'build/project.js',
+        file: 'public/assets/js/lib/project.js',
         format: 'umd',
         name: 'Project'
     },
