@@ -111,7 +111,7 @@ class About extends Interface {
         // Overrides
 
         this.destroy = () => {
-            ...
+            // ...
             return super.destroy();
         };
     }
@@ -216,7 +216,7 @@ class Main {
 
         function initCanvas() {
             canvas = CanvasLayer.instance().canvas;
-            ...
+            // ...
         }
     }
 }
@@ -247,7 +247,7 @@ class Data {
         }
 
         this.setSlide = e => {
-            ...
+            // ...
         };
     }
 }
@@ -259,7 +259,7 @@ class Main {
 
         const state = Data.dispatcher.getState();
         if (state.path !== '') {
-            ...
+            // ...
         }
     }
 }
@@ -311,7 +311,7 @@ npm install alien.js
 
 ```js
 import { Stage, Interface, Device } from 'alien.js';
-...
+// ...
 ```
 
 ### Installation via ES module without transpiling
@@ -321,7 +321,7 @@ Download the [minified library](https://alien.js.org/build/alien.min.js) and inc
 ```html
 <script type="module">
 import { Stage, Interface, Device } from 'lib/alien.min.js';
-...
+// ...
 </script>
 ```
 
