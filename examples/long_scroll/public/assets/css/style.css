@@ -9,7 +9,9 @@ body, html {
     -moz-osx-font-smoothing: grayscale;
     -webkit-font-smoothing: antialiased;
 }
+
 * {
+    position: absolute;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: none;
 }

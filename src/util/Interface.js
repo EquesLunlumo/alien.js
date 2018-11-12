@@ -32,7 +32,6 @@ class Interface {
                     this.element = document.createElement(type);
                     if (name.charAt(0) !== '.') this.element.id = name;
                     else this.element.className = name.substr(1);
-                    this.element.style.position = 'absolute';
                 }
                 if (!detached) document.body.appendChild(this.element);
             } else {

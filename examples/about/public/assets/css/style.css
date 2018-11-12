@@ -12,7 +12,9 @@ body, html {
     -webkit-font-smoothing: antialiased;
     font-smoothing: antialiased;
 }
+
 * {
+    position: absolute;
     outline: none;
     border: none;
     -webkit-touch-callout: none;
@@ -30,6 +32,7 @@ body, html {
     cursor: -moz-grab;
     cursor: grab;
 }
+
 #Button .hit:active, .grabbing {
     cursor: -webkit-grabbing;
     cursor: -moz-grabbing;
