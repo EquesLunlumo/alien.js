@@ -81,17 +81,25 @@ class TitleTexture extends Component {
                 canvas.size(Stage.width, Stage.height);
                 if (text) {
                     canvas.remove(text);
-                    text = text2 = text.destroy();
+                    text = text.destroy();
                 }
-                text = CanvasFont.createText(canvas, Stage.width, Stage.height, data.title.toUpperCase(), `200 ${Device.phone ? 28 : 66}px Oswald`, Config.UI_COLOR, {
+                if (text2) {
+                    canvas.remove(text2);
+                    text2 = text2.destroy();
+                }
+                text = CanvasFont.createText(canvas, Stage.width, Stage.height, data.title.toUpperCase(), {
+                    font: `200 ${Device.phone ? 28 : 66}px Oswald`,
                     lineHeight: Device.phone ? 35 : 80,
                     letterSpacing: 0,
-                    textAlign: 'center'
+                    textAlign: 'center',
+                    fillStyle: Config.UI_COLOR
                 });
-                text2 = CanvasFont.createText(canvas, Stage.width, Stage.height, data.description.toUpperCase(), '400 14px Karla', Config.UI_COLOR, {
+                text2 = CanvasFont.createText(canvas, Stage.width, Stage.height, data.description.toUpperCase(), {
+                    font: '400 14px Karla',
                     lineHeight: 16,
                     letterSpacing: Device.phone ? 1 : 2.4,
-                    textAlign: 'center'
+                    textAlign: 'center',
+                    fillStyle: Config.UI_COLOR
                 });
                 text.add(text2);
                 const margin = Device.phone ? 10 : 18,

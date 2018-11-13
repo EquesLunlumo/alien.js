@@ -8,10 +8,19 @@ import { CanvasGraphics } from './CanvasGraphics.js';
 
 class CanvasFont {
 
-    static createText(canvas, width, height, str, font, fillStyle, { textBaseline = 'alphabetic', lineHeight = height, letterSpacing = 0, textAlign = 'start' }) {
+    static createText(canvas, width, height, str, props) {
+
+        const defaults = {
+            textBaseline: 'alphabetic',
+            lineHeight: height,
+            letterSpacing: 0,
+            textAlign: 'start'
+        };
+        props = Object.assign(defaults, props);
+
         const context = canvas.context;
-        if (height === lineHeight) {
-            return createText(canvas, width, height, str, font, fillStyle, textBaseline, letterSpacing, textAlign);
+        if (height === props.lineHeight) {
+            return createText(canvas, width, height, str, props);
         } else {
             const text = new CanvasGraphics(width, height),
                 words = str.split(' '),
@@ -19,12 +28,12 @@ class CanvasFont {
             let line = '';
             text.totalWidth = 0;
             text.totalHeight = 0;
-            context.font = font;
+            context.font = props.font;
             for (let n = 0; n < words.length; n++) {
                 const testLine = line + words[n] + ' ',
                     characters = testLine.split('');
                 let testWidth = 0;
-                for (let i = 0; i < characters.length; i++) testWidth += context.measureText(characters[i]).width + letterSpacing;
+                for (let i = 0; i < characters.length; i++) testWidth += context.measureText(characters[i]).width + props.letterSpacing;
                 if (testWidth > width && n > 0) {
                     lines.push(line);
                     line = words[n] + ' ';
@@ -34,20 +43,22 @@ class CanvasFont {
             }
             lines.push(line);
             lines.forEach((line, i) => {
-                const graphics = createText(canvas, width, lineHeight, line.slice(0, -1), font, fillStyle, textBaseline, letterSpacing, textAlign);
-                graphics.y = i * lineHeight;
+                const graphics = createText(canvas, width, props.lineHeight, line.slice(0, -1), props);
+                graphics.y = i * props.lineHeight;
                 text.add(graphics);
                 text.totalWidth = Math.max(graphics.totalWidth, text.totalWidth);
-                text.totalHeight += lineHeight;
+                text.totalHeight += props.lineHeight;
             });
             return text;
         }
 
-        function createText(canvas, width, height, str, font, fillStyle, textBaseline, letterSpacing, textAlign) {
+        function createText(canvas, width, height, str, { font, textBaseline, letterSpacing, textAlign, fillStyle, strokeStyle, lineWidth }) {
             const context = canvas.context,
                 graphics = new CanvasGraphics(width, height);
             graphics.font = font;
             graphics.fillStyle = fillStyle;
+            graphics.strokeStyle = strokeStyle;
+            graphics.lineWidth = lineWidth;
             graphics.textBaseline = textBaseline;
             graphics.totalWidth = 0;
             graphics.totalHeight = height;
@@ -72,7 +83,8 @@ class CanvasFont {
             }
             do {
                 chr = characters[index++];
-                graphics.fillText(chr, currentPosition, 0);
+                if (fillStyle) graphics.fillText(chr, currentPosition, 0);
+                if (strokeStyle) graphics.strokeText(chr, currentPosition, 0);
                 currentPosition += context.measureText(chr).width + letterSpacing;
             } while (index < str.length);
             return graphics;

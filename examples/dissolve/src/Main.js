@@ -34,7 +34,6 @@ class TitleTexture extends Component {
     constructor() {
         super();
         const self = this;
-        const fontSize = Device.phone ? 28 : 66;
         let canvas, texture, text;
 
         initCanvas();
@@ -52,10 +51,12 @@ class TitleTexture extends Component {
                 canvas.remove(text);
                 text = text.destroy();
             }
-            text = CanvasFont.createText(canvas, Stage.width, Stage.height, 'Dissolve'.toUpperCase(), `200 ${fontSize}px Oswald`, Config.UI_COLOR, {
+            text = CanvasFont.createText(canvas, Stage.width, Stage.height, 'Dissolve'.toUpperCase(), {
+                font: `200 ${Device.phone ? 28 : 66}px Oswald`,
                 lineHeight: Device.phone ? 35 : 80,
                 letterSpacing: 0,
-                textAlign: 'center'
+                textAlign: 'center',
+                fillStyle: Config.UI_COLOR
             });
             const offset = Device.phone ? 55 : 120;
             text.y = (Stage.height - text.totalHeight + offset) / 2;
