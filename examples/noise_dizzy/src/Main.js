@@ -94,7 +94,7 @@ class Title extends Component {
                 depthWrite: false,
                 depthTest: false
             });
-            mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), shader.material);
+            mesh = new THREE.Mesh(World.quad, shader.material);
             self.object3D.add(mesh);
         }
 
@@ -144,7 +144,7 @@ class Space extends Component {
                 depthWrite: false,
                 depthTest: false
             });
-            mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), shader.material);
+            mesh = new THREE.Mesh(World.quad, shader.material);
             self.object3D.add(mesh);
         }
 
@@ -202,11 +202,11 @@ class World extends Component {
             renderer.setPixelRatio(World.dpr);
             scene = new THREE.Scene();
             camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-            World.scene = scene;
             World.renderer = renderer;
             World.element = renderer.domElement;
+            World.scene = scene;
             World.camera = camera;
-            World.shader = shader;
+            World.quad = new THREE.PlaneBufferGeometry(1, 1);
             World.time = { value: 0 };
             World.resolution = { value: new THREE.Vector2() };
             effects = self.initClass(Effects, Stage, {
@@ -224,6 +224,7 @@ class World extends Component {
             });
             effects.add(shader);
             World.effects = effects;
+            World.shader = shader;
         }
 
         function addListeners() {
@@ -260,7 +261,7 @@ class World extends Component {
             camera = null;
             scene = null;
             renderer = null;
-            Stage.remove(World.element);
+            Stage.remove(World);
             return super.destroy();
         };
     }

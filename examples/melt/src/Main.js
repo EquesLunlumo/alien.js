@@ -96,7 +96,7 @@ class Title extends Component {
                 depthWrite: false,
                 depthTest: false
             });
-            mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), shader.material);
+            mesh = new THREE.Mesh(World.quad, shader.material);
             self.object3D.add(mesh);
         }
 
@@ -146,7 +146,7 @@ class Space extends Component {
                 depthWrite: false,
                 depthTest: false
             });
-            mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), shader.material);
+            mesh = new THREE.Mesh(World.quad, shader.material);
             self.object3D.add(mesh);
         }
 
@@ -207,10 +207,11 @@ class World extends Component {
             scene = new THREE.Scene();
             camera = new THREE.OrthographicCamera(-Stage.width / 2, Stage.width / 2, Stage.height / 2, -Stage.height / 2, 0, 1);
             renderTarget = Utils3D.createRT(Stage.width * World.dpr, Stage.height * World.dpr);
-            World.scene = scene;
             World.renderer = renderer;
             World.element = renderer.domElement;
+            World.scene = scene;
             World.camera = camera;
+            World.quad = new THREE.PlaneBufferGeometry(1, 1);
             World.time = { value: 0 };
             World.frame = { value: 0 };
             World.resolution = { value: new THREE.Vector2(Stage.width * World.dpr, Stage.height * World.dpr) };
@@ -240,7 +241,7 @@ class World extends Component {
                 texture2: { value: renderTarget.texture }
             });
             passScene = new THREE.Scene();
-            passMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), pass.material);
+            passMesh = new THREE.Mesh(World.quad, pass.material);
             passMesh.scale.set(Stage.width, Stage.height, 1);
             passScene.add(passMesh);
             view = self.initClass(Shader, vertMeltBasic, fragMeltView, {
@@ -249,7 +250,7 @@ class World extends Component {
                 texture: { value: buffer1.texture }
             });
             viewScene = new THREE.Scene();
-            viewMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), view.material);
+            viewMesh = new THREE.Mesh(World.quad, view.material);
             viewMesh.scale.set(Stage.width, Stage.height, 1);
             viewScene.add(viewMesh);
         }
@@ -319,7 +320,7 @@ class World extends Component {
             camera = null;
             scene = null;
             renderer = null;
-            Stage.remove(World.element);
+            Stage.remove(World);
             return super.destroy();
         };
     }
