@@ -153,9 +153,9 @@ class World extends Component {
             camera.position.set(0.85, 1, -1.5);
             camera.target = new THREE.Vector3();
             camera.lookAt(camera.target);
-            World.scene = scene;
             World.renderer = renderer;
             World.element = renderer.domElement;
+            World.scene = scene;
             World.camera = camera;
             World.time = { value: 0 };
             World.resolution = { value: new THREE.Vector2() };

@@ -1350,7 +1350,7 @@ class UI extends Interface {
         this.startRender(loop);
 
         function initContainer() {
-            self.size('100%').css({ left: 0, top: 0 }).mouseEnabled(false);
+            self.size('100%').setZ(1).mouseEnabled(false);
             Stage.add(self);
         }
 
@@ -1533,7 +1533,7 @@ class Fluid extends Component {
                 texture: { value: buffer1.texture }
             });
             passScene = new THREE.Scene();
-            passMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), pass.material);
+            passMesh = new THREE.Mesh(World.quad, pass.material);
             passScene.add(passMesh);
             view = self.initClass(Shader, vertFluidBasic, fragFluidView, {
                 time: World.time,
@@ -1541,7 +1541,7 @@ class Fluid extends Component {
                 texture: { value: buffer1.texture }
             });
             viewScene = new THREE.Scene();
-            viewMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), view.material);
+            viewMesh = new THREE.Mesh(World.quad, view.material);
             viewScene.add(viewMesh);
         }
 
@@ -1643,6 +1643,7 @@ class World extends Component {
             World.renderer = renderer;
             World.element = renderer.domElement;
             World.camera = camera;
+            World.quad = new THREE.PlaneBufferGeometry(2, 2);
             World.time = { value: 0 };
             World.frame = { value: 0 };
             World.resolution = { value: new THREE.Vector2() };
@@ -1669,7 +1670,7 @@ class World extends Component {
             renderer.domElement = null;
             camera = null;
             renderer = null;
-            Stage.remove(World.element);
+            Stage.remove(World);
             return super.destroy();
         };
     }
@@ -1762,7 +1763,7 @@ class Loader extends Interface {
         initLoader();
 
         function initHTML() {
-            self.css({ position: 'static' });
+            self.size('100%').setZ(1).mouseEnabled(false);
         }
 
         function initView() {
