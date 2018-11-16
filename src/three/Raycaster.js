@@ -59,7 +59,7 @@ class Raycaster extends Component {
             const geom = new THREE.Geometry();
             geom.vertices.push(new THREE.Vector3(-100, 0, 0));
             geom.vertices.push(new THREE.Vector3(100, 0, 0));
-            const mat = new THREE.LineBasicMaterial({ color: 0x0000ff });
+            const mat = new THREE.LineBasicMaterial({ color: 0xff0000 });
             debug = new THREE.Line(geom, mat);
             scene.add(debug);
         };
