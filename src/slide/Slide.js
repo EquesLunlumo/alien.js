@@ -74,13 +74,11 @@ class Slide extends Component {
         }
 
         function stopInertia() {
-            self.isInertia = false;
             TweenManager.clearTween(scrollTarget);
         }
 
         function scroll(e) {
             if (!self.enabled) return;
-            if (e.preventDefault) e.preventDefault();
             stopInertia();
             axes.forEach(axis => {
                 if (!self.max[axis]) return;
@@ -99,7 +97,6 @@ class Slide extends Component {
                 if (!self.max[axis]) return;
                 scrollTarget[axis] += -Mouse.input.delta[axis] * 4;
                 scrollInertia[axis] = -Mouse.input.delta[axis] * 4;
-                self.isInertia = true;
             });
         }
 
