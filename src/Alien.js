@@ -8,7 +8,6 @@ import './polyfills.js';
 
 export { Utils } from './util/Utils.js';
 export { Render } from './util/Render.js';
-export { Timer } from './util/Timer.js';
 export { Events } from './util/Events.js';
 export { Device } from './util/Device.js';
 export { Component } from './util/Component.js';
