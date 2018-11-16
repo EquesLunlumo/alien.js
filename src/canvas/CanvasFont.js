@@ -30,21 +30,19 @@ class CanvasFont {
             text.totalHeight = 0;
             context.font = props.font;
             for (let n = 0; n < words.length; n++) {
-                if (~words[n].indexOf('\n')) {
-                    const split = words[n].split('\n');
-                    lines.push(line + split[0]);
-                    line = split[1] + ' ';
+                let split;
+                if (~words[n].indexOf('\n')) split = words[n].split('\n');
+                const testLine = line + (split ? split[0] : words[n]) + ' ',
+                    characters = testLine.split('');
+                let testWidth = 0;
+                for (let i = 0; i < characters.length; i++) testWidth += context.measureText(characters[i]).width + props.letterSpacing;
+                if (testWidth > width && n > 0) {
+                    lines.push(line.slice(0, -1));
+                    if (split) lines.push(split[0]);
+                    line = (split ? split[1] : words[n]) + ' ';
                 } else {
-                    const testLine = line + words[n] + ' ',
-                        characters = testLine.split('');
-                    let testWidth = 0;
-                    for (let i = 0; i < characters.length; i++) testWidth += context.measureText(characters[i]).width + props.letterSpacing;
-                    if (testWidth > width && n > 0) {
-                        lines.push(line.slice(0, -1));
-                        line = words[n] + ' ';
-                    } else {
-                        line = testLine;
-                    }
+                    if (split) lines.push(line + split[0]);
+                    line = (split ? split[1] + ' ' : testLine);
                 }
             }
             lines.push(line);
