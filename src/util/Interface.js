@@ -67,8 +67,12 @@ class Interface {
         return timer;
     }
 
+    clearTimeout(ref) {
+        return Timer.clearTimeout(ref);
+    }
+
     clearTimers() {
-        for (let i = this.timers.length - 1; i >= 0; i--) Timer.clearTimeout(this.timers[i]);
+        for (let i = this.timers.length - 1; i >= 0; i--) this.clearTimeout(this.timers[i]);
         this.timers.length = 0;
     }
 

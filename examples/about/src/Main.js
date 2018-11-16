@@ -6,7 +6,7 @@
 
 /* global THREE */
 
-import { Timer, Events, Stage, Interface, Component, Canvas, CanvasGraphics, Device, Interaction, Mouse, Accelerometer, Utils,
+import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, Device, Interaction, Mouse, Accelerometer, Utils,
     Assets, AssetLoader, FontLoader, StateDispatcher, TweenManager, Interpolation, Storage, Vector2, WebAudio, Shader } from '../alien.js/src/Alien.js';
 
 import vertFluidBasic from './shaders/fluid/basic.vert';
@@ -433,7 +433,7 @@ class Button extends Interface {
         };
 
         this.showButton = () => {
-            Timer.clearTimeout(timeout);
+            this.clearTimeout(timeout);
             TweenManager.clearTween(data);
             data.posX = 52;
             data.lineWidth = 0;
@@ -447,7 +447,7 @@ class Button extends Interface {
 
         this.hideButton = () => {
             this.animatedIn = false;
-            Timer.clearTimeout(timeout);
+            this.clearTimeout(timeout);
             TweenManager.clearTween(data);
             data.posX = 52;
             data.lineWidth = 0;
@@ -459,7 +459,7 @@ class Button extends Interface {
         this.animateIn = () => {
             if (this.animatedIn) return;
             this.animatedIn = true;
-            Timer.clearTimeout(timeout);
+            this.clearTimeout(timeout);
             TweenManager.clearTween(data);
             this.needsUpdate = true;
             const start = () => {
@@ -478,7 +478,7 @@ class Button extends Interface {
 
         this.animateOut = () => {
             this.animatedIn = false;
-            Timer.clearTimeout(timeout);
+            this.clearTimeout(timeout);
             TweenManager.clearTween(data);
             this.needsUpdate = true;
             TweenManager.tween(data, { posX: 52, spring: 1, damping: 0.5 }, 600, 'easeOutElastic');
@@ -1391,11 +1391,11 @@ class UI extends Interface {
             const button = e.object;
             if (e.action === 'over' || e.action === 'click') {
                 button.noTap = false;
-                Timer.clearTimeout(button.delay);
+                self.clearTimeout(button.delay);
                 over(button);
                 button.timer = self.delayedCall(() => button.noTap = true, 500);
             } else {
-                Timer.clearTimeout(button.timer);
+                self.clearTimeout(button.timer);
                 if (button.noTap) out(button);
                 else button.delay = self.delayedCall(() => out(button), 500);
             }
