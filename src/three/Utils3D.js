@@ -92,23 +92,23 @@ class Utils3D {
     }
 
     static loadBufferGeometry(data) {
-        const geometry = new THREE.BufferGeometry();
+        const geom = new THREE.BufferGeometry();
         if (data.data) data = data.data;
-        geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(data.position), 3));
-        geometry.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(data.normal || data.position.length), 3));
-        geometry.addAttribute('uv', new THREE.BufferAttribute(new Float32Array(data.uv || data.position.length / 3 * 2), 2));
-        return geometry;
+        geom.addAttribute('position', new THREE.BufferAttribute(new Float32Array(data.position), 3));
+        geom.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(data.normal || data.position.length), 3));
+        geom.addAttribute('uv', new THREE.BufferAttribute(new Float32Array(data.uv || data.position.length / 3 * 2), 2));
+        return geom;
     }
 
     static loadSkinnedGeometry(data) {
-        const geometry = new THREE.BufferGeometry();
-        geometry.addAttribute('position', new THREE.BufferAttribute(new Float32Array(data.position), 3));
-        geometry.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(data.normal), 3));
-        geometry.addAttribute('uv', new THREE.BufferAttribute(new Float32Array(data.uv), 2));
-        geometry.addAttribute('skinIndex', new THREE.BufferAttribute(new Float32Array(data.skinIndices), 4));
-        geometry.addAttribute('skinWeight', new THREE.BufferAttribute(new Float32Array(data.skinWeights), 4));
-        geometry.bones = data.bones;
-        return geometry;
+        const geom = new THREE.BufferGeometry();
+        geom.addAttribute('position', new THREE.BufferAttribute(new Float32Array(data.position), 3));
+        geom.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(data.normal), 3));
+        geom.addAttribute('uv', new THREE.BufferAttribute(new Float32Array(data.uv), 2));
+        geom.addAttribute('skinIndex', new THREE.BufferAttribute(new Float32Array(data.skinIndices), 4));
+        geom.addAttribute('skinWeight', new THREE.BufferAttribute(new Float32Array(data.skinWeights), 4));
+        geom.bones = data.bones;
+        return geom;
     }
 
     static loadCurve(data) {
