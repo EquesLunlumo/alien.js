@@ -137,8 +137,8 @@ class Interaction3D extends Component {
         };
     }
 
-    set camera(c) {
-        this.ray.camera = c;
+    set camera(v) {
+        this.ray.camera = v;
     }
 }
 
