@@ -73,7 +73,6 @@ class Scroll extends Component {
 
         function scroll(e) {
             if (!self.enabled) return;
-            e.preventDefault();
             stopInertia();
             axes.forEach(axis => {
                 if (!self.max[axis]) return;
@@ -96,14 +95,14 @@ class Scroll extends Component {
 
         function up() {
             if (!self.enabled) return;
-            const m = (() => {
+            const multiplier = (() => {
                     if (Device.os === 'android') return 35;
                     return 25;
                 })(),
                 obj = {};
             axes.forEach(axis => {
                 if (!self.max[axis]) return;
-                obj[axis] = scrollTarget[axis] - Mouse.input.delta[axis] * m;
+                obj[axis] = scrollTarget[axis] - Mouse.input.delta[axis] * multiplier;
             });
             TweenManager.tween(scrollTarget, obj, 2500, 'easeOutQuint');
         }
