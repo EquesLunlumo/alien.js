@@ -30,20 +30,26 @@ class CanvasFont {
             text.totalHeight = 0;
             context.font = props.font;
             for (let n = 0; n < words.length; n++) {
-                const testLine = line + words[n] + ' ',
-                    characters = testLine.split('');
-                let testWidth = 0;
-                for (let i = 0; i < characters.length; i++) testWidth += context.measureText(characters[i]).width + props.letterSpacing;
-                if (testWidth > width && n > 0) {
-                    lines.push(line);
-                    line = words[n] + ' ';
+                if (~words[n].indexOf('\n')) {
+                    const split = words[n].split('\n');
+                    lines.push(line + split[0]);
+                    line = split[1] + ' ';
                 } else {
-                    line = testLine;
+                    const testLine = line + words[n] + ' ',
+                        characters = testLine.split('');
+                    let testWidth = 0;
+                    for (let i = 0; i < characters.length; i++) testWidth += context.measureText(characters[i]).width + props.letterSpacing;
+                    if (testWidth > width && n > 0) {
+                        lines.push(line.slice(0, -1));
+                        line = words[n] + ' ';
+                    } else {
+                        line = testLine;
+                    }
                 }
             }
             lines.push(line);
             lines.forEach((line, i) => {
-                const graphics = createText(canvas, width, props.lineHeight, line.slice(0, -1), props);
+                const graphics = createText(canvas, width, props.lineHeight, line, props);
                 graphics.y = i * props.lineHeight;
                 text.add(graphics);
                 text.totalWidth = Math.max(graphics.totalWidth, text.totalWidth);
