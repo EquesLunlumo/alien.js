@@ -29,8 +29,7 @@
     "build-uglify": "rollup -c --environment uglify",
     "build-examples": "for x in `find examples -name 'rollup.config.js' -maxdepth 2 ! -path './alien.js*' -exec dirname {} \\;`; do cd \"$x\" && ln -sfn ../.. alien.js && rollup -c && rm -rf alien.js && cd ../..; done",
     "build-world": "npm run build && npm run build-examples",
-    "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"serve -l 8080\" || exit 0",
-    "start": "npm run dev",
+    "start": "serve -l 8080 || exit 0",
     "lint": "eslint src || exit 0"
   },
   "engines": {
