@@ -303,6 +303,18 @@ npm start
 npm run build
 ```
 
+### Installation via npm
+
+```
+mkdir loader
+cd loader
+curl -sL https://github.com/pschroen/alien.js/archive/master.tar.gz | tar -zxv --strip=3 "*/examples/npm/*"
+curl -sOL https://raw.githubusercontent.com/pschroen/alien.js/master/.eslintrc.json
+curl -sOL https://raw.githubusercontent.com/pschroen/alien.js/master/.gitignore
+npm install
+npm start
+```
+
 ### Installation via ES module without transpiling
 
 Download the [minified library](https://alien.js.org/build/alien.min.js) and include it in your HTML.
