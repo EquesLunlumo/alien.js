@@ -1,6 +1,6 @@
 import { timestamp, uglify } from 'rollup-plugin-bundleutils';
 
-const pkg = require('./package.json');
+import { version } from './package.json';
 
 export default {
     input: 'src/Alien.js',
@@ -11,7 +11,7 @@ export default {
     plugins: [
         process.env.uglify ? uglify({
             output: {
-                preamble: `//   _  /._  _  r${pkg.version.split('.')[1]} ${timestamp()}\n//  /_|///_'/ /`
+                preamble: `//   _  /._  _  r${version.split('.')[1]} ${timestamp()}\n//  /_|///_'/ /`
             },
             safari10: true
         }) : {}

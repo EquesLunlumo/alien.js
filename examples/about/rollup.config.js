@@ -5,7 +5,7 @@ import { eslint } from 'rollup-plugin-eslint';
 
 import replace from 'replace';
 
-const pkg = require('./alien.js/package.json');
+import { version } from './alien.js/package.json';
 
 replace({
     regex: `'assets/js/.*\.js.*'`,
@@ -26,7 +26,7 @@ export default {
         eslint(),
         uglify({
             output: {
-                preamble: `//   _  /._  _  r${pkg.version.split('.')[1]} ${timestamp()}\n//  /_|///_'/ /`
+                preamble: `//   _  /._  _  r${version.split('.')[1]} ${timestamp()}\n//  /_|///_'/ /`
             }
         })
     ]
