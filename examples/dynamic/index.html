@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<!--
+     _  /._  _ 
+    /_|///_'/ /
+-->
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+    <meta name="theme-color" content="#000000">
+
+    <title>Alien.js Example Project</title>
+
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+<script type="module">
+    (async () => {
+        const Main = (await import('./assets/js/Main.js')).default;
+        new Main({ container: document.body });
+    })();
+</script>
+</body>
+</html>
