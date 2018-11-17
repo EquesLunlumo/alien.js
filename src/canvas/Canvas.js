@@ -40,7 +40,7 @@ class Canvas {
             self.element.style.height = h + 'px';
             if (whiteAlpha) {
                 const alpha = new CanvasGraphics(self.width, self.height);
-                alpha.fillStyle = 'rgba(255, 255, 255, 0.002)';
+                alpha.fillStyle = 'rgba(255, 255, 255, 0.004)';
                 alpha.fillRect(0, 0, self.width, self.height);
                 alpha.setCanvas(self);
                 alpha.parent = self;
