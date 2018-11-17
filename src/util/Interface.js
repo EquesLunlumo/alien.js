@@ -281,6 +281,7 @@ class Interface {
             if (typeof val !== 'string' && key !== 'opacity' && key !== 'zIndex') val += 'px';
             this.element.style[key] = val;
         }
+        if (typeof props.opacity === 'number') this.opacity = props.opacity;
         return this;
     }
 
@@ -340,8 +341,28 @@ class Interface {
             if (callback) promise.then(callback);
             callback = promise.resolve;
         }
-        const tween = new CSSTransition(this, props, time, ease, delay, callback);
-        return promise || tween;
+        if (props.math) {
+            if (typeof props.x === 'number' && typeof this.x === 'undefined') this.x = 0;
+            if (typeof props.y === 'number' && typeof this.y === 'undefined') this.y = 0;
+            if (typeof props.z === 'number' && typeof this.z === 'undefined') this.z = 0;
+            if (typeof props.scale === 'number' && typeof this.scale === 'undefined') this.scale = 1;
+            if (typeof props.scaleX === 'number' && typeof this.scaleX === 'undefined') this.scaleX = 1;
+            if (typeof props.scaleY === 'number' && typeof this.scaleY === 'undefined') this.scaleY = 1;
+            if (typeof props.rotation === 'number' && typeof this.rotation === 'undefined') this.rotation = 0;
+            if (typeof props.rotationX === 'number' && typeof this.rotationX === 'undefined') this.rotationX = 0;
+            if (typeof props.rotationY === 'number' && typeof this.rotationY === 'undefined') this.rotationY = 0;
+            if (typeof props.rotationZ === 'number' && typeof this.rotationZ === 'undefined') this.rotationZ = 0;
+            if (typeof props.skewX === 'number' && typeof this.skewX === 'undefined') this.skewX = 0;
+            if (typeof props.skewY === 'number' && typeof this.skewY === 'undefined') this.skewY = 0;
+            if (typeof props.opacity === 'number' && typeof this.opacity === 'undefined') this.opacity = 1;
+            return TweenManager.tween(this, props, time, ease, delay, callback, () => {
+                this.transform();
+                if (typeof this.opacity === 'number') this.css({ opacity: this.opacity });
+            });
+        } else {
+            const tween = new CSSTransition(this, props, time, ease, delay, callback);
+            return promise || tween;
+        }
     }
 
     clearTransform() {
