@@ -330,8 +330,6 @@ import { Stage, Interface, Device } from 'lib/alien.min.js';
 
 * Docs
 * Tests
-* Import three.js via modules
-* Dynamically import classes
 * Particle examples
 * FX and lighting
 * Error handling
@@ -346,6 +344,7 @@ import { Stage, Interface, Device } from 'lib/alien.min.js';
 * Active Theory's [gists](https://gist.github.com/activetheory)
 * Active Theory's [Mira](https://medium.com/@activetheory/mira-exploring-the-potential-of-the-future-web-e1f7f326d58e)
 * [Active Theory](https://activetheory.net/)
+* [Dynamic import()](https://developers.google.com/web/updates/2017/11/dynamic-import)
 * [ECMAScript modules in browsers](https://jakearchibald.com/2017/es-modules-in-browsers/)
 * [How to Set Up Smaller, More Efficient JavaScript Bundling Using Rollup](https://code.lengstorf.com/learn-rollup-js/)
 
