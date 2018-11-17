@@ -23,13 +23,14 @@ class FontLoader extends Component {
 
         super();
         const self = this;
-        let context,
+        let canvas, context,
             loaded = 0;
 
         initFonts();
 
         function initFonts() {
-            context = document.createElement('canvas').getContext('2d');
+            canvas = document.createElement('canvas');
+            context = canvas.getContext('2d');
             fonts.forEach(font => {
                 font.specifier = (({ style = 'normal', variant = 'normal', weight = 'normal', family }) => {
                     return `${style} ${variant} ${weight} 12px "${family}"`;
@@ -49,8 +50,7 @@ class FontLoader extends Component {
                 self.delayedCall(() => {
                     self.percent = 1;
                     self.events.fire(Events.PROGRESS, { percent: self.percent }, true);
-                    self.events.fire(Events.COMPLETE, null, true);
-                    if (callback) callback();
+                    complete();
                 }, 500);
             }
         }
@@ -67,6 +67,7 @@ class FontLoader extends Component {
         }
 
         function complete() {
+            canvas = context = null;
             self.events.fire(Events.COMPLETE, null, true);
             if (callback) callback();
         }
