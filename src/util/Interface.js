@@ -251,7 +251,8 @@ class Interface {
     }
 
     mask(src) {
-        this.element.style.mask = (~src.indexOf('.') ? 'url(' + src + ')' : src) + ' no-repeat';
+        if (~src.indexOf('.')) src = Assets.getPath(src);
+        this.element.style.mask = (src.includes(['data:', '.']) ? 'url(' + src + ')' : src) + ' no-repeat';
         this.element.style.maskSize = 'contain';
         return this;
     }
