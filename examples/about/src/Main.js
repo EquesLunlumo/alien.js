@@ -833,9 +833,9 @@ class HeaderExample extends Interface {
         }
 
         this.animateIn = delay => {
-            if (line) line.transform({ scaleX: 0 }).css({ opacity: 1 }).tween({ scaleX: 1 }, 550, 'easeInOutCubic', delay, () => this.animatedIn = true);
-            if (text) text.transform({ scale: 1.25 }).tween({ y: 0, scale: 1, opacity: 0.35 }, 500, 'easeOutQuart', delay, () => this.animatedIn = true);
-            self.transform({ y: -10 }).tween({ y: 0, opacity: 1 }, 325, 'easeOutQuart', delay);
+            if (line) line.clearTween().transform({ scaleX: 0 }).css({ opacity: 1 }).tween({ scaleX: 1 }, 550, 'easeInOutCubic', delay, () => this.animatedIn = true);
+            if (text) text.clearTween().transform({ scale: 1.25 }).tween({ y: 0, scale: 1, opacity: 0.35 }, 500, 'easeOutQuart', delay, () => this.animatedIn = true);
+            self.clearTween().transform({ y: -10 }).tween({ y: 0, opacity: 1 }, 325, 'easeOutQuart', delay);
         };
 
         this.animateOut = (callback, num, delay, total) => {
@@ -862,7 +862,7 @@ class HeaderExamples extends Interface {
         addListeners();
 
         function initHTML() {
-            self.mouseEnabled(false);
+            self.css({ left: 0, top: 0 }).mouseEnabled(false);
         }
 
         function initViews() {
@@ -894,10 +894,12 @@ class HeaderExamples extends Interface {
         }
 
         function animateIn() {
-            open = true;
-            self.mouseEnabled(true);
             self.show();
             buttons.forEach((button, i) => button.animateIn(i * 100));
+            self.delayedCall(() => {
+                open = true;
+                self.mouseEnabled(true);
+            }, 1000);
         }
 
         function animateOut() {
@@ -983,8 +985,10 @@ class HeaderExamplesButton extends Interface {
         }
 
         function close() {
-            open = false;
-            self.mouseEnabled(true);
+            self.delayedCall(() => {
+                open = false;
+                self.mouseEnabled(true);
+            }, 1000);
         }
 
         this.animateIn = () => {
