@@ -20,3 +20,7 @@ body, html {
     -webkit-text-size-adjust: none;
     text-size-adjust: none;
 }
+
+span, br, a {
+    position: relative;
+}
