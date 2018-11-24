@@ -13,14 +13,14 @@
     "node": ">=6.9.0"
   },
   "devDependencies": {
-    "concurrently": "^4.0.1",
-    "eslint": "^5.8.0",
+    "concurrently": "^4.1.0",
+    "eslint": "^5.9.0",
     "replace": "^1.0.0",
     "rollup": "0.55.3",
-    "rollup-plugin-bundleutils": "^1.0.8",
+    "rollup-plugin-bundleutils": "^1.0.9",
     "rollup-plugin-eslint": "^5.0.0",
     "rollup-plugin-glslify": "^1.0.7",
     "rollup-watch": "^4.3.1",
-    "serve": "^10.0.2"
+    "serve": "^10.1.1"
   }
 }
