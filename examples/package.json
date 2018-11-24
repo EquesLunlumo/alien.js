@@ -5,8 +5,8 @@
   "private": true,
   "scripts": {
     "build": "find . -name 'rollup.config.js' -maxdepth 2 ! -path './alien.js*' -execdir rollup -c {} \\;",
-    "pngquant": "for x in `find . -name 'rollup.config.js' -maxdepth 2 ! -path './alien.js*' -exec dirname {} \\;`; do echo \"$x\" && cd \"$x\" && rm -rf dist/assets/images && cp -r src/images dist/assets/ && find dist/assets/images -name '**.png' -exec pngquant --strip --ext=.png --force {} \\; && cd ..; done",
-    "pngquant-flat": "for x in `find . -name 'rollup.config.js' -maxdepth 2 ! -path './alien.js*' -exec dirname {} \\;`; do echo \"$x\" && cd \"$x\" && rm -f dist/assets/*.png && cp src/images/*.png dist/assets/ && find dist/assets -name '*.png' -exec pngquant --strip --ext=.png --force {} \\; && cd ..; done",
+    "pngquant": "for x in `find . -name 'rollup.config.js' -maxdepth 2 ! -path './alien.js*' -exec dirname {} \\;`; do echo \"$x\" && cd \"$x\" && rm -rf public/assets/images && cp -r src/images public/assets/ && find public/assets/images -name '**.png' -exec pngquant --strip --ext=.png --force {} \\; && cd ..; done",
+    "pngquant-flat": "for x in `find . -name 'rollup.config.js' -maxdepth 2 ! -path './alien.js*' -exec dirname {} \\;`; do echo \"$x\" && cd \"$x\" && rm -f public/assets/*.png && cp src/images/*.png public/assets/ && find public/assets -name '*.png' -exec pngquant --strip --ext=.png --force {} \\; && cd ..; done",
     "start": "serve -l 8080 || exit 0"
   },
   "engines": {
