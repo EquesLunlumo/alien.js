@@ -27,6 +27,10 @@ body, html {
     text-size-adjust: none;
 }
 
+span, br, a {
+    position: relative;
+}
+
 #Button .hit, .grabbable {
     cursor: -webkit-grab;
     cursor: -moz-grab;
