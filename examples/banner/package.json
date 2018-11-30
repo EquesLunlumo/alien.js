@@ -17,6 +17,8 @@
   "devDependencies": {
     "concurrently": "^4.1.0",
     "eslint": "^5.9.0",
+    "mdn-polyfills": "^5.13.0",
+    "promise-polyfill": "^8.1.0",
     "regenerator-runtime": "^0.13.1",
     "replace": "^1.0.0",
     "rollup": "0.55.3",
@@ -25,6 +27,7 @@
     "rollup-plugin-glslify": "^1.0.7",
     "rollup-plugin-node-resolve": "^3.4.0",
     "rollup-watch": "^4.3.1",
-    "serve": "^10.1.1"
+    "serve": "^10.1.1",
+    "whatwg-fetch": "^3.0.0"
   }
 }

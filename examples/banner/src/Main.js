@@ -4,6 +4,9 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+import 'whatwg-fetch';
+import 'promise-polyfill/src/polyfill';
+import 'mdn-polyfills/Object.assign';
 //import 'regenerator-runtime/runtime'; // Babel support for async/await
 
 import { Events, Stage, Interface, Utils, AssetLoader } from '../alien.js/src/Alien.js';
