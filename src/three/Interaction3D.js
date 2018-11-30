@@ -46,7 +46,7 @@ class Interaction3D extends Component {
             const hit = move();
             if (hit) {
                 clickTarget = hit.object;
-                clickTarget.time = Render.TIME;
+                clickTarget.time = Render.time;
             } else {
                 clickTarget = null;
             }
@@ -107,7 +107,6 @@ class Interaction3D extends Component {
                 if (mesh.type === 'Mesh' && mesh.mouseEnabled) output.push(mesh);
                 if (mesh.children.length) mesh.children.forEach(checkMesh);
             }
-
             return output;
         }
 

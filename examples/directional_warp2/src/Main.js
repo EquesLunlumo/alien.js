@@ -4,10 +4,10 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-/* global THREE */
+import THREE from 'three';
 
 import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Mouse, Utils,
-    Assets, Slide, SlideLoader, SlideVideo, MultiLoader, AssetLoader, FontLoader, StateDispatcher, TweenManager, Shader } from '../alien.js/src/Alien.js';
+    Assets, Slide, SlideLoader, SlideVideo, MultiLoader, AssetLoader, FontLoader, StateDispatcher, Shader } from '../alien.js/src/Alien.js';
 
 import vertRipple from './shaders/ripple.vert';
 import fragRipple from './shaders/ripple.frag';
@@ -163,19 +163,13 @@ class Title extends Component {
         };
 
         this.animateIn = callback => {
+            clearTween(shader.uniforms.opacity);
+            clearTween(shader.uniforms.progress);
             shader.uniforms.opacity.value = 0;
             shader.uniforms.progress.value = 0;
             shader.uniforms.direction.value = this.direction < 0 ? new THREE.Vector2(-1, 1) : new THREE.Vector2(1, -1);
-            TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 250, 'linear');
-            TweenManager.tween(shader.uniforms.progress, { value: 1 }, 1600, 'easeOutCubic', callback);
-        };
-
-        this.animateOut = callback => {
-            shader.uniforms.opacity.value = 1;
-            shader.uniforms.progress.value = 1;
-            shader.uniforms.direction.value = this.direction < 0 ? new THREE.Vector2(-1, 1) : new THREE.Vector2(1, -1);
-            TweenManager.tween(shader.uniforms.opacity, { value: 0 }, 250, 'linear');
-            TweenManager.tween(shader.uniforms.progress, { value: 0 }, 1200, 'easeOutCubic', callback);
+            tween(shader.uniforms.opacity, { value: 1 }, 250, 'linear');
+            tween(shader.uniforms.progress, { value: 1 }, 1600, 'easeOutCubic', callback);
         };
     }
 }
@@ -354,7 +348,7 @@ class Space extends Component {
 
         this.animateIn = () => {
             shader.uniforms.opacity.value = 0;
-            TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutCubic');
+            tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutCubic');
             title.animateIn();
         };
 
@@ -498,7 +492,7 @@ class Progress extends Interface {
 
         this.update = e => {
             if (this.complete) return;
-            TweenManager.tween(this, { progress: e.percent }, 500, 'easeOutCubic');
+            tween(this, { progress: e.percent }, 500, 'easeOutCubic');
         };
 
         this.animateOut = callback => {

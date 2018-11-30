@@ -4,6 +4,8 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+import { TweenMax } from '../gsap/TweenMax.js';
+
 class Render {
 
     static init() {
@@ -12,13 +14,12 @@ class Render {
             skipLimit = 200;
         let last = performance.now();
 
-        requestAnimationFrame(step);
-
-        function step(t) {
-            const delta = Math.min(skipLimit, t - last);
+        function tick() {
+            const t = TweenMax.ticker.time * 1000,
+                delta = Math.min(skipLimit, t - last);
             last = t;
-            self.TIME = t;
-            self.DELTA = delta;
+            self.time = t;
+            self.delta = delta;
             for (let i = render.length - 1; i >= 0; i--) {
                 const callback = render[i];
                 if (!callback) {
@@ -33,8 +34,9 @@ class Render {
                 }
                 callback(t, delta);
             }
-            if (!self.paused) requestAnimationFrame(step);
         }
+
+        TweenMax.ticker.addEventListener('tick', tick);
 
         this.start = (callback, fps) => {
             if (fps) {
@@ -49,19 +51,8 @@ class Render {
             render.remove(callback);
         };
 
-        this.tick = () => {
-            this.TIME = performance.now();
-            step(this.TIME);
-        };
-
-        this.pause = () => {
-            this.paused = true;
-        };
-
-        this.resume = () => {
-            if (!this.paused) return;
-            this.paused = false;
-            requestAnimationFrame(step);
+        this.destroy = () => {
+            TweenMax.ticker.removeEventListener('tick', tick);
         };
     }
 }

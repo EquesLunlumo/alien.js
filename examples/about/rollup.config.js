@@ -1,4 +1,4 @@
-import { timestamp, uglify } from 'rollup-plugin-bundleutils';
+import { timestamp, regex, uglify } from 'rollup-plugin-bundleutils';
 
 import glslify from 'rollup-plugin-glslify';
 import { eslint } from 'rollup-plugin-eslint';
@@ -23,11 +23,13 @@ export default {
     },
     plugins: [
         glslify({ basedir: 'src/shaders' }),
-        eslint(),
+        eslint({ include: 'src/**' }),
+        regex([[/^import.*[\r\n]+/m, '']]), // strip imports leftover from externals
         uglify({
             output: {
                 preamble: `//   _  /._  _  r${version.split('.')[1]} ${timestamp()}\n//  /_|///_'/ /`
             }
         })
-    ]
+    ],
+    external: id => /^three$/.test(id)
 };

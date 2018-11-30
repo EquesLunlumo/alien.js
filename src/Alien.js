@@ -4,8 +4,11 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+export * from './gsap/TweenMax.js';
+
 import './polyfills.js';
 
+export { Interpolation } from './util/Interpolation.js';
 export { Utils } from './util/Utils.js';
 export { Render } from './util/Render.js';
 export { Events } from './util/Events.js';
@@ -23,9 +26,6 @@ export { Fullscreen } from './util/Fullscreen.js';
 export { StateDispatcher } from './util/StateDispatcher.js';
 export { Storage } from './util/Storage.js';
 export { WebAudio } from './util/WebAudio.js';
-export { TweenManager } from './tween/TweenManager.js';
-export { Interpolation } from './tween/Interpolation.js';
-export { MathTween } from './tween/MathTween.js';
 export { Canvas } from './canvas/Canvas.js';
 export { CanvasGraphics } from './canvas/CanvasGraphics.js';
 export { CanvasTexture } from './canvas/CanvasTexture.js';

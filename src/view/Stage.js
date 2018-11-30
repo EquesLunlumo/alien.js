@@ -4,6 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+import { Render } from '../util/Render.js';
 import { Events } from '../util/Events.js';
 import { Device } from '../util/Device.js';
 import { Interface } from '../util/Interface.js';
@@ -93,6 +94,7 @@ const Stage = new (class extends Interface {
             window.removeEventListener('resize', resize);
             window.removeEventListener('orientationchange', resize);
             if (Device.mobile) window.removeEventListener('touchstart', preventScroll, { passive: false });
+            Render.destroy();
             return super.destroy();
         };
     }

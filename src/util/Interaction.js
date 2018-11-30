@@ -71,7 +71,7 @@ class Interaction extends Component {
             self.delta.y = self.move.y = self.velocity.y = 0;
             distance = 0;
             self.events.fire(Interaction.START, e, true);
-            timeDown = timeMove = Render.TIME;
+            timeDown = timeMove = Render.time;
         }
 
         function move(e) {
@@ -86,8 +86,8 @@ class Interaction extends Component {
             self.last.x = e.x;
             self.last.y = e.y;
             distance += self.delta.length();
-            const delta = Math.max(0.001, Render.TIME - (timeMove || Render.TIME));
-            timeMove = Render.TIME;
+            const delta = Math.max(0.001, Render.time - (timeMove || Render.time));
+            timeMove = Render.time;
             self.velocity.x = Math.abs(self.delta.x) / delta;
             self.velocity.y = Math.abs(self.delta.y) / delta;
             self.events.fire(Interaction.MOVE, e, true);
@@ -99,13 +99,13 @@ class Interaction extends Component {
             self.isTouching = false;
             self.move.x = 0;
             self.move.y = 0;
-            const delta = Math.max(0.001, Render.TIME - (timeMove || Render.TIME));
+            const delta = Math.max(0.001, Render.time - (timeMove || Render.time));
             if (delta > 100) {
                 self.delta.x = 0;
                 self.delta.y = 0;
             }
             self.events.fire(Interaction.END, e, true);
-            if (distance < 20 && Render.TIME - timeDown < 2000) self.events.fire(Interaction.CLICK, e, true);
+            if (distance < 20 && Render.time - timeDown < 2000) self.events.fire(Interaction.CLICK, e, true);
         }
 
         this.destroy = () => {

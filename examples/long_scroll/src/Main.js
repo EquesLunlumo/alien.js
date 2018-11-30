@@ -297,6 +297,7 @@ class Container extends Interface {
             Stage.css({ position: '', overflow: '', opacity: 0 });
             self.size('100%', 'auto');
             Stage.add(self);
+            window.history.scrollRestoration = 'manual';
         }
 
         function initView() {

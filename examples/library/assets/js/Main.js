@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Events, Stage, Interface, Canvas, CanvasGraphics, Utils, AssetLoader, TweenManager } from '../../../../build/alien.js';
+import { Events, Stage, Interface, Canvas, CanvasGraphics, Utils, AssetLoader } from '../../../../build/alien.js';
 
 Config.UI_COLOR = 'white';
 
@@ -136,7 +136,7 @@ class Progress extends Interface {
 
         this.update = e => {
             if (this.complete) return;
-            TweenManager.tween(this, { progress: e.percent }, 500, 'easeOutCubic');
+            tween(this, { progress: e.percent }, 500, 'easeOutCubic');
         };
 
         this.animateOut = callback => {

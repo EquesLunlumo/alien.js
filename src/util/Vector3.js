@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Interpolation } from '../tween/Interpolation.js';
+import { Interpolation } from './Interpolation.js';
 import { Vector2 } from './Vector2.js';
 
 class Vector3 {
@@ -171,7 +171,7 @@ class Vector3 {
     interp(v, alpha, ease, dist = 5000) {
         if (!this.calc) this.calc = new Vector3();
         this.calc.subVectors(this, v);
-        const fn = Interpolation.convertEase(ease),
+        const fn = Interpolation.getRatio(ease),
             a = fn(Math.clamp(Math.range(this.calc.lengthSq(), 0, dist * dist, 1, 0), 0, 1) * (alpha / 10));
         return this.lerp(v, a);
     }

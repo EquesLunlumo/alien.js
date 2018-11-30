@@ -8,8 +8,7 @@ import { Events } from '../util/Events.js';
 import { Component } from '../util/Component.js';
 import { Interaction } from '../util/Interaction.js';
 import { Mouse } from '../util/Mouse.js';
-import { TweenManager } from '../tween/TweenManager.js';
-import { Interpolation } from '../tween/Interpolation.js';
+import { Sine } from '../gsap/TweenMax.js';
 
 class Slide extends Component {
 
@@ -74,7 +73,7 @@ class Slide extends Component {
         }
 
         function stopInertia() {
-            TweenManager.clearTween(scrollTarget);
+            clearTween(scrollTarget);
         }
 
         function scroll(e) {
@@ -123,14 +122,16 @@ class Slide extends Component {
                     scrollInertia[axis] *= 0.9;
                     if (Math.abs(scrollInertia[axis]) < 0.001) scrollInertia[axis] = 0;
                     scrollTarget[axis] += scrollInertia[axis];
+                    scrollTarget[axis] = Math.round(scrollTarget[axis] * 100) / 100;
                 }
                 const limit = self.max[axis] * 0.035;
-                scrollTarget[axis] += Interpolation.Sine.Out(Math.round(self.progress) - self.progress) * limit;
+                scrollTarget[axis] += Sine.easeOut.getRatio(Math.round(self.progress) - self.progress) * limit;
+                scrollTarget[axis] = Math.round(scrollTarget[axis] * 100) / 100;
                 if (Math.abs(scrollTarget[axis] - self[axis]) > limit) scrollTarget[axis] -= (scrollTarget[axis] - self[axis]) * 0.5;
-                else if (Math.abs(scrollTarget[axis] - self[axis]) < 0.001) scrollTarget[axis] = slide * self.max[axis];
                 self.delta[axis] = scrollTarget[axis] - self[axis];
                 self.delta[axis] = self.delta[axis] < 0 ? Math.max(self.delta[axis], -limit) : Math.min(self.delta[axis], limit);
                 self[axis] += self.delta[axis];
+                self[axis] = Math.round(self[axis] * 100) / 100;
             });
             self.position = (self.x + self.y) / (self.max.x + self.max.y) % self.num + self.num;
             self.progress = self.position % 1;
@@ -151,7 +152,7 @@ class Slide extends Component {
             const obj = {};
             obj.x = slide * this.max.x;
             obj.y = slide * this.max.y;
-            TweenManager.tween(scrollTarget, obj, 2500, 'easeOutQuint');
+            tween(scrollTarget, obj, 2500, 'easeOutQuint');
         };
 
         this.next = () => {

@@ -1,4 +1,4 @@
-import { timestamp, babel, uglify } from 'rollup-plugin-bundleutils';
+import { timestamp, regex, babel, uglify } from 'rollup-plugin-bundleutils';
 
 import resolve from 'rollup-plugin-node-resolve';
 import glslify from 'rollup-plugin-glslify';
@@ -28,12 +28,14 @@ export default {
     plugins: [
         resolve(),
         glslify({ basedir: 'src/shaders' }),
-        eslint(),
-        babel(),
+        eslint({ include: 'src/**' }),
+        regex([[/^import.*[\r\n]+/m, '']]), // strip imports leftover from externals
+        babel({ compact: false }),
         uglify({
             output: {
                 preamble: `//   _  /._  _  r${version.split('.')[1]}.${project} ${timestamp()}\n//  /_|///_'/ /`
             }
         })
-    ]
+    ],
+    external: id => /(\/gsap\/|^three$)/.test(id)
 };

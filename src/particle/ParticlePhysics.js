@@ -125,8 +125,8 @@ class ParticlePhysics extends Component {
         };
 
         this.update = force => {
-            if (!clock) clock = Render.TIME;
-            let time = Render.TIME,
+            if (!clock) clock = Render.time;
+            let time = Render.time,
                 delta = time - clock;
             if (!force && delta <= 0) return;
             delta *= 0.001;
