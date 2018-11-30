@@ -4,14 +4,12 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
+import { TweenMax } from '../gsap/TweenMax.js';
 import { Utils } from './Utils.js';
 import { Render } from './Render.js';
-import { Timer } from './Timer.js';
 import { Events } from './Events.js';
 import { Device } from './Device.js';
 import { Assets } from './Assets.js';
-import { TweenManager } from '../tween/TweenManager.js';
-import { CSSTransition } from '../tween/CSSTransition.js';
 
 class Interface {
 
@@ -59,16 +57,14 @@ class Interface {
 
     delayedCall(callback, time = 0, ...params) {
         if (!this.timers) return;
-        const timer = Timer.create(() => {
-            if (callback) callback(...params);
-        }, time);
-        this.timers.push(timer);
+        TweenMax.delayedCall(time * 0.001, callback, params);
+        this.timers.push(callback);
         if (this.timers.length > 50) this.timers.shift();
-        return timer;
+        return callback;
     }
 
-    clearTimeout(ref) {
-        return Timer.clearTimeout(ref);
+    clearTimeout(callback) {
+        TweenMax.killDelayedCallsTo(callback);
     }
 
     clearTimers() {
@@ -141,33 +137,33 @@ class Interface {
         return this;
     }
 
-    hide() {
-        this.element.style.display = 'none';
+    show() {
+        TweenMax.set(this.element, { clearProps: 'display' });
         return this;
     }
 
-    show() {
-        this.element.style.display = '';
+    hide() {
+        TweenMax.set(this.element, { display: 'none' });
         return this;
     }
 
     visible() {
-        this.element.style.visibility = 'visible';
+        TweenMax.set(this.element, { visibility: 'visible' });
         return this;
     }
 
     invisible() {
-        this.element.style.visibility = 'hidden';
+        TweenMax.set(this.element, { visibility: 'hidden' });
         return this;
     }
 
     setZ(z) {
-        this.element.style.zIndex = z;
+        TweenMax.set(this.element, { zIndex: z });
         return this;
     }
 
-    clearOpacity() {
-        this.element.style.opacity = '';
+    mouseEnabled(bool) {
+        TweenMax.set(this.element, { pointerEvents: bool ? 'auto' : 'none' });
         return this;
     }
 
@@ -177,88 +173,90 @@ class Interface {
             h = w;
         }
         if (typeof w !== 'undefined') {
+            const style = {};
             if (typeof w === 'string' || typeof h === 'string') {
                 if (typeof w !== 'string') w = w + 'px';
                 if (typeof h !== 'string') h = h + 'px';
-                this.element.style.width = w;
-                this.element.style.height = h;
+                style.width = w;
+                style.height = h;
             } else {
-                this.element.style.width = w + 'px';
-                this.element.style.height = h + 'px';
-                if (!noScale) this.element.style.backgroundSize = w + 'px ' + h + 'px';
+                style.width = w + 'px';
+                style.height = h + 'px';
+                if (!noScale) style.backgroundSize = w + 'px ' + h + 'px';
             }
+            TweenMax.set(this.element, style);
         }
         this.width = this.element.offsetWidth;
         this.height = this.element.offsetHeight;
         return this;
     }
 
-    mouseEnabled(bool) {
-        this.element.style.pointerEvents = bool ? 'auto' : 'none';
-        return this;
-    }
-
-    fontStyle(fontFamily, fontSize, color, fontStyle) {
-        this.css({ fontFamily, fontSize, color, fontStyle });
-        return this;
-    }
-
     bg(src, x, y, repeat) {
+        const style = {};
         if (~src.indexOf('.')) src = Assets.getPath(src);
-        if (src.includes(['data:', '.'])) this.element.style.backgroundImage = 'url(' + src + ')';
-        else this.element.style.backgroundColor = src;
+        if (src.includes(['data:', '.'])) style.backgroundImage = 'url(' + src + ')';
+        else style.backgroundColor = src;
         if (typeof x !== 'undefined') {
             x = typeof x === 'number' ? x + 'px' : x;
             y = typeof y === 'number' ? y + 'px' : y;
-            this.element.style.backgroundPosition = x + ' ' + y;
+            style.backgroundPosition = x + ' ' + y;
         }
         if (repeat) {
-            this.element.style.backgroundSize = '';
-            this.element.style.backgroundRepeat = repeat;
+            style.clearProps = 'backgroundSize';
+            style.backgroundRepeat = repeat;
         }
         if (x === 'cover' || x === 'contain') {
             repeat = typeof repeat === 'number' ? repeat + 'px' : repeat;
-            this.element.style.backgroundSize = x;
-            this.element.style.backgroundRepeat = 'no-repeat';
-            this.element.style.backgroundPosition = typeof y !== 'undefined' ? y + ' ' + repeat : 'center';
+            style.backgroundSize = x;
+            style.backgroundRepeat = 'no-repeat';
+            style.backgroundPosition = typeof y !== 'undefined' ? y + ' ' + repeat : 'center';
         }
+        TweenMax.set(this.element, style);
         return this;
     }
 
     center(x, y, noPos) {
-        const css = {};
+        const style = {};
         if (typeof x === 'undefined') {
-            css.left = '50%';
-            css.top = '50%';
-            css.marginLeft = -this.width / 2;
-            css.marginTop = -this.height / 2;
+            style.left = '50%';
+            style.top = '50%';
+            style.marginLeft = -this.width / 2;
+            style.marginTop = -this.height / 2;
         } else {
             if (x) {
-                css.left = '50%';
-                css.marginLeft = -this.width / 2;
+                style.left = '50%';
+                style.marginLeft = -this.width / 2;
             }
             if (y) {
-                css.top = '50%';
-                css.marginTop = -this.height / 2;
+                style.top = '50%';
+                style.marginTop = -this.height / 2;
             }
         }
         if (noPos) {
-            delete css.left;
-            delete css.top;
+            delete style.left;
+            delete style.top;
         }
-        this.css(css);
+        this.css(style);
         return this;
     }
 
     mask(src) {
         if (~src.indexOf('.')) src = Assets.getPath(src);
-        this.element.style.mask = (src.includes(['data:', '.']) ? 'url(' + src + ')' : src) + ' no-repeat';
-        this.element.style.maskSize = 'contain';
+        const mask = (src.includes(['data:', '.']) ? 'url(' + src + ')' : src) + ' center / contain no-repeat';
+        TweenMax.set(this.element, {
+            mask,
+            '-webkit-mask': mask
+        });
         return this;
     }
 
     blendMode(mode, bg) {
-        this.element.style[bg ? 'background-blend-mode' : 'mix-blend-mode'] = mode;
+        TweenMax.set(this.element, { [bg ? 'background-blend-mode' : 'mix-blend-mode']: mode });
+        return this;
+    }
+
+    fontStyle(fontFamily, fontSize, color, fontStyle) {
+        this.css({ fontFamily, fontSize, color, fontStyle });
         return this;
     }
 
@@ -272,98 +270,42 @@ class Interface {
                 }
                 return style || 0;
             } else {
-                this.element.style[props] = value;
+                TweenMax.set(this.element, { [props]: value });
                 return this;
             }
         }
         for (let key in props) {
             let val = props[key];
             if (!(typeof val === 'string' || typeof val === 'number')) continue;
-            if (typeof val !== 'string' && key !== 'opacity' && key !== 'zIndex') val += 'px';
-            this.element.style[key] = val;
+            if (typeof val !== 'string' && key !== 'opacity' && key !== 'zIndex') props[key] += 'px';
         }
-        if (typeof props.opacity === 'number') this.opacity = props.opacity;
+        for (let key in props) if (typeof props[key] === 'undefined') delete props[key];
+        TweenMax.set(this.element, props);
         return this;
     }
 
     transform(props) {
         if (!props) props = this;
         else for (let key in props) if (typeof props[key] === 'number') this[key] = props[key];
-        this.element.style.transform = TweenManager.parseTransform(props);
-        return this;
-    }
-
-    willChange(props) {
-        const string = typeof props === 'string';
-        if (props) this.element.style.willChange = string ? props : 'transform, opacity';
-        else this.element.style.willChange = '';
-    }
-
-    backfaceVisibility(visible) {
-        if (visible) this.element.style.backfaceVisibility = 'visible';
-        else this.element.style.backfaceVisibility = 'hidden';
-        return this;
-    }
-
-    enable3D(perspective, x, y) {
-        this.element.style.transformStyle = 'preserve-3d';
-        if (perspective) this.element.style.perspective = perspective + 'px';
-        if (typeof x !== 'undefined') {
-            x = typeof x === 'number' ? x + 'px' : x;
-            y = typeof y === 'number' ? y + 'px' : y;
-            this.element.style.perspectiveOrigin = x + ' ' + y;
-        }
-        return this;
-    }
-
-    disable3D() {
-        this.element.style.transformStyle = '';
-        this.element.style.perspective = '';
+        const style = {};
+        for (let key in props) if (typeof props[key] !== 'undefined' && ~['x', 'y', 'z', 'scale', 'scaleX', 'scaleY', 'rotation', 'rotationX', 'rotationY', 'rotationZ', 'skewX', 'skewY', 'perspective'].indexOf(key)) style[key] = props[key];
+        TweenMax.set(this.element, style);
         return this;
     }
 
     transformPoint(x, y, z) {
-        let origin = '';
-        if (typeof x !== 'undefined') origin += typeof x === 'number' ? x + 'px' : x;
-        if (typeof y !== 'undefined') origin += typeof y === 'number' ? ' ' + y + 'px' : ' ' + y;
-        if (typeof z !== 'undefined') origin += typeof z === 'number' ? ' ' + z + 'px' : ' ' + z;
-        this.element.style.transformOrigin = origin;
+        let transformOrigin = '';
+        if (typeof x !== 'undefined') transformOrigin += typeof x === 'number' ? x + 'px' : x;
+        if (typeof y !== 'undefined') transformOrigin += typeof y === 'number' ? ' ' + y + 'px' : ' ' + y;
+        if (typeof z !== 'undefined') transformOrigin += typeof z === 'number' ? ' ' + z + 'px' : ' ' + z;
+        if (transformOrigin === '') TweenMax.set(this.element, { clearProps: 'transformOrigin' });
+        else TweenMax.set(this.element, { transformOrigin });
         return this;
     }
 
-    tween(props, time, ease, delay, callback) {
-        if (typeof delay !== 'number') {
-            callback = delay;
-            delay = 0;
-        }
-        let promise = null;
-        if (typeof Promise !== 'undefined') {
-            promise = Promise.create();
-            if (callback) promise.then(callback);
-            callback = promise.resolve;
-        }
-        if (props.math) {
-            if (typeof props.x === 'number' && typeof this.x === 'undefined') this.x = 0;
-            if (typeof props.y === 'number' && typeof this.y === 'undefined') this.y = 0;
-            if (typeof props.z === 'number' && typeof this.z === 'undefined') this.z = 0;
-            if (typeof props.scale === 'number' && typeof this.scale === 'undefined') this.scale = 1;
-            if (typeof props.scaleX === 'number' && typeof this.scaleX === 'undefined') this.scaleX = 1;
-            if (typeof props.scaleY === 'number' && typeof this.scaleY === 'undefined') this.scaleY = 1;
-            if (typeof props.rotation === 'number' && typeof this.rotation === 'undefined') this.rotation = 0;
-            if (typeof props.rotationX === 'number' && typeof this.rotationX === 'undefined') this.rotationX = 0;
-            if (typeof props.rotationY === 'number' && typeof this.rotationY === 'undefined') this.rotationY = 0;
-            if (typeof props.rotationZ === 'number' && typeof this.rotationZ === 'undefined') this.rotationZ = 0;
-            if (typeof props.skewX === 'number' && typeof this.skewX === 'undefined') this.skewX = 0;
-            if (typeof props.skewY === 'number' && typeof this.skewY === 'undefined') this.skewY = 0;
-            if (typeof props.opacity === 'number' && typeof this.opacity === 'undefined') this.opacity = 1;
-            return TweenManager.tween(this, props, time, ease, delay, callback, () => {
-                this.transform();
-                if (typeof this.opacity === 'number') this.css({ opacity: this.opacity });
-            });
-        } else {
-            const tween = new CSSTransition(this, props, time, ease, delay, callback);
-            return promise || tween;
-        }
+    clearOpacity() {
+        TweenMax.set(this.element, { clearProps: 'opacity' });
+        return this;
     }
 
     clearTransform() {
@@ -379,13 +321,47 @@ class Interface {
         if (typeof this.rotationZ === 'number') this.rotationZ = 0;
         if (typeof this.skewX === 'number') this.skewX = 0;
         if (typeof this.skewY === 'number') this.skewY = 0;
-        this.element.style.transform = '';
+        if (typeof this.perspective === 'number') this.perspective = 0;
+        TweenMax.set(this.element, { clearProps: 'transform' });
+        return this;
+    }
+
+    willChange(props) {
+        if (!props) TweenMax.set(this.element, { clearProps: 'willChange' });
+        else TweenMax.set(this.element, { willChange: typeof props === 'string' ? props : 'transform, opacity' });
+        return this;
+    }
+
+    backfaceVisibility(visible) {
+        TweenMax.set(this.element, { backfaceVisibility: visible ? 'visible' : 'hidden' });
+        return this;
+    }
+
+    enable3D(perspective, x, y) {
+        const style = {};
+        style.transformStyle = 'preserve-3d';
+        if (perspective) style.perspective = perspective + 'px';
+        if (typeof x !== 'undefined') {
+            x = typeof x === 'number' ? x + 'px' : x;
+            y = typeof y === 'number' ? y + 'px' : y;
+            style.perspectiveOrigin = x + ' ' + y;
+        }
+        TweenMax.set(this.element, style);
+        return this;
+    }
+
+    disable3D() {
+        TweenMax.set(this.element, { clearProps: 'transformStyle, perspective, perspectiveOrigin' });
+        return this;
+    }
+
+    tween(props, time, ease, delay, complete, update) {
+        tween(this.element, props, time, ease, delay, complete, update);
         return this;
     }
 
     clearTween() {
-        if (this.cssTween) this.cssTween.stop();
-        if (this.mathTween) this.mathTween.stop();
+        clearTween(this.element);
         return this;
     }
 
@@ -424,30 +400,6 @@ class Interface {
         return touch;
     }
 
-    click(callback) {
-        const click = e => {
-            if (!this.element) return false;
-            e.object = this.element.className === 'hit' ? this.parent : this;
-            e.action = 'click';
-            if (callback) callback(e);
-        };
-        this.element.addEventListener('click', click, true);
-        this.element.style.cursor = 'pointer';
-        return this;
-    }
-
-    hover(callback) {
-        const hover = e => {
-            if (!this.element) return false;
-            e.object = this.element.className === 'hit' ? this.parent : this;
-            e.action = e.type === 'mouseout' ? 'out' : 'over';
-            if (callback) callback(e);
-        };
-        this.element.addEventListener('mouseover', hover, true);
-        this.element.addEventListener('mouseout', hover, true);
-        return this;
-    }
-
     bind(event, callback) {
         if (event === 'touchstart' && !Device.mobile) event = 'mousedown';
         else if (event === 'touchmove' && !Device.mobile) event = 'mousemove';
@@ -457,6 +409,7 @@ class Interface {
         events.push({ target: this.element, callback });
 
         const touchEvent = e => {
+            if (!this.element) return false;
             const touch = this.convertTouchEvent(e);
             if (!(e instanceof MouseEvent)) {
                 e.x = touch.x;
@@ -487,6 +440,30 @@ class Interface {
             this.element.removeEventListener(event, this.events['fn_' + event], true);
             this.events['fn_' + event] = null;
         }
+        return this;
+    }
+
+    hover(callback) {
+        const hover = e => {
+            if (!this.element) return false;
+            e.object = this.element.className === 'hit' ? this.parent : this;
+            e.action = e.type === 'mouseout' ? 'out' : 'over';
+            if (callback) callback(e);
+        };
+        this.element.addEventListener('mouseover', hover, true);
+        this.element.addEventListener('mouseout', hover, true);
+        return this;
+    }
+
+    click(callback) {
+        const click = e => {
+            if (!this.element) return false;
+            e.object = this.element.className === 'hit' ? this.parent : this;
+            e.action = 'click';
+            if (callback) callback(e);
+        };
+        this.element.addEventListener('click', click, true);
+        TweenMax.set(this.element, { cursor: 'pointer' });
         return this;
     }
 
@@ -565,17 +542,8 @@ class Interface {
         let startX, startY,
             moving = false;
 
-        const touchStart = e => {
-            const touch = this.convertTouchEvent(e);
-            if (e.touches.length === 1) {
-                startX = touch.x;
-                startY = touch.y;
-                moving = true;
-                this.element.addEventListener('touchmove', touchMove, { passive: true });
-            }
-        };
-
         const touchMove = e => {
+            if (!this.element) return false;
             if (moving) {
                 const touch = this.convertTouchEvent(e),
                     dx = startX - touch.x,
@@ -600,7 +568,19 @@ class Interface {
             }
         };
 
+        const touchStart = e => {
+            if (!this.element) return false;
+            const touch = this.convertTouchEvent(e);
+            if (e.touches.length === 1) {
+                startX = touch.x;
+                startY = touch.y;
+                moving = true;
+                this.element.addEventListener('touchmove', touchMove, { passive: true });
+            }
+        };
+
         const touchEnd = () => {
+            if (!this.element) return false;
             startX = startY = moving = false;
             this.element.removeEventListener('touchmove', touchMove);
         };
@@ -616,32 +596,27 @@ class Interface {
     overflowScroll(direction) {
         const x = !!direction.x,
             y = !!direction.y,
-            overflow = {};
-        if ((!x && !y) || (x && y)) overflow.overflow = 'scroll';
+            style = {};
+        if ((!x && !y) || (x && y)) style.overflow = 'scroll';
         if (!x && y) {
-            overflow.overflowY = 'scroll';
-            overflow.overflowX = 'hidden';
+            style.overflowY = 'scroll';
+            style.overflowX = 'hidden';
         }
         if (x && !y) {
-            overflow.overflowX = 'scroll';
-            overflow.overflowY = 'hidden';
+            style.overflowX = 'scroll';
+            style.overflowY = 'hidden';
         }
         if (Device.mobile) {
-            overflow['-webkit-overflow-scrolling'] = 'touch';
+            style['-webkit-overflow-scrolling'] = 'touch';
             this.element.scrollParent = true;
             this.element.preventEvent = e => e.stopPropagation();
             this.bind('touchmove', this.element.preventEvent);
         }
-        this.css(overflow);
+        this.css(style);
     }
 
     removeOverflowScroll() {
-        this.css({
-            overflow: 'hidden',
-            overflowX: '',
-            overflowY: '',
-            '-webkit-overflow-scrolling': ''
-        });
+        TweenMax.set(this.element, { clearProps: 'overflow, overflowX, overflowY, -webkit-overflow-scrolling' });
         if (Device.mobile) this.unbind('touchmove', this.element.preventEvent);
     }
 

@@ -9,7 +9,6 @@ import { Device } from './Device.js';
 import { Component } from './Component.js';
 import { Interaction } from './Interaction.js';
 import { Mouse } from './Mouse.js';
-import { TweenManager } from '../tween/TweenManager.js';
 
 class Scroll extends Component {
 
@@ -68,7 +67,7 @@ class Scroll extends Component {
         }
 
         function stopInertia() {
-            TweenManager.clearTween(scrollTarget);
+            clearTween(scrollTarget);
         }
 
         function scroll(e) {
@@ -104,7 +103,7 @@ class Scroll extends Component {
                 if (!self.max[axis]) return;
                 obj[axis] = scrollTarget[axis] - Mouse.input.delta[axis] * multiplier;
             });
-            TweenManager.tween(scrollTarget, obj, 2500, 'easeOutQuint');
+            tween(scrollTarget, obj, 2500, 'easeOutQuint');
         }
 
         function resize() {

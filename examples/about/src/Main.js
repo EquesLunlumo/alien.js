@@ -4,10 +4,10 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-/* global THREE */
+import THREE from 'three';
 
-import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, Device, Interaction, Mouse, Accelerometer, Utils,
-    Assets, AssetLoader, FontLoader, StateDispatcher, TweenManager, Interpolation, Storage, Vector2, WebAudio, Shader } from '../alien.js/src/Alien.js';
+import { Sine, Events, Stage, Interface, Component, Canvas, CanvasGraphics, Device, Interaction, Mouse, Accelerometer, Utils,
+    Assets, AssetLoader, FontLoader, StateDispatcher, Storage, Vector2, WebAudio, Shader } from '../alien.js/src/Alien.js';
 
 import vertFluidBasic from './shaders/fluid/basic.vert';
 import fragFluidPass from './shaders/fluid/pass.frag';
@@ -187,22 +187,22 @@ class AudioController {
                     break;
                 case 'mouse_move':
                     if (water) {
-                        TweenManager.tween(water.gain, { value: Math.clamp(params[0], 0, 1) }, 100, 'linear');
+                        tween(water.gain, { value: Math.clamp(params[0], 0, 1) }, 100, 'linear');
                         water.stereoPan.value = Math.clamp(params[1], -1, 1);
                         water.playbackRate.value = Math.clamp(0.8 + params[2] / 2.5, 0.8, 1.2);
                     }
                     break;
                 case 'about_section':
-                    TweenManager.tween(WebAudio.gain, { value: 0.3 }, 1000, 'linear');
+                    tween(WebAudio.gain, { value: 0.3 }, 1000, 'linear');
                     break;
                 case 'fluid_section':
-                    TweenManager.tween(WebAudio.gain, { value: 1 }, 500, 'linear');
+                    tween(WebAudio.gain, { value: 1 }, 500, 'linear');
                     break;
                 case 'sound_off':
-                    TweenManager.tween(WebAudio.gain, { value: 0 }, 300, 'linear');
+                    tween(WebAudio.gain, { value: 0 }, 300, 'linear');
                     break;
                 case 'sound_on':
-                    TweenManager.tween(WebAudio.gain, { value: 1 }, 500, 'linear');
+                    tween(WebAudio.gain, { value: 1 }, 500, 'linear');
                     break;
             }
         };
@@ -434,25 +434,25 @@ class Button extends Interface {
 
         this.showButton = () => {
             this.clearTimeout(timeout);
-            TweenManager.clearTween(data);
+            clearTween(data);
             data.posX = 52;
             data.lineWidth = 0;
             data.radius = 0;
             data.scale = 0;
             data.littleCircleScale = 0;
             this.needsUpdate = true;
-            TweenManager.tween(data, { radius: 24, scale: 1, littleCircleScale: 0 }, 400, 'easeOutCubic', () => this.needsUpdate = false);
+            tween(data, { radius: 24, scale: 1, littleCircleScale: 0 }, 400, 'easeOutCubic', () => this.needsUpdate = false);
             this.tween({ opacity: 1 }, 400, 'easeOutCubic');
         };
 
         this.hideButton = () => {
             this.animatedIn = false;
             this.clearTimeout(timeout);
-            TweenManager.clearTween(data);
+            clearTween(data);
             data.posX = 52;
             data.lineWidth = 0;
             this.needsUpdate = true;
-            TweenManager.tween(data, { radius: 0, scale: 0, littleCircleScale: 0 }, 400, 'easeOutCubic', () => this.needsUpdate = false);
+            tween(data, { radius: 0, scale: 0, littleCircleScale: 0 }, 400, 'easeOutCubic', () => this.needsUpdate = false);
             this.tween({ opacity: 0 }, 400, 'easeOutCubic');
         };
 
@@ -460,13 +460,13 @@ class Button extends Interface {
             if (this.animatedIn) return;
             this.animatedIn = true;
             this.clearTimeout(timeout);
-            TweenManager.clearTween(data);
+            clearTween(data);
             this.needsUpdate = true;
             const start = () => {
-                TweenManager.tween(data, { scale: 0, littleCircleScale: 1 }, 400, 'easeOutCubic');
-                TweenManager.tween(data, { lineWidth: 1 }, 600, 'easeOutQuart', 200);
-                TweenManager.tween(data, { radius: 18, posX: 6 }, 800, 'easeOutQuart', () => {
-                    TweenManager.tween(data, { radius: 24, posX: 52, spring: 1, damping: 0.5 }, 800, 'easeOutElastic', 500, () => {
+                tween(data, { scale: 0, littleCircleScale: 1 }, 400, 'easeOutCubic');
+                tween(data, { lineWidth: 1 }, 600, 'easeOutQuart', 200);
+                tween(data, { radius: 18, posX: 6 }, 800, 'easeOutQuart', () => {
+                    tween(data, { radius: 24, posX: 52, spring: 1, damping: 0.5 }, 800, 'easeOutElastic', 500, () => {
                         timeout = this.delayedCall(() => {
                             if (this.animatedIn) start();
                         }, 500);
@@ -479,12 +479,12 @@ class Button extends Interface {
         this.animateOut = () => {
             this.animatedIn = false;
             this.clearTimeout(timeout);
-            TweenManager.clearTween(data);
+            clearTween(data);
             this.needsUpdate = true;
-            TweenManager.tween(data, { posX: 52, spring: 1, damping: 0.5 }, 600, 'easeOutElastic');
-            TweenManager.tween(data, { radius: 24, spring: 1, damping: 0.5 }, 400, 'easeOutElastic', 200);
-            TweenManager.tween(data, { scale: 1, littleCircleScale: 0 }, 400, 'easeOutCubic', 200);
-            TweenManager.tween(data, { lineWidth: 0 }, 400, 'easeOutQuart', 200, () => this.needsUpdate = false);
+            tween(data, { posX: 52, spring: 1, damping: 0.5 }, 600, 'easeOutElastic');
+            tween(data, { radius: 24, spring: 1, damping: 0.5 }, 400, 'easeOutElastic', 200);
+            tween(data, { scale: 1, littleCircleScale: 0 }, 400, 'easeOutCubic', 200);
+            tween(data, { lineWidth: 0 }, 400, 'easeOutQuart', 200, () => this.needsUpdate = false);
         };
     }
 }
@@ -546,25 +546,25 @@ class MuteButton extends Interface {
 
         function hover(e) {
             if (!self.animatedIn) return;
-            TweenManager.clearTween(data);
+            clearTween(data);
             self.needsUpdate = true;
-            if (e.action === 'over') TweenManager.tween(data, { yMultiplier: Global.SOUND ? 0.75 : 0.25 }, 275, 'easeInOutCubic', () => self.needsUpdate = false);
-            else TweenManager.tween(data, { yMultiplier: Global.SOUND ? 1 : 0 }, 275, 'easeInOutCubic', () => self.needsUpdate = false);
+            if (e.action === 'over') tween(data, { yMultiplier: Global.SOUND ? 0.75 : 0.25 }, 275, 'easeInOutCubic', () => self.needsUpdate = false);
+            else tween(data, { yMultiplier: Global.SOUND ? 1 : 0 }, 275, 'easeInOutCubic', () => self.needsUpdate = false);
         }
 
         function click() {
             if (Global.SOUND) {
                 AudioController.mute();
                 Global.SOUND = false;
-                TweenManager.clearTween(data);
+                clearTween(data);
                 self.needsUpdate = true;
-                TweenManager.tween(data, { yMultiplier: 0 }, 300, 'easeOutCubic', () => self.needsUpdate = false);
+                tween(data, { yMultiplier: 0 }, 300, 'easeOutCubic', () => self.needsUpdate = false);
             } else {
                 AudioController.unmute();
                 Global.SOUND = true;
-                TweenManager.clearTween(data);
+                clearTween(data);
                 self.needsUpdate = true;
-                TweenManager.tween(data, { yMultiplier: 1 }, 300, 'easeOutCubic', () => self.needsUpdate = false);
+                tween(data, { yMultiplier: 1 }, 300, 'easeOutCubic', () => self.needsUpdate = false);
             }
             Storage.set('sound', Global.SOUND);
         }
@@ -594,10 +594,10 @@ class MuteButton extends Interface {
 
         this.showButton = () => {
             if (!this.enabled) return;
-            TweenManager.clearTween(data);
+            clearTween(data);
             data.progress = 0;
             this.needsUpdate = true;
-            TweenManager.tween(data, { progress: 1 }, 1020, 'easeInOutExpo', () => {
+            tween(data, { progress: 1 }, 1020, 'easeInOutExpo', () => {
                 this.needsUpdate = false;
                 this.animatedIn = true;
             });
@@ -608,9 +608,9 @@ class MuteButton extends Interface {
         this.hideButton = () => {
             this.animatedIn = false;
             this.mouseEnabled(false);
-            TweenManager.clearTween(data);
+            clearTween(data);
             this.needsUpdate = true;
-            TweenManager.tween(data, { progress: 0.94 }, 1160, 'easeInOutQuart', () => this.needsUpdate = false);
+            tween(data, { progress: 0.94 }, 1160, 'easeInOutQuart', () => this.needsUpdate = false);
             this.tween({ opacity: 0 }, 400, 'easeOutCubic');
         };
     }
@@ -1186,7 +1186,7 @@ class NavBackground extends Interface {
         }
 
         function stopInertia() {
-            TweenManager.clearTween(target);
+            clearTween(target);
         }
 
         function down() {
@@ -1194,7 +1194,7 @@ class NavBackground extends Interface {
             stopInertia();
             distance = 0;
             self.tweening = true;
-            TweenManager.tween(props, { expanded: 0.15 }, 2000, 'easeOutElastic');
+            tween(props, { expanded: 0.15 }, 2000, 'easeOutElastic');
             Cursor.grabbing();
         }
 
@@ -1213,8 +1213,8 @@ class NavBackground extends Interface {
                 if (Device.os === 'android') return 35;
                 return 25;
             })();
-            TweenManager.tween(props, { expanded: 0 }, 2000, 'easeOutElastic');
-            TweenManager.tween(target, { scroll: target.scroll + Mouse.input.delta.x * m }, 500, 'easeOutQuint');
+            tween(props, { expanded: 0 }, 2000, 'easeOutElastic');
+            tween(target, { scroll: target.scroll + Mouse.input.delta.x * m }, 500, 'easeOutQuint');
             Cursor.clear();
         }
 
@@ -1227,11 +1227,11 @@ class NavBackground extends Interface {
                 if (((direction > 0 && target.scroll > width) || (direction < 0 && target.scroll < width))) self.events.fire(Events.OPEN_NAV, { direction });
             }
             let x = Math.clamp((target.position + target.scroll) / width, 0, 1.8);
-            x = Interpolation.Sine.In(x);
+            x = Sine.easeIn.getRatio(x);
             if ((x > 0 && !self.animatedIn) || self.tweening || self.redraw) {
                 for (let i = 0; i < points.length; i++) {
                     let difY = Math.abs(mouse.y - points[i].y) / Stage.height;
-                    difY = Interpolation.Sine.In(difY);
+                    difY = Sine.easeIn.getRatio(difY);
                     const offset = (Config.NAV_WIDTH * props.wobbly - (difY * 120) * props.wobbly) * x * direction;
                     points[i].x = start + offset + out * props.expanded * direction;
                 }
@@ -1278,7 +1278,7 @@ class NavBackground extends Interface {
             this.enabled = false;
             dragging = false;
             this.tweening = true;
-            TweenManager.tween(props, { wobbly: 0, expanded: 1 }, callback ? 800 : 2000, callback ? 'easeOutCubic' : 'easeOutElastic', () => {
+            tween(props, { wobbly: 0, expanded: 1 }, callback ? 800 : 2000, callback ? 'easeOutCubic' : 'easeOutElastic', () => {
                 this.tweening = false;
                 target.position = 0;
                 target.scroll = 0;
@@ -1294,8 +1294,8 @@ class NavBackground extends Interface {
             dragging = false;
             distance = 0;
             this.tweening = true;
-            TweenManager.tween(props, { wobbly: 1, expanded: 0 }, 400, 'easeInCubic', () => this.tweening = false);
-            TweenManager.tween(target, { position: 0, scroll: 0 }, 400, 'easeInCubic');
+            tween(props, { wobbly: 1, expanded: 0 }, 400, 'easeInCubic', () => this.tweening = false);
+            tween(target, { position: 0, scroll: 0 }, 400, 'easeInCubic');
         };
     }
 }
@@ -1817,7 +1817,7 @@ class Loader extends Interface {
         }
 
         function loadUpdate(e) {
-            TweenManager.tween(self, { progress: e.percent }, 2000, 'easeInOutSine', null, () => {
+            tween(self, { progress: e.percent }, 2000, 'easeInOutSine', null, () => {
                 number.inner.text(Math.round(self.progress * 100));
                 if (self.progress === 1) {
                     const state = Data.dispatcher.getState(),

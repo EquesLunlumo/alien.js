@@ -28,7 +28,7 @@ class RandomEulerRotation {
         }
 
         this.update = () => {
-            const t = Render.TIME;
+            const t = Render.time;
             for (let i = 0; i < 3; i++) {
                 const v = euler[i];
                 switch (rot[v]) {

@@ -10,10 +10,9 @@ Future web framework.
 ### Features
 
 * ES modules [without transpiling](https://alien.js.org/examples/library/), or use [Rollup](https://rollupjs.org/) with [Tree Shaking](https://github.com/rollup/rollup#tree-shaking), only the classes you use are compiled into your project.
-* Simple design pattern with inheritance, `Interface`, `Component`, etc.
+* Simple design pattern with inheritance, `Interface` and `Component`.
 * Event based or use promises.
-* CSS3 animations.
-* Math and Spring animations.
+* GSAP animation core.
 * Canvas graphics engine.
 * Web audio engine.
 * SVG support.
@@ -324,6 +323,24 @@ Download the [minified library](https://alien.js.org/build/alien.min.js) and inc
 import { Stage, Interface, Device } from 'lib/alien.min.js';
 // ...
 </script>
+```
+
+### GreenSock Animation Platform
+
+GSAP offers years of [optimizations](https://greensock.com/why-gsap), debouncing and skew compensation. The core animation system has been replaced with GSAP, but you can still use Active Theory's [method chain](https://en.wikipedia.org/wiki/Method_chaining) syntax.
+
+```js
+letters.forEach((letter, i) => {
+    letter.tween({ y: -5, opacity: 0 }, 125, 'easeOutCubic', 15 * i, () => {
+        letter.transform({ y: 5 }).tween({ y: 0, opacity: 1 }, 300, 'easeOutCubic');
+    });
+});
+```
+
+Spring animation properties `spring` (amplitude) and `damping` (period).
+
+```js
+tween(data, { radius: 24, spring: 1.2, damping: 0.4 }, 1000, 'easeOutElastic');
 ```
 
 ### Roadmap

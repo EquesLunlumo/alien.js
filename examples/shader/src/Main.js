@@ -4,9 +4,9 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-/* global THREE */
+import THREE from 'three';
 
-import { Events, Stage, Component, Canvas, CanvasTexture, Device, Utils, Assets, AssetLoader, TweenManager, Shader } from '../alien.js/src/Alien.js';
+import { Events, Stage, Component, Canvas, CanvasTexture, Device, Utils, Assets, AssetLoader, Shader } from '../alien.js/src/Alien.js';
 
 import vert from './shaders/vert.glsl';
 import frag from './shaders/frag.glsl';
@@ -58,22 +58,22 @@ class AlienKittyTexture extends Component {
         }
 
         function blink1() {
-            TweenManager.tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
-                TweenManager.tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
+            tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+                tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
             });
-            TweenManager.tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 120, 'easeOutCubic', () => {
-                TweenManager.tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 180, 'easeOutCubic', () => {
+            tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 120, 'easeOutCubic', () => {
+                tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 180, 'easeOutCubic', () => {
                     blink();
                 });
             });
         }
 
         function blink2() {
-            TweenManager.tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
-                TweenManager.tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
+            tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+                tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
             });
-            TweenManager.tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 180, 'easeOutCubic', () => {
-                TweenManager.tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 240, 'easeOutCubic', () => {
+            tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 180, 'easeOutCubic', () => {
+                tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 240, 'easeOutCubic', () => {
                     blink();
                 });
             });

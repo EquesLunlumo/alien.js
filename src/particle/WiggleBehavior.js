@@ -23,7 +23,7 @@ class WiggleBehavior {
         if (position) origin.copy(position);
 
         this.update = copy => {
-            const t = Render.TIME;
+            const t = Render.time;
             if (copy) origin.copy(position);
             wobble.x = Math.cos(angle + t * (0.00075 * this.speed)) * (angle + Math.sin(t * (0.00095 * this.speed)) * 200);
             wobble.y = Math.sin(Math.asin(Math.cos(angle + t * (0.00085 * this.speed)))) * (Math.sin(angle + t * (0.00075 * this.speed)) * 150);

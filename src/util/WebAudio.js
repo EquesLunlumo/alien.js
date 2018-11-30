@@ -6,7 +6,6 @@
 
 import { Device } from './Device.js';
 import { Assets } from './Assets.js';
-import { TweenManager } from '../tween/TweenManager.js';
 import { Stage } from '../view/Stage.js';
 
 if (!window.AudioContext) window.AudioContext = window.webkitAudioContext || window.mozAudioContext || window.oAudioContext;
@@ -169,7 +168,7 @@ class WebAudio {
                     sound.volume = 0;
                     sound.loop = !!loop;
                     this.trigger(id);
-                    TweenManager.tween(sound.gain, { value: volume }, time, ease, delay);
+                    tween(sound.gain, { value: volume }, time, ease, delay);
                 }
             };
 
@@ -177,7 +176,7 @@ class WebAudio {
                 if (!context) return;
                 const sound = this.getSound(id);
                 if (sound && sound.playing) {
-                    TweenManager.tween(sound.gain, { value: 0 }, time, ease, delay, () => {
+                    tween(sound.gain, { value: 0 }, time, ease, delay, () => {
                         if (!sound.stopping) return;
                         sound.stopping = false;
                         sound.stop();
@@ -200,12 +199,12 @@ class WebAudio {
 
             this.mute = () => {
                 if (!context) return;
-                TweenManager.tween(this.gain, { value: 0 }, 300, 'easeOutSine');
+                tween(this.gain, { value: 0 }, 300, 'easeOutSine');
             };
 
             this.unmute = () => {
                 if (!context) return;
-                TweenManager.tween(this.gain, { value: 1 }, 500, 'easeOutSine');
+                tween(this.gain, { value: 1 }, 500, 'easeOutSine');
             };
 
             this.stop = () => {

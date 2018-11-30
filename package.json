@@ -27,10 +27,10 @@
   "scripts": {
     "build": "rollup -c && npm run build-uglify",
     "build-uglify": "rollup -c --environment uglify",
-    "build-examples": "for x in `find examples -name 'rollup.config.js' -maxdepth 2 ! -path './alien.js*' -exec dirname {} \\;`; do cd \"$x\" && ln -sfn ../.. alien.js && rollup -c && rm -f alien.js && cd ../..; done",
+    "build-examples": "for x in `find examples -name 'rollup.config.js' -maxdepth 2 ! -path 'alien.js/*' ! -path 'examples/npm/*' -exec dirname {} \\;`; do cd \"$x\" && ln -sfn ../.. alien.js && rollup -c && rm -f alien.js && cd ../..; done",
     "build-world": "npm run build && npm run build-examples",
     "start": "serve -l 8080 || exit 0",
-    "lint": "eslint src || exit 0"
+    "lint": "eslint --ignore-pattern 'src/gsap/*' src || exit 0"
   },
   "engines": {
     "node": ">=6.9.0"

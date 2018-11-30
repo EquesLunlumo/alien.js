@@ -4,10 +4,10 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-/* global THREE */
+import THREE from 'three';
 
 import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Interaction, Mouse, Utils,
-    Assets, Video, AssetLoader, FontLoader, TweenManager, Shader, Effects } from '../alien.js/src/Alien.js';
+    Assets, Video, AssetLoader, FontLoader, Shader, Effects } from '../alien.js/src/Alien.js';
 
 import vertBasicShader from './shaders/basic_shader.vert';
 import fragBasicShader from './shaders/basic_shader.frag';
@@ -112,7 +112,7 @@ class Title extends Component {
 
         this.animateIn = () => {
             shader.uniforms.opacity.value = 0;
-            TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 250, 'linear');
+            tween(shader.uniforms.opacity, { value: 1 }, 250, 'linear');
         };
     }
 }
@@ -233,7 +233,7 @@ class Space extends Component {
         this.animateIn = () => {
             this.object3D.visible = true;
             shader.uniforms.opacity.value = 0;
-            TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutCubic');
+            tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutCubic');
             title.animateIn();
         };
 
@@ -331,7 +331,7 @@ class World extends Component {
         this.animateIn = () => {
             this.startRender(loop);
             shader.uniforms.beam.value = 0;
-            TweenManager.tween(shader.uniforms.beam, { value: 1 }, 1000, 'easeOutSine');
+            tween(shader.uniforms.beam, { value: 1 }, 1000, 'easeOutSine');
         };
 
         this.destroy = () => {
@@ -410,7 +410,7 @@ class Progress extends Interface {
 
         this.update = e => {
             if (this.complete) return;
-            TweenManager.tween(this, { progress: e.percent }, 500, 'easeOutCubic');
+            tween(this, { progress: e.percent }, 500, 'easeOutCubic');
         };
 
         this.animateOut = callback => {

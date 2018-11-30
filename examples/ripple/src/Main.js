@@ -4,9 +4,10 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-/* global THREE */
+import THREE from 'three';
 
-import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Interaction, Mouse, Utils, Assets, AssetLoader, FontLoader, TweenManager, Shader } from '../alien.js/src/Alien.js';
+import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Interaction, Mouse, Utils,
+    Assets, AssetLoader, FontLoader, Shader } from '../alien.js/src/Alien.js';
 
 import vertTitle from './shaders/title.vert';
 import fragTitle from './shaders/title.frag';
@@ -134,8 +135,8 @@ class Title extends Component {
             this.object3D.visible = true;
             shader.uniforms.opacity.value = 0;
             shader.uniforms.progress.value = 0;
-            TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 250, 'linear');
-            TweenManager.tween(shader.uniforms.progress, { value: 1 }, 7000, 'easeOutSine');
+            tween(shader.uniforms.opacity, { value: 1 }, 250, 'linear');
+            tween(shader.uniforms.progress, { value: 1 }, 7000, 'easeOutSine');
         };
     }
 }
@@ -175,8 +176,8 @@ class Space extends Component {
             self.object3D.visible = true;
             shader.uniforms.opacity.value = 0;
             shader.uniforms.progress.value = 0;
-            TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutCubic');
-            TweenManager.tween(shader.uniforms.progress, { value: 1 }, 7000, 'easeOutSine');
+            tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutCubic');
+            tween(shader.uniforms.progress, { value: 1 }, 7000, 'easeOutSine');
             title.animateIn();
         }
 
@@ -363,7 +364,7 @@ class Progress extends Interface {
 
         this.update = e => {
             if (this.complete) return;
-            TweenManager.tween(this, { progress: e.percent }, 500, 'easeOutCubic');
+            tween(this, { progress: e.percent }, 500, 'easeOutCubic');
         };
 
         this.animateOut = callback => {
