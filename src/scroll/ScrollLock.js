@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Component } from './Component.js';
+import { Component } from '../util/Component.js';
 
 class ScrollLock extends Component {
 
