@@ -4,11 +4,11 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Events } from './Events.js';
-import { Device } from './Device.js';
-import { Component } from './Component.js';
-import { Interaction } from './Interaction.js';
-import { Mouse } from './Mouse.js';
+import { Events } from '../util/Events.js';
+import { Device } from '../util/Device.js';
+import { Component } from '../util/Component.js';
+import { Interaction } from '../util/Interaction.js';
+import { Mouse } from '../util/Mouse.js';
 
 class Scroll extends Component {
 
@@ -118,6 +118,7 @@ class Scroll extends Component {
         }
 
         function loop() {
+            if (!self.enabled) return;
             axes.forEach(axis => {
                 if (!self.max[axis]) return;
                 if (self.limit) scrollTarget[axis] = Math.clamp(scrollTarget[axis], 0, self.max[axis]);
