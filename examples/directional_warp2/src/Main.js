@@ -33,6 +33,19 @@ Assets.OPTIONS = {
 };
 
 
+class Work {
+
+    constructor(item) {
+        this.id = item.id;
+        this.path = `work/${this.id}/`;
+        this.title = item.title;
+        this.pageTitle = `${this.title} / Alien.js Example Project`;
+        this.description = item.description;
+        this.src = `assets/videos/${this.id}.mp4`;
+        this.img = `assets/videos/${this.id}.jpg`;
+    }
+}
+
 class Data {
 
     static init() {
@@ -506,14 +519,19 @@ class Loader extends Interface {
     constructor() {
         super('Loader');
         const self = this;
-        let progress;
+        let view;
 
         initHTML();
+        initView();
         initLoader();
-        initProgress();
 
         function initHTML() {
             self.css({ position: 'static' });
+        }
+
+        function initView() {
+            view = self.initClass(Progress);
+            view.center();
         }
 
         function initLoader() {
@@ -521,42 +539,14 @@ class Loader extends Interface {
                 loader = self.initClass(MultiLoader);
             loader.push(self.initClass(AssetLoader, Config.ASSETS));
             loader.push(slide);
-            self.events.add(loader, Events.PROGRESS, loadUpdate);
+            self.events.add(loader, Events.PROGRESS, view.update);
+            self.events.bubble(view, Events.COMPLETE);
 
             Stage.list = slide.list;
             Stage.pathList = slide.pathList;
         }
 
-        function initProgress() {
-            progress = self.initClass(Progress);
-            progress.center();
-            self.events.add(progress, Events.COMPLETE, loadComplete);
-        }
-
-        function loadUpdate(e) {
-            progress.update(e);
-        }
-
-        function loadComplete() {
-            self.events.fire(Events.COMPLETE);
-        }
-
-        this.animateOut = callback => {
-            progress.animateOut(callback);
-        };
-    }
-}
-
-class Work {
-
-    constructor(item) {
-        this.id = item.id;
-        this.path = `work/${this.id}/`;
-        this.title = item.title;
-        this.pageTitle = `${this.title} / Alien.js Example Project`;
-        this.description = item.description;
-        this.src = `assets/videos/${this.id}.mp4`;
-        this.img = `assets/videos/${this.id}.jpg`;
+        this.animateOut = view.animateOut;
     }
 }
 
