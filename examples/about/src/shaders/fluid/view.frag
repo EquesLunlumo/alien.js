@@ -1,13 +1,13 @@
 // Based on https://www.shadertoy.com/view/XlsBDf by davidar
 
-uniform float time;
-uniform vec2 resolution;
-uniform sampler2D texture;
+uniform float uTime;
+uniform vec2 uResolution;
+uniform sampler2D uTexture;
 
 #define PI 3.141592653589793
 
 void main() {
-    vec4 c = texture2D(texture, gl_FragCoord.xy / resolution.xy);
+    vec4 c = texture2D(uTexture, gl_FragCoord.xy / uResolution.xy);
 
     // velocity
     gl_FragColor.rgb = 0.6 + 0.6 * cos(6.3 * atan(c.y, c.x) / (2.0 * PI) + vec3(0, 23, 21));

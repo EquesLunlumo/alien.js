@@ -4,10 +4,10 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-/* global THREE */
+import THREE from 'three';
 
-import { Timer, Events, Stage, Interface, Component, Canvas, CanvasGraphics, Device, Interaction, Mouse, Accelerometer, Utils,
-    Assets, AssetLoader, FontLoader, StateDispatcher, TweenManager, Interpolation, Storage, Vector2, WebAudio, Shader } from '../alien.js/src/Alien.js';
+import { Sine, Events, Stage, Interface, Component, Canvas, CanvasGraphics, Device, Interaction, Mouse, Accelerometer, Utils,
+    Assets, AssetLoader, FontLoader, StateDispatcher, Storage, Vector2, WebAudio, Shader } from '../alien.js/src/Alien.js';
 
 import vertFluidBasic from './shaders/fluid/basic.vert';
 import fragFluidPass from './shaders/fluid/pass.frag';
@@ -64,6 +64,18 @@ class Cursor {
 
     static pointer() {
         Stage.element.className = 'pointer';
+    }
+}
+
+class Example {
+
+    constructor(item) {
+        this.id = item.id;
+        this.path = this.id ? `examples/${this.id}/` : item.path;
+        this.title = item.title;
+        this.pageTitle = `${this.title} / Alien.js Example`;
+        this.description = item.description;
+        this.sideTitle = this.description ? `${this.title} / ${this.description}` : this.title;
     }
 }
 
@@ -187,22 +199,22 @@ class AudioController {
                     break;
                 case 'mouse_move':
                     if (water) {
-                        TweenManager.tween(water.gain, { value: Math.clamp(params[0], 0, 1) }, 100, 'linear');
+                        tween(water.gain, { value: Math.clamp(params[0], 0, 1) }, 100, 'linear');
                         water.stereoPan.value = Math.clamp(params[1], -1, 1);
                         water.playbackRate.value = Math.clamp(0.8 + params[2] / 2.5, 0.8, 1.2);
                     }
                     break;
                 case 'about_section':
-                    TweenManager.tween(WebAudio.gain, { value: 0.3 }, 1000, 'linear');
+                    tween(WebAudio.gain, { value: 0.3 }, 1000, 'linear');
                     break;
                 case 'fluid_section':
-                    TweenManager.tween(WebAudio.gain, { value: 1 }, 500, 'linear');
+                    tween(WebAudio.gain, { value: 1 }, 500, 'linear');
                     break;
                 case 'sound_off':
-                    TweenManager.tween(WebAudio.gain, { value: 0 }, 300, 'linear');
+                    tween(WebAudio.gain, { value: 0 }, 300, 'linear');
                     break;
                 case 'sound_on':
-                    TweenManager.tween(WebAudio.gain, { value: 1 }, 500, 'linear');
+                    tween(WebAudio.gain, { value: 1 }, 500, 'linear');
                     break;
             }
         };
@@ -293,7 +305,7 @@ class About extends Interface {
             if (Global.SOUND) AudioController.mute();
             setTimeout(() => {
                 const title = e.object.title.toLowerCase();
-                getURL(~title.indexOf('source') ? Config.ABOUT_GITHUB_URL : Config.ABOUT_HYDRA_URL);
+                getURL(~title.indexOf('source') ? Config.ABOUT_GITHUB_URL : Config.ABOUT_HYDRA_URL, '_self');
             }, 300);
         }
 
@@ -433,40 +445,40 @@ class Button extends Interface {
         };
 
         this.showButton = () => {
-            Timer.clearTimeout(timeout);
-            TweenManager.clearTween(data);
+            this.clearTimeout(timeout);
+            clearTween(data);
             data.posX = 52;
             data.lineWidth = 0;
             data.radius = 0;
             data.scale = 0;
             data.littleCircleScale = 0;
             this.needsUpdate = true;
-            TweenManager.tween(data, { radius: 24, scale: 1, littleCircleScale: 0 }, 400, 'easeOutCubic', () => this.needsUpdate = false);
+            tween(data, { radius: 24, scale: 1, littleCircleScale: 0 }, 400, 'easeOutCubic', () => this.needsUpdate = false);
             this.tween({ opacity: 1 }, 400, 'easeOutCubic');
         };
 
         this.hideButton = () => {
             this.animatedIn = false;
-            Timer.clearTimeout(timeout);
-            TweenManager.clearTween(data);
+            this.clearTimeout(timeout);
+            clearTween(data);
             data.posX = 52;
             data.lineWidth = 0;
             this.needsUpdate = true;
-            TweenManager.tween(data, { radius: 0, scale: 0, littleCircleScale: 0 }, 400, 'easeOutCubic', () => this.needsUpdate = false);
+            tween(data, { radius: 0, scale: 0, littleCircleScale: 0 }, 400, 'easeOutCubic', () => this.needsUpdate = false);
             this.tween({ opacity: 0 }, 400, 'easeOutCubic');
         };
 
         this.animateIn = () => {
             if (this.animatedIn) return;
             this.animatedIn = true;
-            Timer.clearTimeout(timeout);
-            TweenManager.clearTween(data);
+            this.clearTimeout(timeout);
+            clearTween(data);
             this.needsUpdate = true;
             const start = () => {
-                TweenManager.tween(data, { scale: 0, littleCircleScale: 1 }, 400, 'easeOutCubic');
-                TweenManager.tween(data, { lineWidth: 1 }, 600, 'easeOutQuart', 200);
-                TweenManager.tween(data, { radius: 18, posX: 6 }, 800, 'easeOutQuart', () => {
-                    TweenManager.tween(data, { radius: 24, posX: 52, spring: 1, damping: 0.5 }, 800, 'easeOutElastic', 500, () => {
+                tween(data, { scale: 0, littleCircleScale: 1 }, 400, 'easeOutCubic');
+                tween(data, { lineWidth: 1 }, 600, 'easeOutQuart', 200);
+                tween(data, { radius: 18, posX: 6 }, 800, 'easeOutQuart', () => {
+                    tween(data, { radius: 24, posX: 52, spring: 1, damping: 0.5 }, 800, 'easeOutElastic', 500, () => {
                         timeout = this.delayedCall(() => {
                             if (this.animatedIn) start();
                         }, 500);
@@ -478,13 +490,13 @@ class Button extends Interface {
 
         this.animateOut = () => {
             this.animatedIn = false;
-            Timer.clearTimeout(timeout);
-            TweenManager.clearTween(data);
+            this.clearTimeout(timeout);
+            clearTween(data);
             this.needsUpdate = true;
-            TweenManager.tween(data, { posX: 52, spring: 1, damping: 0.5 }, 600, 'easeOutElastic');
-            TweenManager.tween(data, { radius: 24, spring: 1, damping: 0.5 }, 400, 'easeOutElastic', 200);
-            TweenManager.tween(data, { scale: 1, littleCircleScale: 0 }, 400, 'easeOutCubic', 200);
-            TweenManager.tween(data, { lineWidth: 0 }, 400, 'easeOutQuart', 200, () => this.needsUpdate = false);
+            tween(data, { posX: 52, spring: 1, damping: 0.5 }, 600, 'easeOutElastic');
+            tween(data, { radius: 24, spring: 1, damping: 0.5 }, 400, 'easeOutElastic', 200);
+            tween(data, { scale: 1, littleCircleScale: 0 }, 400, 'easeOutCubic', 200);
+            tween(data, { lineWidth: 0 }, 400, 'easeOutQuart', 200, () => this.needsUpdate = false);
         };
     }
 }
@@ -546,25 +558,27 @@ class MuteButton extends Interface {
 
         function hover(e) {
             if (!self.animatedIn) return;
-            TweenManager.clearTween(data);
+            clearTween(data);
             self.needsUpdate = true;
-            if (e.action === 'over') TweenManager.tween(data, { yMultiplier: Global.SOUND ? 0.75 : 0.25 }, 275, 'easeInOutCubic', () => self.needsUpdate = false);
-            else TweenManager.tween(data, { yMultiplier: Global.SOUND ? 1 : 0 }, 275, 'easeInOutCubic', () => self.needsUpdate = false);
+            if (e.action === 'over') tween(data, { yMultiplier: Global.SOUND ? 0.75 : 0.25 }, 275, 'easeInOutCubic', () => self.needsUpdate = false);
+            else tween(data, { yMultiplier: Global.SOUND ? 1 : 0 }, 275, 'easeInOutCubic', () => self.needsUpdate = false);
         }
 
         function click() {
             if (Global.SOUND) {
                 AudioController.mute();
+                AudioController.trigger('fluid_stop');
                 Global.SOUND = false;
-                TweenManager.clearTween(data);
+                clearTween(data);
                 self.needsUpdate = true;
-                TweenManager.tween(data, { yMultiplier: 0 }, 300, 'easeOutCubic', () => self.needsUpdate = false);
+                tween(data, { yMultiplier: 0 }, 300, 'easeOutCubic', () => self.needsUpdate = false);
             } else {
                 AudioController.unmute();
+                AudioController.trigger('fluid_start');
                 Global.SOUND = true;
-                TweenManager.clearTween(data);
+                clearTween(data);
                 self.needsUpdate = true;
-                TweenManager.tween(data, { yMultiplier: 1 }, 300, 'easeOutCubic', () => self.needsUpdate = false);
+                tween(data, { yMultiplier: 1 }, 300, 'easeOutCubic', () => self.needsUpdate = false);
             }
             Storage.set('sound', Global.SOUND);
         }
@@ -594,10 +608,10 @@ class MuteButton extends Interface {
 
         this.showButton = () => {
             if (!this.enabled) return;
-            TweenManager.clearTween(data);
+            clearTween(data);
             data.progress = 0;
             this.needsUpdate = true;
-            TweenManager.tween(data, { progress: 1 }, 1020, 'easeInOutExpo', () => {
+            tween(data, { progress: 1 }, 1020, 'easeInOutExpo', () => {
                 this.needsUpdate = false;
                 this.animatedIn = true;
             });
@@ -608,9 +622,9 @@ class MuteButton extends Interface {
         this.hideButton = () => {
             this.animatedIn = false;
             this.mouseEnabled(false);
-            TweenManager.clearTween(data);
+            clearTween(data);
             this.needsUpdate = true;
-            TweenManager.tween(data, { progress: 0.94 }, 1160, 'easeInOutQuart', () => this.needsUpdate = false);
+            tween(data, { progress: 0.94 }, 1160, 'easeInOutQuart', () => this.needsUpdate = false);
             this.tween({ opacity: 0 }, 400, 'easeOutCubic');
         };
     }
@@ -833,16 +847,16 @@ class HeaderExample extends Interface {
         }
 
         this.animateIn = delay => {
-            if (line) line.transform({ scaleX: 0 }).css({ opacity: 1 }).tween({ scaleX: 1 }, 550, 'easeInOutCubic', delay, () => this.animatedIn = true);
-            if (text) text.transform({ scale: 1.25 }).tween({ y: 0, scale: 1, opacity: 0.35 }, 500, 'easeOutQuart', delay, () => this.animatedIn = true);
-            self.transform({ y: -10 }).tween({ y: 0, opacity: 1 }, 325, 'easeOutQuart', delay);
+            if (line) line.clearTween().transform({ scaleX: 0 }).css({ opacity: 1 }).tween({ scaleX: 1 }, 550, 'easeInOutCubic', delay, () => this.animatedIn = true);
+            if (text) text.clearTween().transform({ scale: 1.25 }).css({ opacity: 0 }).tween({ y: 0, scale: 1, opacity: 0.35 }, 500, 'easeOutQuart', delay, () => this.animatedIn = true);
+            self.clearTween().transform({ y: -10 }).css({ opacity: 0 }).tween({ y: 0, opacity: 1 }, 325, 'easeOutQuart', delay);
         };
 
         this.animateOut = (callback, num, delay, total) => {
             this.animatedIn = false;
-            if (line) line.tween({ scaleX: 0, opacity: 0 }, 450, 'easeOutCubic', delay);
-            if (text) text.tween({ y: 10, opacity: 0 }, 400, 'easeOutCubic', delay);
-            self.tween({ y: -10, opacity: 0 }, 650, 'easeOutCubic', delay, () => {
+            if (line) line.clearTween().tween({ scaleX: 0, opacity: 0 }, 450, 'easeOutCubic', delay);
+            if (text) text.clearTween().tween({ opacity: 0 }, 400, 'easeOutCubic', delay);
+            self.clearTween().tween({ opacity: 0 }, 650, 'easeOutCubic', delay, () => {
                 if (num === total) callback();
             });
         };
@@ -862,7 +876,7 @@ class HeaderExamples extends Interface {
         addListeners();
 
         function initHTML() {
-            self.mouseEnabled(false);
+            self.css({ left: 0, top: 0 }).mouseEnabled(false);
         }
 
         function initViews() {
@@ -894,10 +908,12 @@ class HeaderExamples extends Interface {
         }
 
         function animateIn() {
-            open = true;
-            self.mouseEnabled(true);
             self.show();
             buttons.forEach((button, i) => button.animateIn(i * 100));
+            self.delayedCall(() => {
+                open = true;
+                self.mouseEnabled(true);
+            }, 1000);
         }
 
         function animateOut() {
@@ -983,8 +999,10 @@ class HeaderExamplesButton extends Interface {
         }
 
         function close() {
-            open = false;
-            self.mouseEnabled(true);
+            self.delayedCall(() => {
+                open = false;
+                self.mouseEnabled(true);
+            }, 1000);
         }
 
         this.animateIn = () => {
@@ -1097,7 +1115,7 @@ class Header extends Interface {
 
         function sourceClick() {
             if (Global.SOUND) AudioController.mute();
-            setTimeout(() => getURL(Config.ABOUT_GITHUB_URL), 300);
+            setTimeout(() => getURL(Config.ABOUT_GITHUB_URL, '_self'), 300);
         }
     }
 }
@@ -1182,7 +1200,7 @@ class NavBackground extends Interface {
         }
 
         function stopInertia() {
-            TweenManager.clearTween(target);
+            clearTween(target);
         }
 
         function down() {
@@ -1190,7 +1208,7 @@ class NavBackground extends Interface {
             stopInertia();
             distance = 0;
             self.tweening = true;
-            TweenManager.tween(props, { expanded: 0.15 }, 2000, 'easeOutElastic');
+            tween(props, { expanded: 0.15 }, 2000, 'easeOutElastic');
             Cursor.grabbing();
         }
 
@@ -1209,8 +1227,8 @@ class NavBackground extends Interface {
                 if (Device.os === 'android') return 35;
                 return 25;
             })();
-            TweenManager.tween(props, { expanded: 0 }, 2000, 'easeOutElastic');
-            TweenManager.tween(target, { scroll: target.scroll + Mouse.input.delta.x * m }, 500, 'easeOutQuint');
+            tween(props, { expanded: 0 }, 2000, 'easeOutElastic');
+            tween(target, { scroll: target.scroll + Mouse.input.delta.x * m }, 500, 'easeOutQuint');
             Cursor.clear();
         }
 
@@ -1223,11 +1241,11 @@ class NavBackground extends Interface {
                 if (((direction > 0 && target.scroll > width) || (direction < 0 && target.scroll < width))) self.events.fire(Events.OPEN_NAV, { direction });
             }
             let x = Math.clamp((target.position + target.scroll) / width, 0, 1.8);
-            x = Interpolation.Sine.In(x);
+            x = Sine.easeIn.getRatio(x);
             if ((x > 0 && !self.animatedIn) || self.tweening || self.redraw) {
                 for (let i = 0; i < points.length; i++) {
                     let difY = Math.abs(mouse.y - points[i].y) / Stage.height;
-                    difY = Interpolation.Sine.In(difY);
+                    difY = Sine.easeIn.getRatio(difY);
                     const offset = (Config.NAV_WIDTH * props.wobbly - (difY * 120) * props.wobbly) * x * direction;
                     points[i].x = start + offset + out * props.expanded * direction;
                 }
@@ -1274,7 +1292,7 @@ class NavBackground extends Interface {
             this.enabled = false;
             dragging = false;
             this.tweening = true;
-            TweenManager.tween(props, { wobbly: 0, expanded: 1 }, callback ? 800 : 2000, callback ? 'easeOutCubic' : 'easeOutElastic', () => {
+            tween(props, { wobbly: 0, expanded: 1 }, callback ? 800 : 2000, callback ? 'easeOutCubic' : 'easeOutElastic', () => {
                 this.tweening = false;
                 target.position = 0;
                 target.scroll = 0;
@@ -1290,8 +1308,8 @@ class NavBackground extends Interface {
             dragging = false;
             distance = 0;
             this.tweening = true;
-            TweenManager.tween(props, { wobbly: 1, expanded: 0 }, 400, 'easeInCubic', () => this.tweening = false);
-            TweenManager.tween(target, { position: 0, scroll: 0 }, 400, 'easeInCubic');
+            tween(props, { wobbly: 1, expanded: 0 }, 400, 'easeInCubic', () => this.tweening = false);
+            tween(target, { position: 0, scroll: 0 }, 400, 'easeInCubic');
         };
     }
 }
@@ -1350,7 +1368,7 @@ class UI extends Interface {
         this.startRender(loop);
 
         function initContainer() {
-            self.size('100%').css({ left: 0, top: 0 }).mouseEnabled(false);
+            self.size('100%').setZ(1).mouseEnabled(false);
             Stage.add(self);
         }
 
@@ -1391,11 +1409,11 @@ class UI extends Interface {
             const button = e.object;
             if (e.action === 'over' || e.action === 'click') {
                 button.noTap = false;
-                Timer.clearTimeout(button.delay);
+                self.clearTimeout(button.delay);
                 over(button);
                 button.timer = self.delayedCall(() => button.noTap = true, 500);
             } else {
-                Timer.clearTimeout(button.timer);
+                self.clearTimeout(button.timer);
                 if (button.noTap) out(button);
                 else button.delay = self.delayedCall(() => out(button), 500);
             }
@@ -1523,25 +1541,25 @@ class Fluid extends Component {
 
         function initShaders() {
             pass = self.initClass(Shader, vertFluidBasic, fragFluidPass, {
-                time: World.time,
-                frame: World.frame,
-                resolution: World.resolution,
-                mouse: { value: new THREE.Vector2(Mouse.inverseNormal.x, Mouse.inverseNormal.y) },
-                last: { value: new THREE.Vector2() },
-                velocity: { value: new THREE.Vector2() },
-                strength: { value: new THREE.Vector2() },
-                texture: { value: buffer1.texture }
+                uTime: World.time,
+                uFrame: World.frame,
+                uResolution: World.resolution,
+                uMouse: { value: new THREE.Vector2(Mouse.inverseNormal.x, Mouse.inverseNormal.y) },
+                uLast: { value: new THREE.Vector2() },
+                uVelocity: { value: new THREE.Vector2() },
+                uStrength: { value: new THREE.Vector2() },
+                uTexture: { value: buffer1.texture }
             });
             passScene = new THREE.Scene();
-            passMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), pass.material);
+            passMesh = new THREE.Mesh(World.quad, pass.material);
             passScene.add(passMesh);
             view = self.initClass(Shader, vertFluidBasic, fragFluidView, {
-                time: World.time,
-                resolution: World.resolution,
-                texture: { value: buffer1.texture }
+                uTime: World.time,
+                uResolution: World.resolution,
+                uTexture: { value: buffer1.texture }
             });
             viewScene = new THREE.Scene();
-            viewMesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2), view.material);
+            viewMesh = new THREE.Mesh(World.quad, view.material);
             viewScene.add(viewMesh);
         }
 
@@ -1566,8 +1584,8 @@ class Fluid extends Component {
         function move() {
             if (!pointer.isMove && self.animatedIn) pointer.isMove = true;
             pos.set(Mouse.x, Stage.height - Mouse.y);
-            pass.uniforms.last.value.copy(pass.uniforms.mouse.value);
-            pass.uniforms.mouse.value.set(pos.x / Stage.width, pos.y / Stage.height);
+            pass.uniforms.uLast.value.copy(pass.uniforms.uMouse.value);
+            pass.uniforms.uMouse.value.set(pos.x / Stage.width, pos.y / Stage.height);
         }
 
         function up() {
@@ -1577,10 +1595,10 @@ class Fluid extends Component {
         function loop() {
             delta.subVectors(pos, last);
             last.copy(pos);
-            pass.uniforms.velocity.value.copy(delta);
+            pass.uniforms.uVelocity.value.copy(delta);
             const distance = Math.min(10, delta.length()) / 10;
-            pass.uniforms.strength.value.set(!pointer.isMove || pointer.isDown ? 50 : 50 * distance, 50 * distance);
-            pass.uniforms.texture.value = buffer1.texture;
+            pass.uniforms.uStrength.value.set(!pointer.isMove || pointer.isDown ? 50 : 50 * distance, 50 * distance);
+            pass.uniforms.uTexture.value = buffer1.texture;
             renderer.render(passScene, camera, buffer2);
             const buffer = buffer1;
             buffer1 = buffer2;
@@ -1643,6 +1661,7 @@ class World extends Component {
             World.renderer = renderer;
             World.element = renderer.domElement;
             World.camera = camera;
+            World.quad = new THREE.PlaneBufferGeometry(2, 2);
             World.time = { value: 0 };
             World.frame = { value: 0 };
             World.resolution = { value: new THREE.Vector2() };
@@ -1669,7 +1688,7 @@ class World extends Component {
             renderer.domElement = null;
             camera = null;
             renderer = null;
-            Stage.remove(World.element);
+            Stage.remove(World);
             return super.destroy();
         };
     }
@@ -1762,7 +1781,7 @@ class Loader extends Interface {
         initLoader();
 
         function initHTML() {
-            self.css({ position: 'static' });
+            self.size('100%').setZ(1).mouseEnabled(false);
         }
 
         function initView() {
@@ -1812,7 +1831,7 @@ class Loader extends Interface {
         }
 
         function loadUpdate(e) {
-            TweenManager.tween(self, { progress: e.percent }, 2000, 'easeInOutSine', null, () => {
+            tween(self, { progress: e.percent }, 2000, 'easeInOutSine', null, () => {
                 number.inner.text(Math.round(self.progress * 100));
                 if (self.progress === 1) {
                     const state = Data.dispatcher.getState(),
@@ -1855,18 +1874,6 @@ class Loader extends Interface {
             title.tween({ opacity: 0 }, 200, 'easeOutSine');
             alienkitty.animateOut(callback);
         };
-    }
-}
-
-class Example {
-
-    constructor(item) {
-        this.id = item.id;
-        this.path = this.id ? `examples/${this.id}/` : item.path;
-        this.title = item.title;
-        this.pageTitle = `${this.title} / Alien.js Example`;
-        this.description = item.description;
-        this.sideTitle = this.description ? `${this.title} / ${this.description}` : this.title;
     }
 }
 

@@ -1,12 +1,12 @@
 // Based on https://www.shadertoy.com/view/XlsGWf by whiteskull
 
-uniform float time;
-uniform vec2 resolution;
-uniform vec2 mouse;
-uniform sampler2D texture;
-uniform float radius;
-uniform float beam;
-uniform float beamWidth;
+uniform float uTime;
+uniform vec2 uResolution;
+uniform vec2 uMouse;
+uniform sampler2D tDiffuse;
+uniform float uRadius;
+uniform float uBeam;
+uniform float uBeamWidth;
 
 varying vec2 vUv;
 
@@ -14,14 +14,14 @@ const float speed = 0.1;
 
 void main() {
     vec2 uv = vUv;
-    float rotate = radians(time * speed * -45.0);
+    float rotate = radians(uTime * speed * -45.0);
     uv -= 0.5;
     mat2 m = mat2(cos(rotate), -sin(rotate), sin(rotate), cos(rotate));
     uv = m * uv;
     uv += 0.5;
 
-    vec2 p = (gl_FragCoord.xy - mouse.xy * resolution.xy) / resolution.y;
-    float r = length(p) - radius;
+    vec2 p = (gl_FragCoord.xy - uMouse.xy * uResolution.xy) / uResolution.y;
+    float r = length(p) - uRadius;
 
-    gl_FragColor = mix(vec4(0.0), texture2D(texture, uv), smoothstep(0.0, 1.0, abs(beam / (beamWidth * r))));
+    gl_FragColor = mix(vec4(0.0), texture2D(tDiffuse, uv), smoothstep(0.0, 1.0, abs(uBeam / (uBeamWidth * r))));
 }

@@ -8,7 +8,9 @@ body, html {
     color: white;
     touch-action: none;
 }
+
 * {
+    position: absolute;
     outline: none;
     border: none;
     -webkit-touch-callout: none;
@@ -19,4 +21,8 @@ body, html {
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: none;
     text-size-adjust: none;
+}
+
+span, br, a {
+    position: relative;
 }

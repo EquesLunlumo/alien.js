@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Events, Stage, Interface, SVG, Utils, AssetLoader, TweenManager } from '../alien.js/src/Alien.js';
+import { Events, Stage, Interface, SVG, Utils, AssetLoader } from '../alien.js/src/Alien.js';
 
 Config.UI_COLOR = 'white';
 
@@ -54,41 +54,34 @@ class AlienKitty extends Interface {
         }
 
         function blink1() {
-            TweenManager.tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
-                TweenManager.tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
+            eyelid1.tween({ scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+                eyelid1.tween({ scaleY: 0.01 }, 180, 'easeOutCubic');
             });
-            TweenManager.tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 120, 'easeOutCubic', () => {
-                TweenManager.tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 180, 'easeOutCubic', () => {
+            eyelid2.tween({ scaleX: 1.3, scaleY: 1.3 }, 120, 'easeOutCubic', () => {
+                eyelid2.tween({ scaleX: 1, scaleY: 0.01 }, 180, 'easeOutCubic', () => {
                     blink();
                 });
             });
         }
 
         function blink2() {
-            TweenManager.tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
-                TweenManager.tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
+            eyelid1.tween({ scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+                eyelid1.tween({ scaleY: 0.01 }, 180, 'easeOutCubic');
             });
-            TweenManager.tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 180, 'easeOutCubic', () => {
-                TweenManager.tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 240, 'easeOutCubic', () => {
+            eyelid2.tween({ scaleX: 1.3, scaleY: 1.3 }, 180, 'easeOutCubic', () => {
+                eyelid2.tween({ scaleX: 1, scaleY: 0.01 }, 240, 'easeOutCubic', () => {
                     blink();
                 });
             });
         }
 
-        function loop() {
-            eyelid1.transform();
-            eyelid2.transform();
-        }
-
         this.animateIn = () => {
             blink();
             this.tween({ opacity: 1 }, 500, 'easeOutQuart');
-            this.startRender(loop);
         };
 
         this.animateOut = callback => {
             this.tween({ opacity: 0 }, 500, 'easeInOutQuad', () => {
-                this.stopRender(loop);
                 this.clearTimers();
                 if (callback) callback();
             });
@@ -145,8 +138,8 @@ class ProgressIndeterminate extends Interface {
             if (this.animatedIn) return;
             this.animatedIn = true;
             const start = () => {
-                TweenManager.tween(data, { length: 1 }, 1000, 'easeOutCubic', () => {
-                    TweenManager.tween(data, { start: 1 }, 1000, 'easeInOutCubic', () => {
+                tween(data, { length: 1 }, 1000, 'easeOutCubic', () => {
+                    tween(data, { start: 1 }, 1000, 'easeInOutCubic', () => {
                         data.start = 0;
                         this.delayedCall(() => {
                             if (this.animatedIn) {
@@ -225,7 +218,7 @@ class Progress extends Interface {
 
         this.update = e => {
             if (this.complete) return;
-            TweenManager.tween(this, { progress: e.percent }, 500, 'easeOutCubic');
+            tween(this, { progress: e.percent }, 500, 'easeOutCubic');
         };
 
         this.animateOut = callback => {
@@ -239,40 +232,30 @@ class Loader extends Interface {
     constructor() {
         super('Loader');
         const self = this;
-        let progress;
+        let view;
 
         initHTML();
+        initView();
         initLoader();
-        initProgress();
 
         function initHTML() {
             self.css({ position: 'static' });
         }
 
+        function initView() {
+            //view = self.initClass(ProgressIndeterminate);
+            view = self.initClass(Progress);
+            view.center();
+            if (view.animateIn) view.animateIn();
+        }
+
         function initLoader() {
             const loader = self.initClass(AssetLoader, Config.ASSETS);
-            self.events.add(loader, Events.PROGRESS, loadUpdate);
+            if (view.update) self.events.add(loader, Events.PROGRESS, view.update);
+            self.events.bubble(view, Events.COMPLETE);
         }
 
-        function initProgress() {
-            //progress = self.initClass(ProgressIndeterminate);
-            progress = self.initClass(Progress);
-            progress.center();
-            if (progress.animateIn) progress.animateIn();
-            self.events.add(progress, Events.COMPLETE, loadComplete);
-        }
-
-        function loadUpdate(e) {
-            if (progress.update) progress.update(e);
-        }
-
-        function loadComplete() {
-            self.events.fire(Events.COMPLETE);
-        }
-
-        this.animateOut = callback => {
-            progress.animateOut(callback);
-        };
+        this.animateOut = view.animateOut;
     }
 }
 

@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "build": "rollup -c || exit 0",
-    "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"serve -l 8080 dist\" || exit 0",
+    "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"serve -l 8080 public\" || exit 0",
     "start": "npm run dev",
     "lint": "eslint src || exit 0"
   },
@@ -13,17 +13,17 @@
     "node": ">=6.9.0"
   },
   "devDependencies": {
-    "concurrently": "^4.0.1",
-    "eslint": "^5.8.0",
+    "concurrently": "^4.1.0",
+    "eslint": "^5.9.0",
     "glsl-checker": "^1.0.1",
     "glsl-halftone": "^1.0.4",
     "glsl-hash-blur": "^1.0.3",
     "replace": "^1.0.0",
-    "rollup": "0.55.3",
-    "rollup-plugin-bundleutils": "^1.0.8",
+    "rollup": "^0.67.3",
+    "rollup-plugin-bundleutils": "^1.0.9",
     "rollup-plugin-eslint": "^5.0.0",
     "rollup-plugin-glslify": "^1.0.7",
     "rollup-watch": "^4.3.1",
-    "serve": "^10.0.2"
+    "serve": "^10.1.1"
   }
 }

@@ -4,9 +4,10 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-/* global THREE */
+import THREE from 'three';
 
-import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Interaction, Mouse, Utils, Assets, AssetLoader, FontLoader, TweenManager, Shader } from '../alien.js/src/Alien.js';
+import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Interaction, Mouse, Utils,
+    Assets, AssetLoader, FontLoader, Shader } from '../alien.js/src/Alien.js';
 
 import vertRipple from './shaders/ripple.vert';
 import fragRipple from './shaders/ripple.frag';
@@ -51,10 +52,12 @@ class TitleTexture extends Component {
                 canvas.remove(text);
                 text = text.destroy();
             }
-            text = CanvasFont.createText(canvas, Stage.width, Stage.height, 'Directional Warp'.toUpperCase(), `200 ${Device.phone ? 28 : 66}px Oswald`, Config.UI_COLOR, {
+            text = CanvasFont.createText(canvas, Stage.width, Stage.height, 'Directional Warp'.toUpperCase(), {
+                font: `200 ${Device.phone ? 28 : 66}px Oswald`,
                 lineHeight: Device.phone ? 35 : 80,
                 letterSpacing: 0,
-                textAlign: 'center'
+                textAlign: 'center',
+                fillStyle: Config.UI_COLOR
             });
             const offset = Device.phone ? 55 : 120;
             text.y = (Stage.height - text.totalHeight + offset) / 2;
@@ -84,19 +87,19 @@ class Title extends Component {
 
         function initMesh() {
             shader = self.initClass(Shader, vertRipple, fragRipple, {
-                time: World.time,
-                resolution: World.resolution,
-                texture: { value: title.texture },
-                opacity: { value: 0 },
-                progress: { value: 0 },
-                amplitude: { value: Device.phone ? 75 : 100 },
-                speed: { value: Device.phone ? 5 : 10 },
-                direction: { value: new THREE.Vector2(1, -1) },
+                uTime: World.time,
+                uResolution: World.resolution,
+                uTexture: { value: title.texture },
+                uAlpha: { value: 0 },
+                uTransition: { value: 0 },
+                uAmplitude: { value: Device.phone ? 75 : 100 },
+                uSpeed: { value: Device.phone ? 5 : 10 },
+                uDirection: { value: new THREE.Vector2(1, -1) },
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
             });
-            mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), shader.material);
+            mesh = new THREE.Mesh(World.quad, shader.material);
             self.object3D.add(mesh);
         }
 
@@ -106,11 +109,11 @@ class Title extends Component {
         };
 
         this.animateIn = () => {
-            shader.uniforms.opacity.value = 0;
-            shader.uniforms.progress.value = 0;
-            shader.uniforms.direction.value = this.direction < 0 ? new THREE.Vector2(-1, 1) : new THREE.Vector2(1, -1);
-            TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 250, 'linear');
-            TweenManager.tween(shader.uniforms.progress, { value: 1 }, 1600, 'easeOutCubic');
+            shader.uniforms.uAlpha.value = 0;
+            shader.uniforms.uTransition.value = 0;
+            shader.uniforms.uDirection.value = this.direction < 0 ? new THREE.Vector2(-1, 1) : new THREE.Vector2(1, -1);
+            tween(shader.uniforms.uAlpha, { value: 1 }, 250, 'linear');
+            tween(shader.uniforms.uTransition, { value: 1 }, 1600, 'easeOutCubic');
         };
     }
 }
@@ -148,27 +151,27 @@ class Space extends Component {
             addListeners();
             self.startRender(loop);
             self.object3D.visible = true;
-            shader.uniforms.opacity.value = 0;
-            shader.uniforms.progress.value = 0;
-            TweenManager.tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutCubic');
-            TweenManager.tween(shader.uniforms.progress, { value: 1 }, 7000, 'easeOutSine');
+            shader.uniforms.uAlpha.value = 0;
+            shader.uniforms.uTransition.value = 0;
+            tween(shader.uniforms.uAlpha, { value: 1 }, 1000, 'easeOutCubic');
+            tween(shader.uniforms.uTransition, { value: 1 }, 7000, 'easeOutSine');
             title.animateIn();
         }
 
         function initMesh() {
             self.object3D.visible = false;
             shader = self.initClass(Shader, vertDirectionalWarp, fragDirectionalWarp, {
-                time: World.time,
-                resolution: World.resolution,
-                texture1: { value: texture1 },
-                texture2: { value: texture2 },
-                opacity: { value: 0 },
-                progress: { value: progress },
-                direction: { value: new THREE.Vector2(-1, 1) },
+                uTime: World.time,
+                uResolution: World.resolution,
+                uTexture1: { value: texture1 },
+                uTexture2: { value: texture2 },
+                uAlpha: { value: 0 },
+                uTransition: { value: progress },
+                uDirection: { value: new THREE.Vector2(-1, 1) },
                 depthWrite: false,
                 depthTest: false
             });
-            mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(1, 1), shader.material);
+            mesh = new THREE.Mesh(World.quad, shader.material);
             self.object3D.add(mesh);
         }
 
@@ -200,7 +203,7 @@ class Space extends Component {
 
         function loop() {
             if (!self.object3D.visible) return;
-            shader.uniforms.progress.value += (progress - shader.uniforms.progress.value) * 0.03;
+            shader.uniforms.uTransition.value += (progress - shader.uniforms.uTransition.value) * 0.03;
         }
     }
 }
@@ -233,10 +236,11 @@ class World extends Component {
             renderer.setPixelRatio(World.dpr);
             scene = new THREE.Scene();
             camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-            World.scene = scene;
             World.renderer = renderer;
             World.element = renderer.domElement;
+            World.scene = scene;
             World.camera = camera;
+            World.quad = new THREE.PlaneBufferGeometry(1, 1);
             World.time = { value: 0 };
             World.resolution = { value: new THREE.Vector2() };
         }
@@ -275,7 +279,7 @@ class World extends Component {
             camera = null;
             scene = null;
             renderer = null;
-            Stage.remove(World.element);
+            Stage.remove(World);
             return super.destroy();
         };
     }
@@ -337,7 +341,7 @@ class Progress extends Interface {
 
         this.update = e => {
             if (this.complete) return;
-            TweenManager.tween(this, { progress: e.percent }, 500, 'easeOutCubic');
+            tween(this, { progress: e.percent }, 500, 'easeOutCubic');
         };
 
         this.animateOut = callback => {
@@ -351,38 +355,28 @@ class Loader extends Interface {
     constructor() {
         super('Loader');
         const self = this;
-        let progress;
+        let view;
 
         initHTML();
+        initView();
         initLoader();
-        initProgress();
 
         function initHTML() {
             self.css({ position: 'static' });
         }
 
+        function initView() {
+            view = self.initClass(Progress);
+            view.center();
+        }
+
         function initLoader() {
             const loader = self.initClass(AssetLoader, Config.ASSETS);
-            self.events.add(loader, Events.PROGRESS, loadUpdate);
+            self.events.add(loader, Events.PROGRESS, view.update);
+            self.events.bubble(view, Events.COMPLETE);
         }
 
-        function initProgress() {
-            progress = self.initClass(Progress);
-            progress.center();
-            self.events.add(progress, Events.COMPLETE, loadComplete);
-        }
-
-        function loadUpdate(e) {
-            progress.update(e);
-        }
-
-        function loadComplete() {
-            self.events.fire(Events.COMPLETE);
-        }
-
-        this.animateOut = callback => {
-            progress.animateOut(callback);
-        };
+        this.animateOut = view.animateOut;
     }
 }
 
