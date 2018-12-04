@@ -68,14 +68,14 @@ class Effects extends Component {
             this.renderer.render(this.scene, this.camera, renderTarget1, true);
             for (let i = 0; i < this.passes.length - 1; i++) {
                 mesh.material = this.passes[i].material;
-                mesh.material.uniforms.texture.value = renderTarget1.texture;
+                mesh.material.uniforms.tDiffuse.value = renderTarget1.texture;
                 this.renderer.render(scene, camera, renderTarget2);
                 const renderTarget = renderTarget1;
                 renderTarget1 = renderTarget2;
                 renderTarget2 = renderTarget;
             }
             mesh.material = this.passes[this.passes.length - 1].material;
-            mesh.material.uniforms.texture.value = renderTarget1.texture;
+            mesh.material.uniforms.tDiffuse.value = renderTarget1.texture;
             this.renderer.render(scene, camera, rt || this.rt);
         };
 

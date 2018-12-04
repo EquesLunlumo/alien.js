@@ -1,11 +1,11 @@
 // Based on https://gl-transitions.com/editor/GlitchDisplace by mattdesl
 
-uniform float time;
-uniform vec2 resolution;
-uniform sampler2D texture1;
-uniform sampler2D texture2;
-uniform float opacity;
-uniform float progress;
+uniform float uTime;
+uniform vec2 uResolution;
+uniform sampler2D uTexture1;
+uniform sampler2D uTexture2;
+uniform float uAlpha;
+uniform float uTransition;
 
 varying vec2 vUv;
 
@@ -62,20 +62,20 @@ float ease2(float t) {
 }
 
 void main() {
-    vec4 color1 = texture2D(texture1, vUv);
-    vec4 color2 = texture2D(texture2, vUv);
-    vec2 disp1 = displace(color1, vUv, 0.33, 0.7, 1.0 - ease1(progress));
-    vec2 disp2 = displace(color2, vUv, 0.33, 0.5, ease2(progress));
-    vec4 dColor1 = texture2D(texture2, disp1);
-    vec4 dColor2 = texture2D(texture1, disp2);
-    float val = ease1(progress);
+    vec4 color1 = texture2D(uTexture1, vUv);
+    vec4 color2 = texture2D(uTexture2, vUv);
+    vec2 disp1 = displace(color1, vUv, 0.33, 0.7, 1.0 - ease1(uTransition));
+    vec2 disp2 = displace(color2, vUv, 0.33, 0.5, ease2(uTransition));
+    vec4 dColor1 = texture2D(uTexture2, disp1);
+    vec4 dColor2 = texture2D(uTexture1, disp2);
+    float val = ease1(uTransition);
     //vec3 gray = vec3(dot(min(dColor2, dColor1).rgb, vec3(0.299, 0.587, 0.114)));
     //dColor2 = vec4(gray, 1.0);
     //dColor2 *= 2.0;
     dColor2 *= -2.0; // darken
-    color1 = mix(color1, dColor2, smoothstep(0.0, 0.5, progress));
-    color2 = mix(color2, dColor1, smoothstep(1.0, 0.5, progress));
+    color1 = mix(color1, dColor2, smoothstep(0.0, 0.5, uTransition));
+    color2 = mix(color2, dColor1, smoothstep(1.0, 0.5, uTransition));
     vec4 color = mix(color1, color2, val);
-    color.a *= opacity;
+    color.a *= uAlpha;
     gl_FragColor = color;
 }

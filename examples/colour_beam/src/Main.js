@@ -85,10 +85,10 @@ class Title extends Component {
 
         function initMesh() {
             shader = self.initClass(Shader, vertBasicShader, fragBasicShader, {
-                time: World.time,
-                resolution: World.resolution,
-                texture: { value: title.texture },
-                opacity: { value: 0 },
+                uTime: World.time,
+                uResolution: World.resolution,
+                uTexture: { value: title.texture },
+                uAlpha: { value: 0 },
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
@@ -103,8 +103,8 @@ class Title extends Component {
         };
 
         this.animateIn = () => {
-            shader.uniforms.opacity.value = 0;
-            tween(shader.uniforms.opacity, { value: 1 }, 250, 'linear');
+            shader.uniforms.uAlpha.value = 0;
+            tween(shader.uniforms.uAlpha, { value: 1 }, 250, 'linear');
         };
     }
 }
@@ -127,12 +127,12 @@ class ColourBeam extends Component {
         function initMesh() {
             self.object3D.visible = false;
             shader = self.initClass(Shader, vertColourBeam, fragColourBeam, {
-                time: World.time,
-                resolution: World.resolution,
-                mouse: { value: Mouse.inverseNormal },
-                radius: { value: 0 },
-                beam: { value: 0 },
-                beamWidth: { value: beamWidth },
+                uTime: World.time,
+                uResolution: World.resolution,
+                uMouse: { value: Mouse.inverseNormal },
+                uRadius: { value: 0 },
+                uBeam: { value: 0 },
+                uBeamWidth: { value: beamWidth },
                 depthWrite: false,
                 depthTest: false
             });
@@ -167,14 +167,14 @@ class ColourBeam extends Component {
 
         function loop() {
             if (!self.object3D.visible) return;
-            shader.uniforms.beamWidth.value += (beamWidth - shader.uniforms.beamWidth.value) * 0.3;
+            shader.uniforms.uBeamWidth.value += (beamWidth - shader.uniforms.uBeamWidth.value) * 0.3;
         }
 
         this.animateIn = () => {
             this.startRender(loop);
             this.object3D.visible = true;
-            shader.uniforms.beam.value = 0;
-            tween(shader.uniforms.beam, { value: 1 }, 1000, 'easeOutSine');
+            shader.uniforms.uBeam.value = 0;
+            tween(shader.uniforms.uBeam, { value: 1 }, 1000, 'easeOutSine');
             title.animateIn();
         };
     }

@@ -1,11 +1,11 @@
 // Based on https://github.com/mattdesl/three-glslify-example by mattdesl
 
-uniform float time;
-uniform vec2 resolution;
-uniform sampler2D texture;
+uniform float uTime;
+uniform vec2 uResolution;
+uniform sampler2D uTexture;
 
 varying vec2 vUv;
-varying vec3 vNorm;
+varying vec3 vNormal;
 
 #define TEXEL_SIZE 1.0 / 512.0
 
@@ -15,12 +15,12 @@ vec3 sample(vec2 uv);
 #pragma glslify: checker = require('glsl-checker')
 
 vec3 sample(vec2 uv) {
-    return texture2D(texture, uv).rgb;
+    return texture2D(uTexture, uv).rgb;
 }
 
 void main() {
     // the checker box
-    vec3 colorA = vNorm * 0.5 + 0.5;
+    vec3 colorA = vNormal * 0.5 + 0.5;
     colorA += vec3(checker(vUv, 15.0)) * 0.05;
 
     // our texture with halftone + hash blur
@@ -33,7 +33,7 @@ void main() {
     colorB = mix(colorB, halftone(colorB, vUv, 35.0), falloff);
 
     // mix the two
-    float blend = smoothstep(0.0, 0.7, vNorm.z);
+    float blend = smoothstep(0.0, 0.7, vNormal.z);
     gl_FragColor.rgb = mix(colorA, colorB, blend);
     gl_FragColor.a = 1.0;
 }

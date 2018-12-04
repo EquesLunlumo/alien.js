@@ -2,10 +2,10 @@
 
 const float amount = 0.035;
 
-vec4 apply(sampler2D tex, vec2 uv, float progress) {
+vec4 apply(sampler2D tex, vec2 uv, float t) {
     vec2 uvred = uv;
     vec2 uvblue = uv;
-    float s = progress * amount;
+    float s = t * amount;
     uvred.x += s;
     uvblue.x -= s;
 
