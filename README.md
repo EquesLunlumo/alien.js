@@ -1,9 +1,8 @@
 # Alien.js
-[![Build Status](https://travis-ci.org/pschroen/alien.js.svg)]()
-[![Latest NPM release](https://img.shields.io/npm/v/alien.js.svg)]()
-[![License](https://img.shields.io/npm/l/alien.js.svg)]()
-[![Dependencies](https://img.shields.io/david/pschroen/alien.js.svg)]()
-[![Dev Dependencies](https://img.shields.io/david/dev/pschroen/alien.js.svg)]()
+[![NPM Package][npm]][npm-url]
+[![Build Status][build-status]][build-status-url]
+[![Dependencies][dependencies]][dependencies-url]
+[![Dev Dependencies][dev-dependencies]][dev-dependencies-url]
 
 Future web framework.
 
@@ -372,3 +371,13 @@ tween(data, { radius: 24, spring: 1.2, damping: 0.4 }, 1000, 'easeOutElastic');
 ### License
 
 Released under the [MIT license](LICENSE).
+
+
+[npm]: https://img.shields.io/npm/v/alien.js.svg
+[npm-url]: https://www.npmjs.com/package/alien.js
+[build-status]: https://travis-ci.org/pschroen/alien.js.svg?branch=dev
+[build-status-url]: https://travis-ci.org/pschroen/alien.js
+[dependencies]: https://img.shields.io/david/pschroen/alien.js.svg
+[dependencies-url]: https://david-dm.org/pschroen/alien.js
+[dev-dependencies]: https://img.shields.io/david/dev/pschroen/alien.js.svg
+[dev-dependencies-url]: https://david-dm.org/pschroen/alien.js?type=dev
