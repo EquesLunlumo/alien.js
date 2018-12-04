@@ -18,6 +18,14 @@ replace({
 
 export default {
     input: 'src/Main.js',
+    external(id) {
+        return /^three$/.test(id);
+    },
+    onwarn(warning, warn) {
+        if (warning.code === 'UNUSED_EXTERNAL_IMPORT') return;
+        if (warning.code === 'CIRCULAR_DEPENDENCY') return;
+        warn(warning);
+    },
     output: {
         file: 'public/assets/js/app.js',
         format: 'es'
@@ -32,6 +40,5 @@ export default {
                 preamble: `//   _  /._  _  r${version.split('.')[1]} ${timestamp()}\n//  /_|///_'/ /`
             }
         })
-    ],
-    external: id => /^three$/.test(id)
+    ]
 };
