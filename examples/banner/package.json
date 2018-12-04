@@ -21,7 +21,7 @@
     "promise-polyfill": "^8.1.0",
     "regenerator-runtime": "^0.13.1",
     "replace": "^1.0.0",
-    "rollup": "0.55.3",
+    "rollup": "^0.67.3",
     "rollup-plugin-bundleutils": "^1.0.9",
     "rollup-plugin-eslint": "^5.0.0",
     "rollup-plugin-glslify": "^1.0.7",
