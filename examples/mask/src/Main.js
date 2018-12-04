@@ -88,10 +88,10 @@ class Title extends Component {
 
         function initMesh() {
             shader = self.initClass(Shader, vertBasicShader, fragBasicShader, {
-                time: World.time,
-                resolution: World.resolution,
-                texture: { value: title.texture },
-                opacity: { value: 0 },
+                uTime: World.time,
+                uResolution: World.resolution,
+                uTexture: { value: title.texture },
+                uAlpha: { value: 0 },
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
@@ -106,8 +106,8 @@ class Title extends Component {
         };
 
         this.animateIn = () => {
-            shader.uniforms.opacity.value = 0;
-            tween(shader.uniforms.opacity, { value: 1 }, 250, 'linear');
+            shader.uniforms.uAlpha.value = 0;
+            tween(shader.uniforms.uAlpha, { value: 1 }, 250, 'linear');
         };
     }
 }
@@ -139,10 +139,10 @@ class Space extends Component {
         function initMesh() {
             self.object3D.visible = false;
             shader = self.initClass(Shader, vertBasicShader, fragBasicShader, {
-                time: World.time,
-                resolution: World.resolution,
-                texture: { value: texture },
-                opacity: { value: 0 },
+                uTime: World.time,
+                uResolution: World.resolution,
+                uTexture: { value: texture },
+                uAlpha: { value: 0 },
                 depthWrite: false,
                 depthTest: false
             });
@@ -167,8 +167,8 @@ class Space extends Component {
 
         this.animateIn = () => {
             self.object3D.visible = true;
-            shader.uniforms.opacity.value = 0;
-            tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutCubic');
+            shader.uniforms.uAlpha.value = 0;
+            tween(shader.uniforms.uAlpha, { value: 1 }, 1000, 'easeOutCubic');
             title.animateIn();
         };
 
@@ -218,10 +218,10 @@ class World extends Component {
                 dpr: World.dpr
             });
             shader = self.initClass(Shader, vertBasicPass, fragMask, {
-                time: World.time,
-                texture: { type: 't', value: null },
-                mask: { type: 't', value: null },
-                opacity: { value: opacity },
+                uTime: World.time,
+                tDiffuse: { type: 't', value: null },
+                tMask: { type: 't', value: null },
+                uAlpha: { value: opacity },
                 depthWrite: false,
                 depthTest: false
             });
@@ -238,7 +238,7 @@ class World extends Component {
             mask = new THREE.Texture(maskimg);
             mask.minFilter = THREE.LinearFilter;
             mask.needsUpdate = true;
-            shader.uniforms.mask.value = mask;
+            shader.uniforms.tMask.value = mask;
         }
 
         function addListeners() {
@@ -270,13 +270,13 @@ class World extends Component {
         function loop(t, delta) {
             World.time.value += delta * 0.001;
             effects.render();
-            shader.uniforms.opacity.value += (opacity - shader.uniforms.opacity.value) * 0.3;
+            shader.uniforms.uAlpha.value += (opacity - shader.uniforms.uAlpha.value) * 0.3;
         }
 
         this.animateIn = () => {
             this.startRender(loop);
-            shader.uniforms.opacity.value = 0;
-            tween(shader.uniforms.opacity, { value: 1 }, 7000, 'easeOutSine');
+            shader.uniforms.uAlpha.value = 0;
+            tween(shader.uniforms.uAlpha, { value: 1 }, 7000, 'easeOutSine');
         };
 
         this.ready = initTextures;

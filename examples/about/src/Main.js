@@ -1527,22 +1527,22 @@ class Fluid extends Component {
 
         function initShaders() {
             pass = self.initClass(Shader, vertFluidBasic, fragFluidPass, {
-                time: World.time,
-                frame: World.frame,
-                resolution: World.resolution,
-                mouse: { value: new THREE.Vector2(Mouse.inverseNormal.x, Mouse.inverseNormal.y) },
-                last: { value: new THREE.Vector2() },
-                velocity: { value: new THREE.Vector2() },
-                strength: { value: new THREE.Vector2() },
-                texture: { value: buffer1.texture }
+                uTime: World.time,
+                uFrame: World.frame,
+                uResolution: World.resolution,
+                uMouse: { value: new THREE.Vector2(Mouse.inverseNormal.x, Mouse.inverseNormal.y) },
+                uLast: { value: new THREE.Vector2() },
+                uVelocity: { value: new THREE.Vector2() },
+                uStrength: { value: new THREE.Vector2() },
+                uTexture: { value: buffer1.texture }
             });
             passScene = new THREE.Scene();
             passMesh = new THREE.Mesh(World.quad, pass.material);
             passScene.add(passMesh);
             view = self.initClass(Shader, vertFluidBasic, fragFluidView, {
-                time: World.time,
-                resolution: World.resolution,
-                texture: { value: buffer1.texture }
+                uTime: World.time,
+                uResolution: World.resolution,
+                uTexture: { value: buffer1.texture }
             });
             viewScene = new THREE.Scene();
             viewMesh = new THREE.Mesh(World.quad, view.material);
@@ -1570,8 +1570,8 @@ class Fluid extends Component {
         function move() {
             if (!pointer.isMove && self.animatedIn) pointer.isMove = true;
             pos.set(Mouse.x, Stage.height - Mouse.y);
-            pass.uniforms.last.value.copy(pass.uniforms.mouse.value);
-            pass.uniforms.mouse.value.set(pos.x / Stage.width, pos.y / Stage.height);
+            pass.uniforms.uLast.value.copy(pass.uniforms.uMouse.value);
+            pass.uniforms.uMouse.value.set(pos.x / Stage.width, pos.y / Stage.height);
         }
 
         function up() {
@@ -1581,10 +1581,10 @@ class Fluid extends Component {
         function loop() {
             delta.subVectors(pos, last);
             last.copy(pos);
-            pass.uniforms.velocity.value.copy(delta);
+            pass.uniforms.uVelocity.value.copy(delta);
             const distance = Math.min(10, delta.length()) / 10;
-            pass.uniforms.strength.value.set(!pointer.isMove || pointer.isDown ? 50 : 50 * distance, 50 * distance);
-            pass.uniforms.texture.value = buffer1.texture;
+            pass.uniforms.uStrength.value.set(!pointer.isMove || pointer.isDown ? 50 : 50 * distance, 50 * distance);
+            pass.uniforms.uTexture.value = buffer1.texture;
             renderer.render(passScene, camera, buffer2);
             const buffer = buffer1;
             buffer1 = buffer2;

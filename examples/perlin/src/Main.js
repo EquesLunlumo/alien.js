@@ -87,10 +87,10 @@ class Title extends Component {
 
         function initMesh() {
             shader = self.initClass(Shader, vertBasicShader, fragBasicShader, {
-                time: World.time,
-                resolution: World.resolution,
-                texture: { value: title.texture },
-                opacity: { value: 0 },
+                uTime: World.time,
+                uResolution: World.resolution,
+                uTexture: { value: title.texture },
+                uAlpha: { value: 0 },
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
@@ -105,8 +105,8 @@ class Title extends Component {
         };
 
         this.animateIn = () => {
-            shader.uniforms.opacity.value = 0;
-            tween(shader.uniforms.opacity, { value: 1 }, 250, 'linear');
+            shader.uniforms.uAlpha.value = 0;
+            tween(shader.uniforms.uAlpha, { value: 1 }, 250, 'linear');
         };
     }
 }
@@ -144,22 +144,22 @@ class Space extends Component {
             addListeners();
             self.startRender(loop);
             self.object3D.visible = true;
-            shader.uniforms.opacity.value = 0;
-            shader.uniforms.progress.value = 0;
-            tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutCubic');
-            tween(shader.uniforms.progress, { value: 1 }, 7000, 'easeOutSine');
+            shader.uniforms.uAlpha.value = 0;
+            shader.uniforms.uTransition.value = 0;
+            tween(shader.uniforms.uAlpha, { value: 1 }, 1000, 'easeOutCubic');
+            tween(shader.uniforms.uTransition, { value: 1 }, 7000, 'easeOutSine');
             title.animateIn();
         }
 
         function initMesh() {
             self.object3D.visible = false;
             shader = self.initClass(Shader, vertPerlin, fragPerlin, {
-                time: World.time,
-                resolution: World.resolution,
-                texture1: { value: texture1 },
-                texture2: { value: texture2 },
-                opacity: { value: 0 },
-                progress: { value: progress },
+                uTime: World.time,
+                uResolution: World.resolution,
+                uTexture1: { value: texture1 },
+                uTexture2: { value: texture2 },
+                uAlpha: { value: 0 },
+                uTransition: { value: progress },
                 depthWrite: false,
                 depthTest: false
             });
@@ -195,7 +195,7 @@ class Space extends Component {
 
         function loop() {
             if (!self.object3D.visible) return;
-            shader.uniforms.progress.value += (progress - shader.uniforms.progress.value) * 0.3;
+            shader.uniforms.uTransition.value += (progress - shader.uniforms.uTransition.value) * 0.3;
         }
     }
 }

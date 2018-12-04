@@ -90,14 +90,14 @@ class Title extends Component {
         function initMesh() {
             self.object3D.visible = false;
             shader = self.initClass(Shader, vertTitle, fragTitle, {
-                time: World.time,
-                resolution: World.resolution,
-                texture: { value: title.texture },
-                opacity: { value: 0 },
-                progress: { value: progress },
-                amplitude: { value: Device.phone ? 75 : 100 },
-                speed: { value: Device.phone ? 5 : 10 },
-                direction: { value: new THREE.Vector2(1, -1) },
+                uTime: World.time,
+                uResolution: World.resolution,
+                uTexture: { value: title.texture },
+                uAlpha: { value: 0 },
+                uTransition: { value: progress },
+                uAmplitude: { value: Device.phone ? 75 : 100 },
+                uSpeed: { value: Device.phone ? 5 : 10 },
+                uDirection: { value: new THREE.Vector2(1, -1) },
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
@@ -122,7 +122,7 @@ class Title extends Component {
 
         function loop() {
             if (!self.object3D.visible) return;
-            shader.uniforms.progress.value += (progress - shader.uniforms.progress.value) * 0.03;
+            shader.uniforms.uTransition.value += (progress - shader.uniforms.uTransition.value) * 0.03;
         }
 
         this.update = () => {
@@ -133,10 +133,10 @@ class Title extends Component {
         this.animateIn = () => {
             this.startRender(loop);
             this.object3D.visible = true;
-            shader.uniforms.opacity.value = 0;
-            shader.uniforms.progress.value = 0;
-            tween(shader.uniforms.opacity, { value: 1 }, 250, 'linear');
-            tween(shader.uniforms.progress, { value: 1 }, 7000, 'easeOutSine');
+            shader.uniforms.uAlpha.value = 0;
+            shader.uniforms.uTransition.value = 0;
+            tween(shader.uniforms.uAlpha, { value: 1 }, 250, 'linear');
+            tween(shader.uniforms.uTransition, { value: 1 }, 7000, 'easeOutSine');
         };
     }
 }
@@ -174,23 +174,23 @@ class Space extends Component {
             addListeners();
             self.startRender(loop);
             self.object3D.visible = true;
-            shader.uniforms.opacity.value = 0;
-            shader.uniforms.progress.value = 0;
-            tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutCubic');
-            tween(shader.uniforms.progress, { value: 1 }, 7000, 'easeOutSine');
+            shader.uniforms.uAlpha.value = 0;
+            shader.uniforms.uTransition.value = 0;
+            tween(shader.uniforms.uAlpha, { value: 1 }, 1000, 'easeOutCubic');
+            tween(shader.uniforms.uTransition, { value: 1 }, 7000, 'easeOutSine');
             title.animateIn();
         }
 
         function initMesh() {
             self.object3D.visible = false;
             shader = self.initClass(Shader, vertRipple, fragRipple, {
-                time: World.time,
-                resolution: World.resolution,
-                texture1: { value: texture1 },
-                texture2: { value: texture2 },
-                opacity: { value: 0 },
-                progress: { value: progress },
-                direction: { value: new THREE.Vector2(1, -1) },
+                uTime: World.time,
+                uResolution: World.resolution,
+                uTexture1: { value: texture1 },
+                uTexture2: { value: texture2 },
+                uAlpha: { value: 0 },
+                uTransition: { value: progress },
+                uDirection: { value: new THREE.Vector2(1, -1) },
                 depthWrite: false,
                 depthTest: false
             });
@@ -226,7 +226,7 @@ class Space extends Component {
 
         function loop() {
             if (!self.object3D.visible) return;
-            shader.uniforms.progress.value += (progress - shader.uniforms.progress.value) * 0.03;
+            shader.uniforms.uTransition.value += (progress - shader.uniforms.uTransition.value) * 0.03;
         }
     }
 }

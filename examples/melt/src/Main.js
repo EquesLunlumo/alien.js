@@ -88,10 +88,10 @@ class Title extends Component {
 
         function initMesh() {
             shader = self.initClass(Shader, vertBasicShader, fragBasicShader, {
-                time: World.time,
-                resolution: World.resolution,
-                texture: { value: title.texture },
-                opacity: { value: 0 },
+                uTime: World.time,
+                uResolution: World.resolution,
+                uTexture: { value: title.texture },
+                uAlpha: { value: 0 },
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
@@ -106,8 +106,8 @@ class Title extends Component {
         };
 
         this.animateIn = () => {
-            shader.uniforms.opacity.value = 0;
-            tween(shader.uniforms.opacity, { value: 1 }, 250, 'linear');
+            shader.uniforms.uAlpha.value = 0;
+            tween(shader.uniforms.uAlpha, { value: 1 }, 250, 'linear');
         };
     }
 }
@@ -139,10 +139,10 @@ class Space extends Component {
         function initMesh() {
             self.object3D.visible = false;
             shader = self.initClass(Shader, vertBasicShader, fragBasicShader, {
-                time: World.time,
-                resolution: World.resolution,
-                texture: { value: texture },
-                opacity: { value: 0 },
+                uTime: World.time,
+                uResolution: World.resolution,
+                uTexture: { value: texture },
+                uAlpha: { value: 0 },
                 depthWrite: false,
                 depthTest: false
             });
@@ -167,8 +167,8 @@ class Space extends Component {
 
         this.animateIn = () => {
             self.object3D.visible = true;
-            shader.uniforms.opacity.value = 0;
-            tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutCubic');
+            shader.uniforms.uAlpha.value = 0;
+            tween(shader.uniforms.uAlpha, { value: 1 }, 1000, 'easeOutCubic');
             title.animateIn();
         };
 
@@ -234,20 +234,20 @@ class World extends Component {
 
         function initShaders() {
             pass = self.initClass(Shader, vertMeltBasic, fragMeltPass, {
-                time: World.time,
-                frame: World.frame,
-                resolution: World.resolution,
-                texture1: { value: buffer1.texture },
-                texture2: { value: renderTarget.texture }
+                uTime: World.time,
+                uFrame: World.frame,
+                uResolution: World.resolution,
+                uTexture1: { value: buffer1.texture },
+                uTexture2: { value: renderTarget.texture }
             });
             passScene = new THREE.Scene();
             passMesh = new THREE.Mesh(World.quad, pass.material);
             passMesh.scale.set(Stage.width, Stage.height, 1);
             passScene.add(passMesh);
             view = self.initClass(Shader, vertMeltBasic, fragMeltView, {
-                time: World.time,
-                resolution: World.resolution,
-                texture: { value: buffer1.texture }
+                uTime: World.time,
+                uResolution: World.resolution,
+                uTexture: { value: buffer1.texture }
             });
             viewScene = new THREE.Scene();
             viewMesh = new THREE.Mesh(World.quad, view.material);
@@ -278,8 +278,8 @@ class World extends Component {
         function loop(t, delta) {
             World.time.value += delta * 0.001;
             renderer.render(scene, camera, renderTarget, true);
-            pass.uniforms.texture2.value = renderTarget.texture;
-            pass.uniforms.texture1.value = buffer1.texture;
+            pass.uniforms.uTexture2.value = renderTarget.texture;
+            pass.uniforms.uTexture1.value = buffer1.texture;
             renderer.render(passScene, camera, buffer2);
             const buffer = buffer1;
             buffer1 = buffer2;

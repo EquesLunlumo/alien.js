@@ -135,14 +135,14 @@ class Title extends Component {
 
         function initMesh() {
             shader = self.initClass(Shader, vertRipple, fragRipple, {
-                time: World.time,
-                resolution: World.resolution,
-                texture: { value: texture },
-                opacity: { value: 0 },
-                progress: { value: 0 },
-                amplitude: { value: Device.phone ? 75 : 100 },
-                speed: { value: Device.phone ? 5 : 10 },
-                direction: { value: new THREE.Vector2(1, -1) },
+                uTime: World.time,
+                uResolution: World.resolution,
+                uTexture: { value: texture },
+                uAlpha: { value: 0 },
+                uTransition: { value: 0 },
+                uAmplitude: { value: Device.phone ? 75 : 100 },
+                uSpeed: { value: Device.phone ? 5 : 10 },
+                uDirection: { value: new THREE.Vector2(1, -1) },
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
@@ -163,13 +163,13 @@ class Title extends Component {
         };
 
         this.animateIn = callback => {
-            clearTween(shader.uniforms.opacity);
-            clearTween(shader.uniforms.progress);
-            shader.uniforms.opacity.value = 0;
-            shader.uniforms.progress.value = 0;
-            shader.uniforms.direction.value = this.direction < 0 ? new THREE.Vector2(-1, 1) : new THREE.Vector2(1, -1);
-            tween(shader.uniforms.opacity, { value: 1 }, 250, 'linear');
-            tween(shader.uniforms.progress, { value: 1 }, 1600, 'easeOutCubic', callback);
+            clearTween(shader.uniforms.uAlpha);
+            clearTween(shader.uniforms.uTransition);
+            shader.uniforms.uAlpha.value = 0;
+            shader.uniforms.uTransition.value = 0;
+            shader.uniforms.uDirection.value = this.direction < 0 ? new THREE.Vector2(-1, 1) : new THREE.Vector2(1, -1);
+            tween(shader.uniforms.uAlpha, { value: 1 }, 250, 'linear');
+            tween(shader.uniforms.uTransition, { value: 1 }, 1600, 'easeOutCubic', callback);
         };
     }
 }
@@ -198,13 +198,13 @@ class Space extends Component {
 
         function initMesh() {
             shader = self.initClass(Shader, vertDirectionalWarp, fragDirectionalWarp, {
-                time: World.time,
-                resolution: World.resolution,
-                texture1: { value: texture1 },
-                texture2: { value: texture2 },
-                opacity: { value: 0 },
-                progress: { value: 0 },
-                direction: { value: new THREE.Vector2(-1, 1) },
+                uTime: World.time,
+                uResolution: World.resolution,
+                uTexture1: { value: texture1 },
+                uTexture2: { value: texture2 },
+                uAlpha: { value: 0 },
+                uTransition: { value: 0 },
+                uDirection: { value: new THREE.Vector2(-1, 1) },
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
@@ -276,7 +276,7 @@ class Space extends Component {
             }
             if (playing1 && video1.ready()) texture1.needsUpdate = true;
             if (playing2 && video2.ready()) texture2.needsUpdate = true;
-            shader.uniforms.progress.value = slide.progress;
+            shader.uniforms.uTransition.value = slide.progress;
         }
 
         function updateTextures() {
@@ -347,8 +347,8 @@ class Space extends Component {
         }
 
         this.animateIn = () => {
-            shader.uniforms.opacity.value = 0;
-            tween(shader.uniforms.opacity, { value: 1 }, 1000, 'easeOutCubic');
+            shader.uniforms.uAlpha.value = 0;
+            tween(shader.uniforms.uAlpha, { value: 1 }, 1000, 'easeOutCubic');
             title.animateIn();
         };
 
