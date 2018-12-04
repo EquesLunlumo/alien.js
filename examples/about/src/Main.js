@@ -67,6 +67,18 @@ class Cursor {
     }
 }
 
+class Example {
+
+    constructor(item) {
+        this.id = item.id;
+        this.path = this.id ? `examples/${this.id}/` : item.path;
+        this.title = item.title;
+        this.pageTitle = `${this.title} / Alien.js Example`;
+        this.description = item.description;
+        this.sideTitle = this.description ? `${this.title} / ${this.description}` : this.title;
+    }
+}
+
 class Data {
 
     static init() {
@@ -293,7 +305,7 @@ class About extends Interface {
             if (Global.SOUND) AudioController.mute();
             setTimeout(() => {
                 const title = e.object.title.toLowerCase();
-                getURL(~title.indexOf('source') ? Config.ABOUT_GITHUB_URL : Config.ABOUT_HYDRA_URL);
+                getURL(~title.indexOf('source') ? Config.ABOUT_GITHUB_URL : Config.ABOUT_HYDRA_URL, '_self');
             }, 300);
         }
 
@@ -555,12 +567,14 @@ class MuteButton extends Interface {
         function click() {
             if (Global.SOUND) {
                 AudioController.mute();
+                AudioController.trigger('fluid_stop');
                 Global.SOUND = false;
                 clearTween(data);
                 self.needsUpdate = true;
                 tween(data, { yMultiplier: 0 }, 300, 'easeOutCubic', () => self.needsUpdate = false);
             } else {
                 AudioController.unmute();
+                AudioController.trigger('fluid_start');
                 Global.SOUND = true;
                 clearTween(data);
                 self.needsUpdate = true;
@@ -834,15 +848,15 @@ class HeaderExample extends Interface {
 
         this.animateIn = delay => {
             if (line) line.clearTween().transform({ scaleX: 0 }).css({ opacity: 1 }).tween({ scaleX: 1 }, 550, 'easeInOutCubic', delay, () => this.animatedIn = true);
-            if (text) text.clearTween().transform({ scale: 1.25 }).tween({ y: 0, scale: 1, opacity: 0.35 }, 500, 'easeOutQuart', delay, () => this.animatedIn = true);
-            self.clearTween().transform({ y: -10 }).tween({ y: 0, opacity: 1 }, 325, 'easeOutQuart', delay);
+            if (text) text.clearTween().transform({ scale: 1.25 }).css({ opacity: 0 }).tween({ y: 0, scale: 1, opacity: 0.35 }, 500, 'easeOutQuart', delay, () => this.animatedIn = true);
+            self.clearTween().transform({ y: -10 }).css({ opacity: 0 }).tween({ y: 0, opacity: 1 }, 325, 'easeOutQuart', delay);
         };
 
         this.animateOut = (callback, num, delay, total) => {
             this.animatedIn = false;
-            if (line) line.tween({ scaleX: 0, opacity: 0 }, 450, 'easeOutCubic', delay);
-            if (text) text.tween({ y: 10, opacity: 0 }, 400, 'easeOutCubic', delay);
-            self.tween({ y: -10, opacity: 0 }, 650, 'easeOutCubic', delay, () => {
+            if (line) line.clearTween().tween({ scaleX: 0, opacity: 0 }, 450, 'easeOutCubic', delay);
+            if (text) text.clearTween().tween({ opacity: 0 }, 400, 'easeOutCubic', delay);
+            self.clearTween().tween({ opacity: 0 }, 650, 'easeOutCubic', delay, () => {
                 if (num === total) callback();
             });
         };
@@ -1101,7 +1115,7 @@ class Header extends Interface {
 
         function sourceClick() {
             if (Global.SOUND) AudioController.mute();
-            setTimeout(() => getURL(Config.ABOUT_GITHUB_URL), 300);
+            setTimeout(() => getURL(Config.ABOUT_GITHUB_URL, '_self'), 300);
         }
     }
 }
@@ -1860,18 +1874,6 @@ class Loader extends Interface {
             title.tween({ opacity: 0 }, 200, 'easeOutSine');
             alienkitty.animateOut(callback);
         };
-    }
-}
-
-class Example {
-
-    constructor(item) {
-        this.id = item.id;
-        this.path = this.id ? `examples/${this.id}/` : item.path;
-        this.title = item.title;
-        this.pageTitle = `${this.title} / Alien.js Example`;
-        this.description = item.description;
-        this.sideTitle = this.description ? `${this.title} / ${this.description}` : this.title;
     }
 }
 

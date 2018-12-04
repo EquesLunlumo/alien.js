@@ -232,40 +232,30 @@ class Loader extends Interface {
     constructor() {
         super('Loader');
         const self = this;
-        let progress;
+        let view;
 
         initHTML();
+        initView();
         initLoader();
-        initProgress();
 
         function initHTML() {
             self.css({ position: 'static' });
         }
 
+        function initView() {
+            //view = self.initClass(ProgressIndeterminate);
+            view = self.initClass(Progress);
+            view.center();
+            if (view.animateIn) view.animateIn();
+        }
+
         function initLoader() {
             const loader = self.initClass(AssetLoader, Config.ASSETS);
-            self.events.add(loader, Events.PROGRESS, loadUpdate);
+            if (view.update) self.events.add(loader, Events.PROGRESS, view.update);
+            self.events.bubble(view, Events.COMPLETE);
         }
 
-        function initProgress() {
-            //progress = self.initClass(ProgressIndeterminate);
-            progress = self.initClass(Progress);
-            progress.center();
-            if (progress.animateIn) progress.animateIn();
-            self.events.add(progress, Events.COMPLETE, loadComplete);
-        }
-
-        function loadUpdate(e) {
-            if (progress.update) progress.update(e);
-        }
-
-        function loadComplete() {
-            self.events.fire(Events.COMPLETE);
-        }
-
-        this.animateOut = callback => {
-            progress.animateOut(callback);
-        };
+        this.animateOut = view.animateOut;
     }
 }
 
