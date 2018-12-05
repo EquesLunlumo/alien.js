@@ -89,6 +89,102 @@ class AlienKitty extends Interface {
     }
 }
 
+class ProgressClose extends Interface {
+
+    constructor() {
+        super('.ProgressClose');
+        const self = this;
+        const size = 90,
+            radius = size * 0.4,
+            length = Math.PI * radius * 2,
+            offset = -0.25,
+            data = {
+                start: 0,
+                length: 0,
+                line1Length: 0,
+                line2Length: 0
+            };
+        let svg, circle, icon, line1, line2;
+
+        initHTML();
+        initSVG();
+        initCircle();
+        initIcon();
+
+        function initHTML() {
+            self.size(size);
+        }
+
+        function initSVG() {
+            svg = self.initClass(SVG).size(size);
+        }
+
+        function initCircle() {
+            circle = svg.initClass(SVG, 'circle');
+            circle.attr('fill', 'none');
+            circle.attr('cx', size / 2);
+            circle.attr('cy', size / 2);
+            circle.attr('r', radius);
+            circle.attr('stroke', Config.UI_COLOR);
+            circle.attr('stroke-width', 1.5);
+            circle.attr('stroke-dasharray', `0,${length}`);
+            circle.attr('stroke-dashoffset', -length * offset);
+        }
+
+        function initIcon() {
+            icon = svg.initClass(SVG, 'g');
+            icon.attr('transform', `translate(${(size - 22) / 2}, ${(size - 22) / 2})`);
+            icon.attr('fill', 'none');
+            icon.attr('stroke', Config.UI_COLOR);
+            icon.attr('stroke-width', 1.5);
+            line1 = icon.initClass(SVG, 'line');
+            line1.attr('x1', 0);
+            line1.attr('y1', 0);
+            line1.attr('x2', 22);
+            line1.attr('y2', 22);
+            line1.attr('stroke-dasharray', `0,${line1.element.getTotalLength()}`);
+            line2 = icon.initClass(SVG, 'line');
+            line2.attr('x1', 22);
+            line2.attr('y1', 0);
+            line2.attr('x2', 0);
+            line2.attr('y2', 22);
+            line2.attr('stroke-dasharray', `0,${line2.element.getTotalLength()}`);
+        }
+
+        function loop() {
+            let dash = length * data.length;
+            dash = Math.round(dash * 100) / 100;
+            let gap = length - dash;
+            gap = Math.round(gap * 100) / 100;
+            let dashoffset = -length * (data.start + offset);
+            dashoffset = Math.round(dashoffset * 100) / 100;
+            circle.attr('stroke-dasharray', `${dash},${gap}`);
+            circle.attr('stroke-dashoffset', dashoffset);
+            line1.attr('stroke-dasharray', `${line1.element.getTotalLength() * data.line1Length},${line1.element.getTotalLength() - line1.element.getTotalLength() * data.line1Length}`);
+            line2.attr('stroke-dasharray', `${line2.element.getTotalLength() * data.line2Length},${line2.element.getTotalLength() - line2.element.getTotalLength() * data.line2Length}`);
+        }
+
+        this.animateIn = () => {
+            if (this.animatedIn) return;
+            this.animatedIn = true;
+            tween(data, { length: 1 }, 1000, 'easeOutCubic', () => {
+                tween(data, { line1Length: 1 }, 400, 'easeOutCubic', () => {
+                    tween(data, { line2Length: 1 }, 400, 'easeOutCubic', () => {
+                        this.stopRender(loop);
+                        this.animatedIn = false;
+                    });
+                });
+            });
+            this.startRender(loop);
+        };
+
+        this.animateOut = callback => {
+            this.animatedIn = false;
+            if (callback) callback();
+        };
+    }
+}
+
 class ProgressIndeterminate extends Interface {
 
     constructor() {
@@ -122,16 +218,16 @@ class ProgressIndeterminate extends Interface {
             circle.attr('cx', size / 2);
             circle.attr('cy', size / 2);
             circle.attr('r', radius);
-            circle.css('stroke', Config.UI_COLOR);
-            circle.css('stroke-width', '1.5px');
-            circle.css('stroke-dasharray', `0,${length}`);
-            circle.css('stroke-dashoffset', -length * offset);
+            circle.attr('stroke', Config.UI_COLOR);
+            circle.attr('stroke-width', 1.5);
+            circle.attr('stroke-dasharray', `0,${length}`);
+            circle.attr('stroke-dashoffset', -length * offset);
         }
 
         function loop() {
             const dash = length * data.length;
-            circle.css('stroke-dasharray', `${dash},${length - dash}`);
-            circle.css('stroke-dashoffset', -length * (data.start + offset));
+            circle.attr('stroke-dasharray', `${dash},${length - dash}`);
+            circle.attr('stroke-dashoffset', -length * (data.start + offset));
         }
 
         this.animateIn = () => {
@@ -197,17 +293,17 @@ class Progress extends Interface {
             circle.attr('cx', size / 2);
             circle.attr('cy', size / 2);
             circle.attr('r', radius);
-            circle.css('stroke', Config.UI_COLOR);
-            circle.css('stroke-width', '1.5px');
-            circle.css('stroke-dasharray', `0,${length}`);
-            circle.css('stroke-dashoffset', -length * offset);
+            circle.attr('stroke', Config.UI_COLOR);
+            circle.attr('stroke-width', 1.5);
+            circle.attr('stroke-dasharray', `0,${length}`);
+            circle.attr('stroke-dashoffset', -length * offset);
         }
 
         function loop() {
             if (self.complete) return;
             if (self.progress >= 1) complete();
             const dash = length * self.progress;
-            circle.css('stroke-dasharray', `${dash},${length - dash}`);
+            circle.attr('stroke-dasharray', `${dash},${length - dash}`);
         }
 
         function complete() {
@@ -243,6 +339,7 @@ class Loader extends Interface {
         }
 
         function initView() {
+            //view = self.initClass(ProgressClose);
             //view = self.initClass(ProgressIndeterminate);
             view = self.initClass(Progress);
             view.center();
