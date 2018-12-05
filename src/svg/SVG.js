@@ -10,12 +10,39 @@ class SVG extends Interface {
 
     constructor(type = 'svg') {
         super(null, 'svg', type);
+
+        this.start = 0;
+        this.offset = 0;
+        this.alpha = 0;
     }
 
     size(w, h = w) {
         this.attr('width', w);
         this.attr('height', h);
         return this;
+    }
+
+    line(offset = 0) {
+        if (offset) this.offset = offset;
+        const length = this.element.getTotalLength();
+        let dash = length * this.alpha;
+        dash = Math.round(dash * 100) / 100;
+        let gap = length - dash;
+        gap = Math.round(gap * 100) / 100;
+        let dashoffset = -length * (this.start + this.offset);
+        dashoffset = Math.round(dashoffset * 100) / 100;
+        this.attr('stroke-dasharray', `${dash},${gap}`);
+        this.attr('stroke-dashoffset', dashoffset);
+        return this;
+    }
+
+    get length() {
+        return this.alpha;
+    }
+
+    set length(alpha) {
+        this.alpha = alpha;
+        this.line();
     }
 }
 
