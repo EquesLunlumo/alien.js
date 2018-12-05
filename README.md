@@ -8,7 +8,7 @@ Future web framework.
 
 ### Features
 
-* ES modules [without transpiling](https://alien.js.org/examples/library/), or use [Rollup](https://rollupjs.org/) with [Tree Shaking](https://github.com/rollup/rollup#tree-shaking), only the classes you use are compiled into your project.
+* ES modules [without transpiling](https://alien.js.org/examples/library/) and [dynamic import](https://alien.js.org/examples/dynamic/), or use [Rollup](https://rollupjs.org/) with [Tree Shaking](https://github.com/rollup/rollup#tree-shaking), only the classes you use are compiled into your project.
 * Simple design pattern with inheritance, `Interface` and `Component`.
 * Event based or use promises.
 * GSAP animation core.
