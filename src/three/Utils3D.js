@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import THREE from 'three';
+import * as THREE from 'three';
 
 import { Assets } from '../util/Assets.js';
 

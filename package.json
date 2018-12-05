@@ -27,7 +27,7 @@
   "scripts": {
     "build": "rollup -c && npm run build-uglify",
     "build-uglify": "rollup -c --environment uglify",
-    "build-examples": "for x in `find examples -name 'rollup.config.js' -maxdepth 2 ! -path 'alien.js/*' ! -path 'examples/npm/*' -exec dirname {} \\;`; do cd \"$x\" && ln -sfn ../.. alien.js && rollup -c && rm -f alien.js && cd ../..; done",
+    "build-examples": "for x in `find examples -name 'rollup.config.js' -maxdepth 2 ! -path 'alien.js/*' ! -path 'examples/npm/*' -exec dirname {} \\;`; do cd \"$x\" && ln -sfn ../.. alien.js && npm run build && rm -f alien.js && cd ../..; done",
     "build-world": "npm run build && npm run build-examples",
     "start": "serve -l 8080 || exit 0",
     "lint": "eslint --ignore-pattern 'src/gsap/*' src || exit 0"
@@ -38,11 +38,11 @@
   "devDependencies": {
     "concurrently": "^4.1.0",
     "eslint": "^5.9.0",
-    "replace": "^1.0.0",
     "rollup": "^0.67.3",
     "rollup-plugin-bundleutils": "^1.0.9",
     "rollup-plugin-eslint": "^5.0.0",
     "rollup-plugin-glslify": "^1.0.7",
+    "rollup-plugin-replace": "^2.1.0",
     "rollup-watch": "^4.3.1",
     "serve": "^10.1.1"
   }

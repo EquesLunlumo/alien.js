@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import THREE from 'three';
+import * as THREE from 'three';
 
 import { Component } from '../util/Component.js';
 import { Mouse } from '../util/Mouse.js';

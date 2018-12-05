@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import THREE from 'three';
+import * as THREE from 'three';
 
 import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Mouse, Utils,
     Assets, AssetLoader, FontLoader, Utils3D, Shader } from '../alien.js/src/Alien.js';

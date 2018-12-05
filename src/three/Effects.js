@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import THREE from 'three';
+import * as THREE from 'three';
 
 import { Events } from '../util/Events.js';
 import { Component } from '../util/Component.js';
