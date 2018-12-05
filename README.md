@@ -14,7 +14,7 @@ Future web framework.
 * GSAP animation core.
 * Canvas graphics engine.
 * Web audio engine.
-* SVG support.
+* SVG support and line animations.
 * WebGL with [three.js](https://threejs.org/).
 * GLSL shaders with [glslify](https://github.com/glslify/glslify) (a node.js-style module system for GLSL).
 
