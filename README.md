@@ -150,7 +150,7 @@ class Logo extends Interface {
         }
 
         function click() {
-            getURL('https://alien.js.org/');
+            open('https://alien.js.org/');
         }
     }
 }
