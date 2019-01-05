@@ -198,8 +198,8 @@ class Interface {
 
     bg(src, x, y, repeat) {
         const style = {};
-        if (~src.indexOf('.')) src = Assets.getPath(src);
-        if (src.includes(['data:', '.'])) style.backgroundImage = 'url(' + src + ')';
+        if (~src.indexOf('.') && !~src.indexOf(',') && !~src.indexOf('data:')) src = Assets.getPath(src);
+        if ((~src.indexOf('.') && !~src.indexOf(',')) || ~src.indexOf('data:')) style.backgroundImage = 'url(' + src + ')';
         else style.backgroundColor = src;
         if (typeof x !== 'undefined') {
             x = typeof x === 'number' ? x + 'px' : x;
