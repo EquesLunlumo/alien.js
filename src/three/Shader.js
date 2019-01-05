@@ -70,6 +70,17 @@ class Shader extends Component {
             return header + '\n\n' + code;
         }
 
+        this.clone = () => {
+            const shader = new Shader(vertexShader, fragmentShader, props);
+            shader.properties = this.properties;
+            this.copyUniformsTo(shader);
+            return shader;
+        };
+
+        this.copyUniformsTo = shader => {
+            for (let key in this.uniforms) shader.uniforms[key] = { type: this.uniforms[key].type, value: this.uniforms[key].value };
+        };
+
         this.destroy = () => {
             this.material.dispose();
             return super.destroy();
