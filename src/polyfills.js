@@ -166,6 +166,11 @@ window.post = function (url, body, options = {}) {
 };
 
 window.defer = function (callback) {
+    if (!callback) {
+        const promise = Promise.create();
+        TweenMax.delayedCall(0.001, promise.resolve);
+        return promise;
+    }
     TweenMax.delayedCall(0.001, callback);
 };
 
