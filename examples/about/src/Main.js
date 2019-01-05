@@ -1541,25 +1541,27 @@ class Fluid extends Component {
 
         function initShaders() {
             pass = self.initClass(Shader, vertFluidBasic, fragFluidPass, {
-                uTime: World.time,
-                uFrame: World.frame,
-                uResolution: World.resolution,
+                tMap: { value: buffer1.texture },
                 uMouse: { value: new THREE.Vector2(Mouse.inverseNormal.x, Mouse.inverseNormal.y) },
                 uLast: { value: new THREE.Vector2() },
                 uVelocity: { value: new THREE.Vector2() },
                 uStrength: { value: new THREE.Vector2() },
-                uTexture: { value: buffer1.texture }
+                uTime: World.time,
+                uFrame: World.frame,
+                uResolution: World.resolution
             });
             passScene = new THREE.Scene();
             passMesh = new THREE.Mesh(World.quad, pass.material);
+            passMesh.frustumCulled = false;
             passScene.add(passMesh);
             view = self.initClass(Shader, vertFluidBasic, fragFluidView, {
+                tMap: { value: buffer1.texture },
                 uTime: World.time,
-                uResolution: World.resolution,
-                uTexture: { value: buffer1.texture }
+                uResolution: World.resolution
             });
             viewScene = new THREE.Scene();
             viewMesh = new THREE.Mesh(World.quad, view.material);
+            viewMesh.frustumCulled = false;
             viewScene.add(viewMesh);
         }
 
@@ -1598,7 +1600,7 @@ class Fluid extends Component {
             pass.uniforms.uVelocity.value.copy(delta);
             const distance = Math.min(10, delta.length()) / 10;
             pass.uniforms.uStrength.value.set(!pointer.isMove || pointer.isDown ? 50 : 50 * distance, 50 * distance);
-            pass.uniforms.uTexture.value = buffer1.texture;
+            pass.uniforms.tMap.value = buffer1.texture;
             renderer.render(passScene, camera, buffer2);
             const buffer = buffer1;
             buffer1 = buffer2;
@@ -1614,14 +1616,14 @@ class Fluid extends Component {
         };
 
         this.destroy = () => {
-            if (buffer1) buffer1.dispose();
             if (buffer2) buffer2.dispose();
+            if (buffer1) buffer1.dispose();
             viewScene.remove(viewMesh);
-            viewMesh.geometry.dispose();
             viewMesh.material.dispose();
+            viewMesh.geometry.dispose();
             passScene.remove(passMesh);
-            passMesh.geometry.dispose();
             passMesh.material.dispose();
+            passMesh.geometry.dispose();
             viewMesh = null;
             passMesh = null;
             viewScene = null;

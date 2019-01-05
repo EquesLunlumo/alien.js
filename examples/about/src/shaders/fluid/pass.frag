@@ -1,17 +1,17 @@
 // Based on https://www.shadertoy.com/view/XlsBDf by davidar
 
-uniform float uTime;
-uniform int uFrame;
-uniform vec2 uResolution;
+uniform sampler2D tMap;
 uniform vec2 uMouse;
 uniform vec2 uLast;
 uniform vec2 uVelocity;
 uniform vec2 uStrength;
-uniform sampler2D uTexture;
+uniform float uTime;
+uniform int uFrame;
+uniform vec2 uResolution;
 
 #define MAX_ITERATIONS 5.0
 
-#define T(p) texture2D(uTexture, (p) / uResolution.xy)
+#define T(p) texture2D(tMap, (p) / uResolution.xy)
 #define length2(p) dot(p, p)
 
 #define dt 0.15

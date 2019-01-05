@@ -90,8 +90,9 @@ class Scene extends Component {
         const self = this;
         let alienkitty, shader, mesh;
 
-        this.object3D = new THREE.Object3D();
-        World.scene.add(this.object3D);
+        this.group = new THREE.Group();
+        this.group.visible = false;
+        World.scene.add(this.group);
 
         initCanvasTexture();
         initMesh();
@@ -103,23 +104,22 @@ class Scene extends Component {
 
         function finishSetup() {
             self.startRender(loop);
-            self.object3D.visible = true;
+            self.group.visible = true;
         }
 
         function initMesh() {
-            self.object3D.visible = false;
             shader = self.initClass(Shader, vert, frag, {
+                tMap: { value: alienkitty.texture },
                 uTime: World.time,
-                uResolution: World.resolution,
-                uTexture: { value: alienkitty.texture }
+                uResolution: World.resolution
             });
             mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), shader.material);
             mesh.rotation.y = -Math.PI;
-            self.object3D.add(mesh);
+            self.group.add(mesh);
         }
 
         function loop() {
-            if (!self.object3D.visible) return;
+            if (!self.group.visible) return;
             alienkitty.canvas.render();
             alienkitty.texture.needsUpdate = true;
             mesh.rotation.y += 0.01;

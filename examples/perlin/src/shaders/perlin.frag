@@ -1,11 +1,11 @@
 // Based on https://gl-transitions.com/editor/perlin by Rich-Harris
 
-uniform float uTime;
-uniform vec2 uResolution;
-uniform sampler2D uTexture1;
-uniform sampler2D uTexture2;
+uniform sampler2D tMap1;
+uniform sampler2D tMap2;
 uniform float uAlpha;
 uniform float uTransition;
+uniform float uTime;
+uniform vec2 uResolution;
 
 varying vec2 vUv;
 
@@ -24,7 +24,7 @@ void main() {
 
     float q = smoothstep(lower, higher, n);
 
-    vec4 color = mix(texture2D(uTexture1, vUv), texture2D(uTexture2, vUv), 1.0 - q);
+    vec4 color = mix(texture2D(tMap1, vUv), texture2D(tMap2, vUv), 1.0 - q);
     color.a *= uAlpha;
     gl_FragColor = color;
 }

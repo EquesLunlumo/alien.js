@@ -72,7 +72,7 @@ class Data {
 
 class TitleTexture extends Component {
 
-    constructor() {
+    constructor(config) {
         super();
         const self = this;
 
@@ -80,18 +80,18 @@ class TitleTexture extends Component {
 
         function initCanvas() {
             Config.LIST.forEach(data => {
-                const canvas = self.initClass(Canvas, Stage.width, Stage.height, true, true);
+                const canvas = self.initClass(Canvas, config.width, config.height, true, true);
                 data.graphics = {};
                 data.graphics.canvas = canvas;
             });
         }
 
-        this.update = () => {
+        this.update = (width, height) => {
             Config.LIST.forEach(data => {
                 const canvas = data.graphics.canvas;
                 let text = data.graphics.text,
                     text2 = data.graphics.text2;
-                canvas.size(Stage.width, Stage.height);
+                canvas.size(width, height);
                 if (text) {
                     canvas.remove(text);
                     text = text.destroy();
@@ -100,25 +100,26 @@ class TitleTexture extends Component {
                     canvas.remove(text2);
                     text2 = text2.destroy();
                 }
-                text = CanvasFont.createText(canvas, Stage.width, Stage.height, data.title.toUpperCase(), {
-                    font: `200 ${Device.phone ? 28 : 66}px Oswald`,
-                    lineHeight: Device.phone ? 35 : 80,
+                text = CanvasFont.createText(canvas, width, height, data.title.toUpperCase(), {
+                    font: `200 ${config.fontSize}px Oswald`,
+                    lineHeight: config.lineHeight,
                     letterSpacing: 0,
+                    textBaseline: 'alphabetic',
                     textAlign: 'center',
                     fillStyle: Config.UI_COLOR
                 });
-                text2 = CanvasFont.createText(canvas, Stage.width, Stage.height, data.description.toUpperCase(), {
+                text2 = CanvasFont.createText(canvas, width, height, data.description.toUpperCase(), {
                     font: '400 14px Karla',
                     lineHeight: 16,
                     letterSpacing: Device.phone ? 1 : 2.4,
+                    textBaseline: 'alphabetic',
                     textAlign: 'center',
                     fillStyle: Config.UI_COLOR
                 });
                 text.add(text2);
-                const margin = Device.phone ? 10 : 18,
-                    offset = Device.phone ? 50 : 120;
-                text2.y = text2.totalHeight + margin;
-                text.y = (Stage.height - (text.totalHeight + margin + text2.totalHeight) + offset) / 2;
+                const margin = Device.phone ? 10 : 18;
+                text2.y = 14 + margin;
+                text.y = config.fontSize + (height - (text.totalHeight + margin + text2.totalHeight)) / 2;
                 canvas.add(text);
                 canvas.render();
                 data.graphics.text = text;
@@ -133,40 +134,45 @@ class Title extends Component {
     constructor() {
         super();
         const self = this;
+        const fontSize = Device.phone ? 28 : 66,
+            lineHeight = Device.phone ? 35 : 80,
+            offset = -fontSize / 10;
         let title, texture, shader, mesh;
 
-        this.object3D = new THREE.Object3D();
-        World.scene.add(this.object3D);
+        this.group = new THREE.Group();
+        World.scene.add(this.group);
 
         initCanvasTexture();
         initMesh();
 
         function initCanvasTexture() {
-            title = self.initClass(TitleTexture);
+            title = self.initClass(TitleTexture, { width: Stage.width, height: Stage.height, fontSize, lineHeight });
             texture = new THREE.Texture(null, null, THREE.ClampToEdgeWrapping, THREE.ClampToEdgeWrapping, THREE.LinearFilter, THREE.LinearFilter);
             texture.generateMipmaps = false;
         }
 
         function initMesh() {
             shader = self.initClass(Shader, vertRipple, fragRipple, {
-                uTime: World.time,
-                uResolution: World.resolution,
-                uTexture: { value: texture },
+                tMap: { value: texture },
                 uAlpha: { value: 0 },
                 uTransition: { value: 0 },
                 uAmplitude: { value: Device.phone ? 75 : 100 },
                 uSpeed: { value: Device.phone ? 5 : 10 },
                 uDirection: { value: new THREE.Vector2(1, -1) },
+                uTime: World.time,
+                uResolution: World.resolution,
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
             });
             mesh = new THREE.Mesh(World.quad, shader.material);
-            self.object3D.add(mesh);
+            mesh.frustumCulled = false;
+            mesh.position.y = -offset;
+            self.group.add(mesh);
         }
 
         this.resize = () => {
-            title.update();
+            title.update(Stage.width, Stage.height);
             mesh.scale.set(Stage.width, Stage.height, 1);
         };
 
@@ -196,8 +202,8 @@ class Space extends Component {
         const ratio = 1920 / 1080;
         let texture1, texture2, shader, mesh, slide, slide1, slide2, video1, video2, playing1, playing2, title;
 
-        this.object3D = new THREE.Object3D();
-        World.scene.add(this.object3D);
+        this.group = new THREE.Group();
+        World.scene.add(this.group);
 
         initTextures();
         initMesh();
@@ -214,19 +220,20 @@ class Space extends Component {
 
         function initMesh() {
             shader = self.initClass(Shader, vertDirectionalWarp, fragDirectionalWarp, {
-                uTime: World.time,
-                uResolution: World.resolution,
-                uTexture1: { value: texture1 },
-                uTexture2: { value: texture2 },
+                tMap1: { value: texture1 },
+                tMap2: { value: texture2 },
                 uAlpha: { value: 0 },
                 uTransition: { value: 0 },
                 uDirection: { value: new THREE.Vector2(-1, 1) },
+                uTime: World.time,
+                uResolution: World.resolution,
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
             });
             mesh = new THREE.Mesh(World.quad, shader.material);
-            self.object3D.add(mesh);
+            mesh.frustumCulled = false;
+            self.group.add(mesh);
         }
 
         function initTitle() {
@@ -436,8 +443,8 @@ class World extends Component {
             for (let i = scene.children.length - 1; i >= 0; i--) {
                 const object = scene.children[i];
                 scene.remove(object);
-                if (object.geometry) object.geometry.dispose();
                 if (object.material) object.material.dispose();
+                if (object.geometry) object.geometry.dispose();
             }
             renderer.dispose();
             renderer.forceContextLoss();

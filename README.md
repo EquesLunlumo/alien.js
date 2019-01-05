@@ -172,8 +172,8 @@ import { Events, Stage, Interface, Canvas } from '../alien.js/src/Alien.js';
 
 class CanvasLayer extends Interface {
 
-    static instance() {
-        if (!this.singleton) this.singleton = new CanvasLayer();
+    static instance(...params) {
+        if (!this.singleton) this.singleton = new CanvasLayer(...params);
         return this.singleton;
     }
 
