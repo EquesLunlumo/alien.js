@@ -369,6 +369,7 @@ await this.wait(250);
 
 * Docs
 * Tests
+* Shader interface examples
 * Particle examples
 * FX and lighting
 * Error handling
