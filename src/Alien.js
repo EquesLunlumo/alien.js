@@ -11,6 +11,7 @@ import './polyfills.js';
 export { Interpolation } from './util/Interpolation.js';
 export { Utils } from './util/Utils.js';
 export { Render } from './util/Render.js';
+export { Worker } from './util/Worker.js';
 export { Events } from './util/Events.js';
 export { Device } from './util/Device.js';
 export { Component } from './util/Component.js';
