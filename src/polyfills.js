@@ -74,17 +74,13 @@ Array.prototype.shuffle = function () {
     return this;
 };
 
-Array.storeRandom = function (arr) {
-    arr.randomStore = [];
-};
-
 Array.prototype.random = function (range) {
     let value = Math.floor(Math.random() * this.length);
-    if (range && !this.randomStore) Array.storeRandom(this);
+    if (range && !this.randomStore) this.randomStore = [];
     if (!this.randomStore) return this[value];
-    if (range > this.length - 1) range = this.length;
+    if (range > this.length) range = this.length;
     if (range > 1) {
-        while (~this.randomStore.indexOf(value)) if (value++ > this.length - 1) value = 0;
+        while (~this.randomStore.indexOf(value)) if (++value > this.length - 1) value = 0;
         this.randomStore.push(value);
         if (this.randomStore.length >= range) this.randomStore.shift();
     }
