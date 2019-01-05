@@ -68,6 +68,12 @@ class Component {
         this.loops.length = 0;
     }
 
+    wait(time = 0) {
+        const promise = Promise.create();
+        this.delayedCall(promise.resolve, time);
+        return promise;
+    }
+
     destroy() {
         if (!this.classes) return;
         this.removed = true;
