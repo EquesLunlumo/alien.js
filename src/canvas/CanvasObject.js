@@ -43,11 +43,11 @@ class CanvasObject {
         for (let i = 0; i < this.children.length; i++) this.children[i].render(override);
     }
 
-    startDraw(ox = 0, oy = 0, override) {
+    startDraw(px = 0, py = 0, override) {
         const context = this.canvas.context,
             v = this.values.data,
-            x = v[0] + ox,
-            y = v[1] + oy;
+            x = v[0] + px,
+            y = v[1] + py;
         context.save();
         if (!override) context.globalCompositeOperation = this.blendMode;
         context.translate(x, y);
@@ -83,10 +83,10 @@ class CanvasObject {
     }
 
     isMask() {
-        let obj = this;
-        while (obj) {
-            if (obj.masked) return true;
-            obj = obj.parent;
+        let object = this;
+        while (object) {
+            if (object.masked) return true;
+            object = object.parent;
         }
         return false;
     }
@@ -142,16 +142,17 @@ class CanvasObject {
         return this;
     }
 
-    clip(x, y, w, h) {
+    clip(x, y, width, height) {
         this.clipX = x;
         this.clipY = y;
-        this.clipWidth = w;
-        this.clipHeight = h;
+        this.clipWidth = width;
+        this.clipHeight = height;
         return this;
     }
 
     destroy() {
         if (this.children) for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
+        if (this.parent) this.parent.remove(this);
         return Utils.nullObject(this);
     }
 }

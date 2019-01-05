@@ -25,14 +25,14 @@ class Raycaster extends Component {
         }
 
         function intersectObject(object, raycaster, intersects, recursive) {
-            if (object.visible === false) return;
+            if (!object.visible) return;
             let parent = object.parent;
             while (parent) {
-                if (parent.visible === false) return;
+                if (!parent.visible) return;
                 parent = parent.parent;
             }
             object.raycast(raycaster, intersects);
-            if (recursive === true) object.children.forEach(object => intersectObject(object, raycaster, intersects, true));
+            if (recursive) object.children.forEach(object => intersectObject(object, raycaster, intersects, true));
         }
 
         function intersect(objects) {
@@ -72,7 +72,7 @@ class Raycaster extends Component {
                 calc.x = mouse.x / rect.width * 2 - 1;
                 calc.y = -(mouse.y / rect.height) * 2 + 1;
             }
-            raycaster.setFromCamera(calc, camera);
+            raycaster.setFromCamera(calc, this.camera);
             return intersect(objects);
         };
 

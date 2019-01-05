@@ -40,36 +40,36 @@ class CanvasValues {
         for (let key in values) if (!this.styles[key]) this.styles[key] = values[key];
     }
 
-    set shadowOffsetX(val) {
+    set shadowOffsetX(v) {
         this.styled = true;
-        this.styles.shadowOffsetX = val;
+        this.styles.shadowOffsetX = v;
     }
 
     get shadowOffsetX() {
         return this.styles.shadowOffsetX;
     }
 
-    set shadowOffsetY(val) {
+    set shadowOffsetY(v) {
         this.styled = true;
-        this.styles.shadowOffsetY = val;
+        this.styles.shadowOffsetY = v;
     }
 
     get shadowOffsetY() {
         return this.styles.shadowOffsetY;
     }
 
-    set shadowBlur(val) {
+    set shadowBlur(v) {
         this.styled = true;
-        this.styles.shadowBlur = val;
+        this.styles.shadowBlur = v;
     }
 
     get shadowBlur() {
         return this.styles.shadowBlur;
     }
 
-    set shadowColor(val) {
+    set shadowColor(v) {
         this.styled = true;
-        this.styles.shadowColor = val;
+        this.styles.shadowColor = v;
     }
 
     get shadowColor() {

@@ -17,15 +17,13 @@ class ScreenProjection extends Component {
             v32 = new THREE.Vector3(),
             value = new THREE.Vector3;
 
-        this.set = v => {
-            camera = v;
-        };
+        this.camera = camera;
 
         this.unproject = (mouse, distance) => {
             const rect = this.rect || Stage;
             v3.set(mouse.x / rect.width * 2 - 1, -(mouse.y / rect.height) * 2 + 1, 0.5);
-            v3.unproject(camera);
-            const pos = camera.position;
+            v3.unproject(this.camera);
+            const pos = this.camera.position;
             v3.sub(pos).normalize();
             const dist = distance || -pos.z / v3.z;
             value.copy(pos).add(v3.multiplyScalar(dist));
@@ -40,7 +38,7 @@ class ScreenProjection extends Component {
             } else {
                 v32.copy(pos);
             }
-            v32.project(camera);
+            v32.project(this.camera);
             v32.x = (v32.x + 1) / 2 * rect.width;
             v32.y = -(v32.y - 1) / 2 * rect.height;
             return v32;

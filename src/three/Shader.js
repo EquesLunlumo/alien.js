@@ -67,11 +67,7 @@ class Shader extends Component {
                     'uniform vec3 cameraPosition;'
                 ].join('\n');
             }
-            code = header + '\n\n' + code;
-            const threeChunk = (a, b) => {
-                return THREE.ShaderChunk[b] + '\n';
-            };
-            return code.replace(/#s?chunk\(\s?(\w+)\s?\);/g, threeChunk);
+            return header + '\n\n' + code;
         }
 
         this.destroy = () => {

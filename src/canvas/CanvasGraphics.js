@@ -9,14 +9,14 @@ import { CanvasObject } from './CanvasObject.js';
 
 class CanvasGraphics extends CanvasObject {
 
-    constructor(w = 0, h = w) {
+    constructor(width = 0, height = width) {
         super();
         const self = this;
         let draw = [],
             mask;
 
-        this.width = w;
-        this.height = h;
+        this.width = width;
+        this.height = height;
         this.props = {};
 
         function setProperties(context) {
@@ -70,16 +70,16 @@ class CanvasGraphics extends CanvasObject {
             draw.push(['bezierCurveTo', cp1x, cp1y, cp2x, cp2y, x, y]);
         };
 
-        this.fillRect = (x, y, w, h) => {
-            draw.push(['fillRect', x, y, w, h]);
+        this.fillRect = (x, y, width, height) => {
+            draw.push(['fillRect', x, y, width, height]);
         };
 
-        this.clearRect = (x, y, w, h) => {
-            draw.push(['clearRect', x, y, w, h]);
+        this.clearRect = (x, y, width, height) => {
+            draw.push(['clearRect', x, y, width, height]);
         };
 
-        this.strokeRect = (x, y, w, h) => {
-            draw.push(['strokeRect', x, y, w, h]);
+        this.strokeRect = (x, y, width, height) => {
+            draw.push(['strokeRect', x, y, width, height]);
         };
 
         this.moveTo = (x, y) => {
@@ -150,80 +150,80 @@ class CanvasGraphics extends CanvasObject {
         };
     }
 
-    set strokeStyle(val) {
-        this.props.strokeStyle = val;
+    set strokeStyle(v) {
+        this.props.strokeStyle = v;
     }
 
     get strokeStyle() {
         return this.props.strokeStyle;
     }
 
-    set fillStyle(val) {
-        this.props.fillStyle = val;
+    set fillStyle(v) {
+        this.props.fillStyle = v;
     }
 
     get fillStyle() {
         return this.props.fillStyle;
     }
 
-    set lineWidth(val) {
-        this.props.lineWidth = val;
+    set lineWidth(v) {
+        this.props.lineWidth = v;
     }
 
     get lineWidth() {
         return this.props.lineWidth;
     }
 
-    set lineCap(val) {
-        this.props.lineCap = val;
+    set lineCap(v) {
+        this.props.lineCap = v;
     }
 
     get lineCap() {
         return this.props.lineCap;
     }
 
-    set lineDashOffset(val) {
-        this.props.lineDashOffset = val;
+    set lineDashOffset(v) {
+        this.props.lineDashOffset = v;
     }
 
     get lineDashOffset() {
         return this.props.lineDashOffset;
     }
 
-    set lineJoin(val) {
-        this.props.lineJoin = val;
+    set lineJoin(v) {
+        this.props.lineJoin = v;
     }
 
     get lineJoin() {
         return this.props.lineJoin;
     }
 
-    set miterLimit(val) {
-        this.props.miterLimit = val;
+    set miterLimit(v) {
+        this.props.miterLimit = v;
     }
 
     get miterLimit() {
         return this.props.miterLimit;
     }
 
-    set font(val) {
-        this.props.font = val;
+    set font(v) {
+        this.props.font = v;
     }
 
     get font() {
         return this.props.font;
     }
 
-    set textAlign(val) {
-        this.props.textAlign = val;
+    set textAlign(v) {
+        this.props.textAlign = v;
     }
 
     get textAlign() {
         return this.props.textAlign;
     }
 
-    set textBaseline(val) {
-        this.props.textBaseline = val;
+    set textBaseline(v) {
+        this.props.textBaseline = v;
     }
 
     get textBaseline() {

@@ -29,8 +29,7 @@ class Interaction3D extends Component {
 
         this.ray = new Raycaster(camera);
         this.meshes = [];
-        this.meshCallbacks = [];
-        this.cursor = 'auto';
+        this.callbacks = [];
         this.enabled = true;
 
         addListeners();
@@ -54,21 +53,21 @@ class Interaction3D extends Component {
 
         function move() {
             if (!self.enabled) return;
-            const hit = self.ray.checkHit(self.meshes)[0];
-            if (hit) {
-                const mesh = hit.object;
+            const hit = self.ray.checkHit(self.meshes);
+            if (hit[0]) {
+                const mesh = hit[0].object;
                 if (mesh !== hoverTarget) {
                     if (hoverTarget) triggerHover('out', hoverTarget);
                     hoverTarget = mesh;
                     triggerHover('over', hoverTarget);
                     Stage.css('cursor', 'pointer');
                 }
-                return hit;
+                return hit[0];
             } else {
                 if (hoverTarget) {
                     triggerHover('out', hoverTarget);
                     hoverTarget = null;
-                    Stage.css('cursor', self.cursor);
+                    Stage.css('cursor', '');
                 }
                 return false;
             }
@@ -87,7 +86,7 @@ class Interaction3D extends Component {
             event.mesh = mesh;
             self.events.fire(Interaction3D.HOVER, event, true);
             const i = self.meshes.indexOf(hoverTarget);
-            if (self.meshCallbacks[i].hoverCallback) self.meshCallbacks[i].hoverCallback(event);
+            if (self.callbacks[i].overCallback) self.callbacks[i].overCallback(event);
         }
 
         function triggerClick(mesh) {
@@ -95,26 +94,27 @@ class Interaction3D extends Component {
             event.mesh = mesh;
             self.events.fire(Interaction3D.CLICK, event, true);
             const i = self.meshes.indexOf(clickTarget);
-            if (self.meshCallbacks[i].clickCallback) self.meshCallbacks[i].clickCallback(event);
+            if (self.callbacks[i].clickCallback) self.callbacks[i].clickCallback(event);
         }
 
         function parseMeshes(meshes) {
             if (!Array.isArray(meshes)) meshes = [meshes];
             const output = [];
-            meshes.forEach(checkMesh);
 
             function checkMesh(mesh) {
                 if (mesh.type === 'Mesh' && mesh.mouseEnabled) output.push(mesh);
                 if (mesh.children.length) mesh.children.forEach(checkMesh);
             }
+
+            meshes.forEach(checkMesh);
             return output;
         }
 
-        this.add = (meshes, hoverCallback, clickCallback, parse) => {
+        this.add = (meshes, overCallback, clickCallback, parse) => {
             if (!Array.isArray(meshes) || parse) meshes = parseMeshes(meshes);
             meshes.forEach(mesh => {
                 this.meshes.push(mesh);
-                this.meshCallbacks.push({ hoverCallback, clickCallback });
+                this.callbacks.push({ overCallback, clickCallback });
             });
         };
 
@@ -124,20 +124,15 @@ class Interaction3D extends Component {
                 if (mesh === hoverTarget) {
                     triggerHover('out', hoverTarget);
                     hoverTarget = null;
-                    Stage.css('cursor', this.cursor);
+                    Stage.css('cursor', '');
                 }
-                for (let i = this.meshes.length - 1; i >= 0; i--) {
-                    if (this.meshes[i] === mesh) {
-                        this.meshes.splice(i, 1);
-                        this.meshCallbacks.splice(i, 1);
-                    }
+                const i = this.meshes.indexOf(mesh);
+                if (~i) {
+                    this.meshes.splice(i, 1);
+                    this.callbacks.splice(i, 1);
                 }
             });
         };
-    }
-
-    set camera(v) {
-        this.ray.camera = v;
     }
 }
 

@@ -487,7 +487,7 @@ class Interface {
         return this;
     }
 
-    touchClick(hover, click) {
+    touchClick(overCallback, clickCallback) {
         const start = {};
         let time, move, touch;
 
@@ -517,21 +517,20 @@ class Interface {
             e.object = this.element.className === 'hit' ? this.parent : this;
             e.action = 'over';
             setTouch(e);
-            if (hover && !move) hover(e);
+            if (overCallback && !move) overCallback(e);
         };
 
         const touchEnd = e => {
             if (!this.element) return false;
-            const t = performance.now();
             e.object = this.element.className === 'hit' ? this.parent : this;
             setTouch(e);
-            if (time && t - time < 750 && click && !move) {
+            if (time && performance.now() - time < 750 && clickCallback && !move) {
                 e.action = 'click';
-                click(e);
+                clickCallback(e);
             }
-            if (hover) {
+            if (overCallback) {
                 e.action = 'out';
-                hover(e);
+                overCallback(e);
             }
             move = false;
         };
