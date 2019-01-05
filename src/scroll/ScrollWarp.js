@@ -25,24 +25,25 @@ class ScrollWarp extends Component {
 
         function initParameters() {
             self.object = object;
-            self.container = container || document.body;
+            self.container = container ? container.parent.element : document.body;
+            self.inner = container ? container.element : document.body;
             self.object.willChange('transform');
         }
 
         function addListeners() {
-            window.addEventListener('scroll', scroll);
+            self.container.addEventListener('scroll', scroll);
             self.events.add(Events.RESIZE, resize);
             defer(resize);
         }
 
         function setHeight() {
             const height = self.object.element.getBoundingClientRect().height;
-            TweenMax.set(self.container, { height });
+            TweenMax.set(self.inner, { height });
         }
 
         function scroll() {
             if (!self.enabled) return;
-            self.current = window.scrollY;
+            self.current = self.container.scrollTop;
         }
 
         function resize() {
@@ -59,7 +60,7 @@ class ScrollWarp extends Component {
         }
 
         this.destroy = () => {
-            window.removeEventListener('scroll', scroll);
+            this.container.removeEventListener('scroll', scroll);
             return super.destroy();
         };
     }
