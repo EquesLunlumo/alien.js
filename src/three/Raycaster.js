@@ -21,7 +21,7 @@ class Raycaster extends Component {
         this.camera = camera;
 
         function ascSort(a, b) {
-            return a.distance - b.distance;
+            return Math.round(a.distance * 100) / 100 - Math.round(b.distance * 100) / 100;
         }
 
         function intersectObject(object, raycaster, intersects, recursive) {
