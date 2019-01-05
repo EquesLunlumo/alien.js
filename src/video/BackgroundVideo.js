@@ -23,12 +23,23 @@ class BackgroundVideo extends Interface {
         let cover, wrapper, video,
             tick = 0;
 
-        this.fade = params.fade !== false;
-
+        initParameters();
         initHTML();
         if (BackgroundVideo.test) {
             initVideo();
-            if (this.fade) addListeners();
+            if (params.fade) addListeners();
+        }
+
+        function initParameters() {
+            const defaults = {
+                preload: true,
+                loop: true,
+                width: 640,
+                height: 360,
+                ticks: 10,
+                fade: true
+            };
+            params = Object.assign(defaults, params);
         }
 
         function initHTML() {
@@ -40,14 +51,14 @@ class BackgroundVideo extends Interface {
         function initVideo() {
             wrapper = self.create('.wrapper');
             wrapper.size('100%');
-            if (self.fade) wrapper.css({ opacity: 0 });
+            if (params.fade) wrapper.css({ opacity: 0 });
             video = wrapper.initClass(Video, {
                 src: params.src,
-                loop: params.loop !== false,
-                events: ['timeupdate', 'ended'],
+                preload: params.preload,
+                loop: params.loop,
                 width: params.width,
                 height: params.height,
-                preload: true
+                events: ['timeupdate', 'ended']
             });
             video.object.css({ position: 'absolute' });
             self.video = video;
@@ -58,7 +69,7 @@ class BackgroundVideo extends Interface {
         }
 
         function update() {
-            if (tick++ < 10) return;
+            if (tick++ < params.ticks) return;
             self.events.remove(video, Video.UPDATE, update);
             wrapper.tween({ opacity: params.opacity || 1 }, 500, 'easeOutSine', () => {
                 if (!params.opacity) wrapper.clearOpacity();
