@@ -16,12 +16,7 @@ const Stage = new (class extends Interface {
         const self = this;
         let last;
 
-        initHTML();
         addListeners();
-
-        function initHTML() {
-            self.css({ overflow: 'hidden' });
-        }
 
         function addListeners() {
             window.addEventListener('focus', focus);
