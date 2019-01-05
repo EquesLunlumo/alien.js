@@ -361,8 +361,7 @@ class Interface {
     }
 
     tween(props, time, ease, delay, complete, update) {
-        tween(this.element, props, time, ease, delay, complete, update);
-        return this;
+        return tween(this.element, props, time, ease, delay, complete, update);
     }
 
     clearTween() {
