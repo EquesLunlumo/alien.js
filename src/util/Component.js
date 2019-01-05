@@ -25,11 +25,11 @@ class Component {
     }
 
     add(child) {
+        if (!this.classes) return;
         if (child.destroy) {
             this.classes.push(child);
             child.parent = this;
         }
-        return this;
     }
 
     delayedCall(callback, time = 0, ...params) {
@@ -45,21 +45,25 @@ class Component {
     }
 
     clearTimers() {
+        if (!this.timers) return;
         for (let i = this.timers.length - 1; i >= 0; i--) this.clearTimeout(this.timers[i]);
         this.timers.length = 0;
     }
 
     startRender(callback, fps) {
+        if (!this.loops) return;
         this.loops.push(callback);
         Render.start(callback, fps);
     }
 
     stopRender(callback) {
+        if (!this.loops) return;
         this.loops.remove(callback);
         Render.stop(callback);
     }
 
     clearRenders() {
+        if (!this.loops) return;
         for (let i = this.loops.length - 1; i >= 0; i--) this.stopRender(this.loops[i]);
         this.loops.length = 0;
     }
@@ -81,6 +85,7 @@ class Component {
     }
 
     remove(child) {
+        if (!this.classes) return;
         this.classes.remove(child);
     }
 }
