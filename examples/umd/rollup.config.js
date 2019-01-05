@@ -15,6 +15,6 @@ export default {
             delimiters: ['import * as THREE from \'', '\';']
         }),
         glslify({ basedir: 'src/shaders' }),
-        eslint({ include: 'src/**' })
+        eslint({ include: ['src/**', 'alien.js/**'], exclude: 'alien.js/src/gsap/**' })
     ]
 };
