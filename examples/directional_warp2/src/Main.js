@@ -144,6 +144,7 @@ class Title extends Component {
         function initCanvasTexture() {
             title = self.initClass(TitleTexture);
             texture = new THREE.Texture(null, null, THREE.ClampToEdgeWrapping, THREE.ClampToEdgeWrapping, THREE.LinearFilter, THREE.LinearFilter);
+            texture.generateMipmaps = false;
         }
 
         function initMesh() {
@@ -206,7 +207,9 @@ class Space extends Component {
 
         function initTextures() {
             texture1 = new THREE.Texture(null, null, THREE.ClampToEdgeWrapping, THREE.ClampToEdgeWrapping, THREE.LinearFilter, THREE.LinearFilter);
+            texture1.generateMipmaps = false;
             texture2 = new THREE.Texture(null, null, THREE.ClampToEdgeWrapping, THREE.ClampToEdgeWrapping, THREE.LinearFilter, THREE.LinearFilter);
+            texture2.generateMipmaps = false;
         }
 
         function initMesh() {

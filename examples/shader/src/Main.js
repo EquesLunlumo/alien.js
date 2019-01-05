@@ -30,7 +30,7 @@ class AlienKittyTexture extends Component {
             canvas = self.initClass(Canvas, 90, 86, true);
             self.canvas = canvas;
             texture = new THREE.Texture(canvas.element);
-            texture.minFilter = THREE.LinearFilter;
+            texture.minFilter = texture.magFilter = THREE.LinearFilter;
             self.texture = texture;
         }
 
