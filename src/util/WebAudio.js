@@ -16,14 +16,17 @@ class WebAudio {
 
         class Sound {
 
-            constructor(path) {
+            constructor(id, path) {
                 const self = this;
 
+                this.id = id;
                 this.path = Assets.getPath(path);
                 if (WebAudio.context.createStereoPanner) this.stereo = WebAudio.context.createStereoPanner();
                 this.output = WebAudio.context.createGain();
                 this.volume = 1;
                 this.rate = 1;
+                this.pan = 0;
+                this.loop = false;
                 if (this.stereo) this.stereo.connect(this.output);
                 this.output.connect(WebAudio.output);
                 this.output.gain.setValueAtTime(0, WebAudio.context.currentTime);
@@ -58,11 +61,36 @@ class WebAudio {
                     }
                 };
 
-                this.stop = () => {
-                    if (this.source) {
-                        this.source.stop();
-                        this.playing = false;
+                this.play = () => {
+                    if (this.element) {
+                        this.playing = true;
+                        this.element.loop = this.loop;
+                        this.element.play();
+                    } else {
+                        if (!this.ready) WebAudio.loadSound(this.id);
+                        this.ready().then(() => {
+                            if (this.complete) {
+                                if (this.stopping && this.loop) {
+                                    this.stopping = false;
+                                    return;
+                                }
+                                this.playing = true;
+                                this.source = WebAudio.context.createBufferSource();
+                                this.source.buffer = this.buffer;
+                                this.source.loop = this.loop;
+                                this.source.playbackRate.setValueAtTime(this.rate, WebAudio.context.currentTime);
+                                this.source.connect(this.stereo ? this.stereo : this.output);
+                                this.source.start();
+                            }
+                        });
                     }
+                    this.output.gain.linearRampToValueAtTime(this.volume, WebAudio.context.currentTime + 0.015);
+                };
+
+                this.stop = () => {
+                    if (this.element) this.element.pause();
+                    else this.source.stop();
+                    this.playing = false;
                 };
             }
         }
@@ -95,7 +123,7 @@ class WebAudio {
                 const promise = Promise.create();
                 if (callback) promise.then(callback);
                 callback = promise.resolve;
-                const sound = this.getSound(id);
+                const sound = sounds[id];
                 window.fetch(sound.path, Assets.OPTIONS).then(response => {
                     if (!response.ok) return callback();
                     response.arrayBuffer().then(data => {
@@ -114,9 +142,23 @@ class WebAudio {
             };
 
             this.createSound = (id, path, callback) => {
-                sounds[id] = new Sound(path);
+                sounds[id] = new Sound(id, path);
                 if (Device.os === 'ios' && callback) callback();
                 else this.loadSound(id, callback);
+                return sounds[id];
+            };
+
+            this.createStream = (id, path) => {
+                const sound = new Sound(id, path),
+                    audio = document.createElement('audio');
+                audio.src = sound.path;
+                audio.crossOrigin = Assets.CORS;
+                audio.autoplay = false;
+                audio.loop = sound.loop;
+                sound.source = context.createMediaElementSource(audio);
+                sound.source.connect(sound.stereo ? sound.stereo : sound.output);
+                sound.element = audio;
+                sounds[id] = sound;
                 return sounds[id];
             };
 
@@ -127,24 +169,8 @@ class WebAudio {
             this.trigger = id => {
                 if (!context) return;
                 if (context.state === 'suspended') context.resume();
-                const sound = this.getSound(id);
-                if (!sound.ready) this.loadSound(id);
-                sound.ready().then(() => {
-                    if (sound.complete) {
-                        if (sound.stopping && sound.loop) {
-                            sound.stopping = false;
-                            return;
-                        }
-                        sound.playing = true;
-                        sound.source = context.createBufferSource();
-                        sound.source.buffer = sound.buffer;
-                        sound.source.loop = sound.loop;
-                        sound.source.playbackRate.setValueAtTime(sound.rate, context.currentTime);
-                        sound.source.connect(sound.stereo ? sound.stereo : sound.output);
-                        sound.source.start();
-                        sound.output.gain.linearRampToValueAtTime(sound.volume, context.currentTime + 0.015);
-                    }
-                });
+                const sound = sounds[id];
+                if (sound) sound.play();
             };
 
             this.play = (id, volume = 1, loop) => {
@@ -153,7 +179,7 @@ class WebAudio {
                     loop = volume;
                     volume = 1;
                 }
-                const sound = this.getSound(id);
+                const sound = sounds[id];
                 if (sound) {
                     sound.volume = volume;
                     sound.loop = !!loop;
@@ -163,7 +189,7 @@ class WebAudio {
 
             this.fadeInAndPlay = (id, volume, loop, time, ease, delay = 0) => {
                 if (!context) return;
-                const sound = this.getSound(id);
+                const sound = sounds[id];
                 if (sound) {
                     sound.volume = 0;
                     sound.loop = !!loop;
@@ -174,7 +200,7 @@ class WebAudio {
 
             this.fadeOutAndStop = (id, time, ease, delay = 0) => {
                 if (!context) return;
-                const sound = this.getSound(id);
+                const sound = sounds[id];
                 if (sound && sound.playing) {
                     tween(sound.gain, { value: 0 }, time, ease, delay, () => {
                         if (!sound.stopping) return;
@@ -186,10 +212,15 @@ class WebAudio {
             };
 
             this.remove = id => {
-                const sound = this.getSound(id);
+                const sound = sounds[id];
                 if (sound && sound.source) {
-                    sound.source.buffer = null;
-                    sound.source.stop();
+                    if (sound.element) {
+                        sound.element.pause();
+                        sound.element.src = '';
+                    } else {
+                        sound.source.stop();
+                        sound.source.buffer = null;
+                    }
                     sound.source.disconnect();
                     sound.source = null;
                     sound.playing = false;
@@ -210,10 +241,7 @@ class WebAudio {
             this.stop = () => {
                 this.active = false;
                 if (!context) return;
-                for (let id in sounds) {
-                    const sound = sounds[id];
-                    if (sound) sound.stop();
-                }
+                for (let id in sounds) this.remove(id);
                 context.close();
             };
         }
