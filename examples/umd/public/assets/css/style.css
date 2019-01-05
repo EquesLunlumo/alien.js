@@ -1,4 +1,4 @@
-body, html {
+body, html, #Stage {
     margin: 0;
     padding: 0;
     width: 100%;
@@ -6,7 +6,6 @@ body, html {
     overflow: hidden;
     background: black;
     color: white;
-    touch-action: none;
 }
 
 * {
@@ -20,7 +19,6 @@ body, html {
     user-select: none;
     -webkit-tap-highlight-color: transparent;
     -webkit-text-size-adjust: none;
-    text-size-adjust: none;
 }
 
 span, br, a {
