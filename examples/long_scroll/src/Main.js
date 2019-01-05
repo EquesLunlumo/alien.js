@@ -4,9 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Events, Stage, Interface, BackgroundVideo, Device, Utils, Assets, AssetLoader, FontLoader } from '../alien.js/src/Alien.js';
-
-BackgroundVideo.test = true; // Load video regardless
+import { Events, Stage, Interface, Device, Utils, Assets, BackgroundVideo, AssetLoader, FontLoader } from '../alien.js/src/Alien.js';
 
 //Assets.CDN = Config.CDN;
 Assets.CORS = 'anonymous';
@@ -14,6 +12,8 @@ Assets.OPTIONS = {
     mode: 'cors',
     //credentials: 'include'
 };
+
+BackgroundVideo.test = true; // Load video regardless
 
 
 class Copy extends Interface {

@@ -1,9 +1,9 @@
 // Based on https://www.shadertoy.com/view/XlsGWf by whiteskull
 
+uniform sampler2D tMap;
+uniform float uAlpha;
 uniform float uTime;
 uniform vec2 uResolution;
-uniform sampler2D uTexture;
-uniform float uAlpha;
 
 varying vec2 vUv;
 
@@ -16,7 +16,7 @@ void main() {
     mat2 m = mat2(cos(rotate), -sin(rotate), sin(rotate), cos(rotate));
     uv = m * uv;
     uv += 0.5;
-    vec4 color = texture2D(uTexture, uv);
+    vec4 color = texture2D(tMap, uv);
     color.a *= uAlpha;
     gl_FragColor = color;
 }

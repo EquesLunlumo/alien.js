@@ -32,7 +32,7 @@ Assets.OPTIONS = {
 
 class TitleTexture extends Component {
 
-    constructor() {
+    constructor(config) {
         super();
         const self = this;
         let canvas, texture, text;
@@ -40,28 +40,28 @@ class TitleTexture extends Component {
         initCanvas();
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, Stage.width, Stage.height, true, true);
+            canvas = self.initClass(Canvas, config.width, config.height, true, true);
             texture = new THREE.Texture(canvas.element);
             texture.minFilter = texture.magFilter = THREE.LinearFilter;
             texture.generateMipmaps = false;
             self.texture = texture;
         }
 
-        this.update = () => {
-            canvas.size(Stage.width, Stage.height);
+        this.update = (width, height) => {
+            canvas.size(width, height);
             if (text) {
                 canvas.remove(text);
                 text = text.destroy();
             }
-            text = CanvasFont.createText(canvas, Stage.width, Stage.height, 'Mask'.toUpperCase(), {
-                font: `200 ${Device.phone ? 28 : 66}px Oswald`,
-                lineHeight: Device.phone ? 35 : 80,
+            text = CanvasFont.createText(canvas, width, height, 'Mask'.toUpperCase(), {
+                font: `200 ${config.fontSize}px Oswald`,
+                lineHeight: config.lineHeight,
                 letterSpacing: 0,
+                textBaseline: 'alphabetic',
                 textAlign: 'center',
                 fillStyle: Config.UI_COLOR
             });
-            const offset = Device.phone ? 55 : 120;
-            text.y = (Stage.height - text.totalHeight + offset) / 2;
+            text.y = config.fontSize + (height - text.totalHeight) / 2;
             canvas.add(text);
             canvas.render();
             texture.needsUpdate = true;
@@ -74,36 +74,43 @@ class Title extends Component {
     constructor() {
         super();
         const self = this;
-        let title, shader, mesh;
+        const fontSize = Device.phone ? 28 : 66,
+            lineHeight = Device.phone ? 35 : 80,
+            offset = -fontSize / 10;
+        let title, shader, mesh,
+            width = 1200,
+            height = lineHeight * 2;
 
-        this.object3D = new THREE.Object3D();
-        World.scene.add(this.object3D);
+        this.group = new THREE.Group();
+        World.scene.add(this.group);
 
         initCanvasTexture();
         initMesh();
 
         function initCanvasTexture() {
-            title = self.initClass(TitleTexture);
-            self.texture = title.texture;
+            title = self.initClass(TitleTexture, { width, height, fontSize, lineHeight });
         }
 
         function initMesh() {
             shader = self.initClass(Shader, vertBasicShader, fragBasicShader, {
+                tMap: { value: title.texture },
+                uAlpha: { value: 0 },
                 uTime: World.time,
                 uResolution: World.resolution,
-                uTexture: { value: title.texture },
-                uAlpha: { value: 0 },
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
             });
             mesh = new THREE.Mesh(World.quad, shader.material);
-            self.object3D.add(mesh);
+            mesh.frustumCulled = false;
+            mesh.position.y = -offset;
+            self.group.add(mesh);
         }
 
         this.update = () => {
-            title.update();
-            mesh.scale.set(Stage.width, Stage.height, 1);
+            width = Stage.portrait ? Stage.width * 0.9 : Math.min(1200, Stage.width * 0.8);
+            title.update(width, height);
+            mesh.scale.set(width, height, 1);
         };
 
         this.animateIn = () => {
@@ -121,8 +128,9 @@ class Space extends Component {
         const ratio = 1920 / 1080;
         let texture, shader, mesh, title;
 
-        this.object3D = new THREE.Object3D();
-        World.scene.add(this.object3D);
+        this.group = new THREE.Group();
+        this.group.visible = false;
+        World.scene.add(this.group);
 
         function initTextures() {
             return Assets.loadImage('assets/images/HubblePAO_1920px.jpg').then(finishSetup);
@@ -139,17 +147,17 @@ class Space extends Component {
         }
 
         function initMesh() {
-            self.object3D.visible = false;
             shader = self.initClass(Shader, vertBasicShader, fragBasicShader, {
+                tMap: { value: texture },
+                uAlpha: { value: 0 },
                 uTime: World.time,
                 uResolution: World.resolution,
-                uTexture: { value: texture },
-                uAlpha: { value: 0 },
                 depthWrite: false,
                 depthTest: false
             });
             mesh = new THREE.Mesh(World.quad, shader.material);
-            self.object3D.add(mesh);
+            mesh.frustumCulled = false;
+            self.group.add(mesh);
         }
 
         function initTitle() {
@@ -168,7 +176,7 @@ class Space extends Component {
         }
 
         this.animateIn = () => {
-            self.object3D.visible = true;
+            self.group.visible = true;
             shader.uniforms.uAlpha.value = 0;
             tween(shader.uniforms.uAlpha, { value: 1 }, 1000, 'easeOutCubic');
             title.animateIn();
@@ -221,8 +229,8 @@ class World extends Component {
             });
             shader = self.initClass(Shader, vertBasicPass, fragMask, {
                 uTime: World.time,
-                tDiffuse: { type: 't', value: null },
-                tMask: { type: 't', value: null },
+                tDiffuse: { value: null },
+                tMask: { value: null },
                 uAlpha: { value: opacity },
                 depthWrite: false,
                 depthTest: false
@@ -288,8 +296,8 @@ class World extends Component {
             for (let i = scene.children.length - 1; i >= 0; i--) {
                 const object = scene.children[i];
                 scene.remove(object);
-                if (object.geometry) object.geometry.dispose();
                 if (object.material) object.material.dispose();
+                if (object.geometry) object.geometry.dispose();
             }
             renderer.dispose();
             renderer.forceContextLoss();

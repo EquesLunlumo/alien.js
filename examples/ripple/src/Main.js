@@ -32,7 +32,7 @@ Assets.OPTIONS = {
 
 class TitleTexture extends Component {
 
-    constructor() {
+    constructor(config) {
         super();
         const self = this;
         let canvas, texture, text;
@@ -40,28 +40,28 @@ class TitleTexture extends Component {
         initCanvas();
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, Stage.width, Stage.height, true, true);
+            canvas = self.initClass(Canvas, config.width, config.height, true, true);
             texture = new THREE.Texture(canvas.element);
             texture.minFilter = texture.magFilter = THREE.LinearFilter;
             texture.generateMipmaps = false;
             self.texture = texture;
         }
 
-        this.update = () => {
-            canvas.size(Stage.width, Stage.height);
+        this.update = (width, height) => {
+            canvas.size(width, height);
             if (text) {
                 canvas.remove(text);
                 text = text.destroy();
             }
-            text = CanvasFont.createText(canvas, Stage.width, Stage.height, 'Ripple'.toUpperCase(), {
-                font: `200 ${Device.phone ? 28 : 66}px Oswald`,
-                lineHeight: Device.phone ? 35 : 80,
+            text = CanvasFont.createText(canvas, width, height, 'Ripple'.toUpperCase(), {
+                font: `200 ${config.fontSize}px Oswald`,
+                lineHeight: config.lineHeight,
                 letterSpacing: 0,
+                textBaseline: 'alphabetic',
                 textAlign: 'center',
                 fillStyle: Config.UI_COLOR
             });
-            const offset = Device.phone ? 55 : 120;
-            text.y = (Stage.height - text.totalHeight + offset) / 2;
+            text.y = config.fontSize + (height - text.totalHeight) / 2;
             canvas.add(text);
             canvas.render();
             texture.needsUpdate = true;
@@ -74,37 +74,43 @@ class Title extends Component {
     constructor() {
         super();
         const self = this;
+        const ratio = 1920 / 1080,
+            fontSize = Device.phone ? 28 : 66,
+            lineHeight = Device.phone ? 35 : 80,
+            offset = -fontSize / 10;
         let title, shader, mesh,
             progress = 0;
 
-        this.object3D = new THREE.Object3D();
-        World.scene.add(this.object3D);
+        this.group = new THREE.Group();
+        this.group.visible = false;
+        World.scene.add(this.group);
 
         initCanvasTexture();
         initMesh();
         addListeners();
 
         function initCanvasTexture() {
-            title = self.initClass(TitleTexture);
+            title = self.initClass(TitleTexture, { width: Stage.width, height: Stage.height, fontSize, lineHeight });
         }
 
         function initMesh() {
-            self.object3D.visible = false;
             shader = self.initClass(Shader, vertTitle, fragTitle, {
-                uTime: World.time,
-                uResolution: World.resolution,
-                uTexture: { value: title.texture },
+                tMap: { value: title.texture },
                 uAlpha: { value: 0 },
                 uTransition: { value: progress },
                 uAmplitude: { value: Device.phone ? 75 : 100 },
                 uSpeed: { value: Device.phone ? 5 : 10 },
                 uDirection: { value: new THREE.Vector2(1, -1) },
+                uTime: World.time,
+                uResolution: World.resolution,
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
             });
             mesh = new THREE.Mesh(World.quad, shader.material);
-            self.object3D.add(mesh);
+            mesh.frustumCulled = false;
+            mesh.position.y = -offset;
+            self.group.add(mesh);
         }
 
         function addListeners() {
@@ -122,18 +128,24 @@ class Title extends Component {
         }
 
         function loop() {
-            if (!self.object3D.visible) return;
+            if (!self.group.visible) return;
             shader.uniforms.uTransition.value += (progress - shader.uniforms.uTransition.value) * 0.03;
         }
 
         this.update = () => {
-            title.update();
-            mesh.scale.set(Stage.width, Stage.height, 1);
+            let width = Stage.width,
+                height = Stage.width / ratio;
+            if (height < Stage.height) {
+                height = Stage.height;
+                width = height * ratio;
+            }
+            title.update(width, height);
+            mesh.scale.set(width, height, 1);
         };
 
         this.animateIn = () => {
             this.startRender(loop);
-            this.object3D.visible = true;
+            this.group.visible = true;
             shader.uniforms.uAlpha.value = 0;
             shader.uniforms.uTransition.value = 0;
             tween(shader.uniforms.uAlpha, { value: 1 }, 250, 'linear');
@@ -151,8 +163,9 @@ class Space extends Component {
         let texture1, texture2, shader, mesh, title,
             progress = 0;
 
-        this.object3D = new THREE.Object3D();
-        World.scene.add(this.object3D);
+        this.group = new THREE.Group();
+        this.group.visible = false;
+        World.scene.add(this.group);
 
         initTextures();
 
@@ -176,7 +189,7 @@ class Space extends Component {
             initTitle();
             addListeners();
             self.startRender(loop);
-            self.object3D.visible = true;
+            self.group.visible = true;
             shader.uniforms.uAlpha.value = 0;
             shader.uniforms.uTransition.value = 0;
             tween(shader.uniforms.uAlpha, { value: 1 }, 1000, 'easeOutCubic');
@@ -185,20 +198,20 @@ class Space extends Component {
         }
 
         function initMesh() {
-            self.object3D.visible = false;
             shader = self.initClass(Shader, vertRipple, fragRipple, {
-                uTime: World.time,
-                uResolution: World.resolution,
-                uTexture1: { value: texture1 },
-                uTexture2: { value: texture2 },
+                tMap1: { value: texture1 },
+                tMap2: { value: texture2 },
                 uAlpha: { value: 0 },
                 uTransition: { value: progress },
                 uDirection: { value: new THREE.Vector2(1, -1) },
+                uTime: World.time,
+                uResolution: World.resolution,
                 depthWrite: false,
                 depthTest: false
             });
             mesh = new THREE.Mesh(World.quad, shader.material);
-            self.object3D.add(mesh);
+            mesh.frustumCulled = false;
+            self.group.add(mesh);
         }
 
         function initTitle() {
@@ -228,7 +241,7 @@ class Space extends Component {
         }
 
         function loop() {
-            if (!self.object3D.visible) return;
+            if (!self.group.visible) return;
             shader.uniforms.uTransition.value += (progress - shader.uniforms.uTransition.value) * 0.03;
         }
     }
@@ -295,8 +308,8 @@ class World extends Component {
             for (let i = scene.children.length - 1; i >= 0; i--) {
                 const object = scene.children[i];
                 scene.remove(object);
-                if (object.geometry) object.geometry.dispose();
                 if (object.material) object.material.dispose();
+                if (object.geometry) object.geometry.dispose();
             }
             renderer.dispose();
             renderer.forceContextLoss();
