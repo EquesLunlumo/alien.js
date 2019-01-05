@@ -46,13 +46,13 @@ class Interface {
     }
 
     add(child) {
+        if (!this.classes) return;
         if (child.destroy) {
             this.classes.push(child);
             child.parent = this;
         }
         if (child.element) this.element.appendChild(child.element);
         else if (child.nodeName) this.element.appendChild(child);
-        return this;
     }
 
     delayedCall(callback, time = 0, ...params) {
@@ -68,21 +68,25 @@ class Interface {
     }
 
     clearTimers() {
+        if (!this.timers) return;
         for (let i = this.timers.length - 1; i >= 0; i--) this.clearTimeout(this.timers[i]);
         this.timers.length = 0;
     }
 
     startRender(callback, fps) {
+        if (!this.loops) return;
         this.loops.push(callback);
         Render.start(callback, fps);
     }
 
     stopRender(callback) {
+        if (!this.loops) return;
         this.loops.remove(callback);
         Render.stop(callback);
     }
 
     clearRenders() {
+        if (!this.loops) return;
         for (let i = this.loops.length - 1; i >= 0; i--) this.stopRender(this.loops[i]);
         this.loops.length = 0;
     }
@@ -105,6 +109,7 @@ class Interface {
     }
 
     remove(child) {
+        if (!this.classes) return;
         if (child.element) child.element.parentNode.removeChild(child.element);
         else if (child.nodeName) child.parentNode.removeChild(child);
         this.classes.remove(child);
