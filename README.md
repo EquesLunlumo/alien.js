@@ -342,6 +342,29 @@ Spring animation properties `spring` (amplitude) and `damping` (period).
 tween(data, { radius: 24, spring: 1.2, damping: 0.4 }, 1000, 'easeOutElastic');
 ```
 
+### Inbetweening with promises
+
+The `tween` and `defer` functions return a `Promise`, so you can also use `.then()` and `async/await` syntax.
+
+```js
+letters.forEach(async (letter, i) => {
+    await letter.tween({ y: -5, opacity: 0 }, 125, 'easeOutCubic', 15 * i);
+    await letter.transform({ y: 5 }).tween({ y: 0, opacity: 1 }, 300, 'easeOutCubic');
+});
+```
+
+```js
+await defer();
+// ...
+```
+
+And with the `wait` method of `Interface` and `Component`.
+
+```js
+await this.wait(250);
+// ...
+```
+
 ### Roadmap
 
 * Docs
