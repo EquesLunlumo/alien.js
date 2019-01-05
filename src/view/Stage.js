@@ -58,7 +58,17 @@ const Stage = new (class extends Interface {
 
         function resize(e) {
             self.size();
-            self.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
+            if (Device.mobile) {
+                if (window.innerWidth > window.innerHeight) {
+                    self.orientation = 'landscape';
+                    self.landscape = true;
+                    self.portrait = false;
+                } else {
+                    self.orientation = 'portrait';
+                    self.landscape = false;
+                    self.portrait = true;
+                }
+            }
             Events.emitter.fire(Events.RESIZE, e);
         }
 
