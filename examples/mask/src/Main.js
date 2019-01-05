@@ -42,7 +42,8 @@ class TitleTexture extends Component {
         function initCanvas() {
             canvas = self.initClass(Canvas, Stage.width, Stage.height, true, true);
             texture = new THREE.Texture(canvas.element);
-            texture.minFilter = THREE.LinearFilter;
+            texture.minFilter = texture.magFilter = THREE.LinearFilter;
+            texture.generateMipmaps = false;
             self.texture = texture;
         }
 
@@ -129,8 +130,9 @@ class Space extends Component {
 
         function finishSetup(img) {
             texture = new THREE.Texture(img);
-            texture.minFilter = THREE.LinearFilter;
+            texture.minFilter = texture.magFilter = THREE.LinearFilter;
             texture.needsUpdate = true;
+            texture.generateMipmaps = false;
             initMesh();
             initTitle();
             addListeners();
@@ -236,8 +238,9 @@ class World extends Component {
 
         function finishSetup(maskimg) {
             mask = new THREE.Texture(maskimg);
-            mask.minFilter = THREE.LinearFilter;
+            mask.minFilter = mask.magFilter = THREE.LinearFilter;
             mask.needsUpdate = true;
+            mask.generateMipmaps = false;
             shader.uniforms.tMask.value = mask;
         }
 
