@@ -38,6 +38,11 @@ class Effects extends Component {
             scene.add(mesh);
         }
 
+        function finalRender(scene, camera, rt) {
+            self.renderer.render(scene, camera, rt);
+            if (self.postRender) self.postRender();
+        }
+
         function addListeners() {
             self.events.add(Events.RESIZE, resize);
         }
@@ -62,7 +67,7 @@ class Effects extends Component {
 
         this.render = rt => {
             if (!this.enabled || !this.passes.length) {
-                this.renderer.render(this.scene, this.camera, rt || this.rt);
+                finalRender(this.scene, this.camera, rt || this.rt);
                 return;
             }
             this.renderer.render(this.scene, this.camera, renderTarget1, true);
@@ -76,7 +81,7 @@ class Effects extends Component {
             }
             mesh.material = this.passes[this.passes.length - 1].material;
             mesh.material.uniforms.tDiffuse.value = renderTarget1.texture;
-            this.renderer.render(scene, camera, rt || this.rt);
+            finalRender(scene, camera, rt || this.rt);
         };
 
         this.setSize = (width, height) => {
