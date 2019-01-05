@@ -305,7 +305,7 @@ class About extends Interface {
             if (Global.SOUND) AudioController.mute();
             setTimeout(() => {
                 const title = e.object.title.toLowerCase();
-                getURL(~title.indexOf('source') ? Config.ABOUT_GITHUB_URL : Config.ABOUT_HYDRA_URL, '_self');
+                open(~title.indexOf('source') ? Config.ABOUT_GITHUB_URL : Config.ABOUT_HYDRA_URL, '_self');
             }, 300);
         }
 
@@ -1115,7 +1115,7 @@ class Header extends Interface {
 
         function sourceClick() {
             if (Global.SOUND) AudioController.mute();
-            setTimeout(() => getURL(Config.ABOUT_GITHUB_URL, '_self'), 300);
+            setTimeout(() => open(Config.ABOUT_GITHUB_URL, '_self'), 300);
         }
     }
 }

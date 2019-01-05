@@ -196,9 +196,5 @@ window.clearTween = function (object) {
     TweenMax.killTweensOf(object);
 };
 
-window.getURL = function (url, target = '_blank') {
-    window.open(url, target);
-};
-
 if (!window.Config) window.Config = {};
 if (!window.Global) window.Global = {};
