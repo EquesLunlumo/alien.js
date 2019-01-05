@@ -16,10 +16,10 @@ class Render {
 
         function tick() {
             const t = TweenMax.ticker.time * 1000,
-                delta = Math.min(skipLimit, t - last);
+                dt = Math.min(skipLimit, t - last);
             last = t;
             self.time = t;
-            self.delta = delta;
+            self.delta = dt;
             for (let i = render.length - 1; i >= 0; i--) {
                 const callback = render[i];
                 if (!callback) {
@@ -32,7 +32,7 @@ class Render {
                     callback.last = t;
                     continue;
                 }
-                callback(t, delta);
+                callback(t, dt);
             }
         }
 

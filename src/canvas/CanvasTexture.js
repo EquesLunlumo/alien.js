@@ -9,13 +9,13 @@ import { CanvasObject } from './CanvasObject.js';
 
 class CanvasTexture extends CanvasObject {
 
-    constructor(texture, w = 0, h = w) {
+    constructor(texture, width = 0, height = width) {
         super();
         const self = this;
         let mask;
 
-        this.width = w;
-        this.height = h;
+        this.width = width;
+        this.height = height;
 
         initTexture();
 

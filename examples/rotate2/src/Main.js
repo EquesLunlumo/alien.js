@@ -333,8 +333,8 @@ class World extends Component {
             World.resolution.value.set(Stage.width * World.dpr, Stage.height * World.dpr);
         }
 
-        function loop(t, delta) {
-            World.time.value += delta * 0.001;
+        function loop(t, dt) {
+            World.time.value += dt * 0.001;
             effects.render();
             shader.uniforms.uBeamWidth.value += (beamWidth - shader.uniforms.uBeamWidth.value) * 0.3;
         }

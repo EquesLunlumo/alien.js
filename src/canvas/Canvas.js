@@ -10,11 +10,11 @@ import { CanvasGraphics } from './CanvasGraphics.js';
 
 class Canvas {
 
-    constructor(w, h = w, retina, whiteAlpha) {
+    constructor(width, height = width, retina, whiteAlpha) {
 
-        if (typeof h === 'boolean') {
-            retina = h;
-            h = w;
+        if (typeof height === 'boolean') {
+            retina = height;
+            height = width;
         }
 
         const self = this;
@@ -25,19 +25,19 @@ class Canvas {
         this.children = [];
         this.retina = retina;
 
-        size(w, h);
+        size(width, height);
 
-        function size(w, h = w) {
+        function size(width, height = width) {
             const ratio = retina ? 2 : 1;
-            self.element.width = w * ratio;
-            self.element.height = h * ratio;
-            self.width = w;
-            self.height = h;
+            self.element.width = width * ratio;
+            self.element.height = height * ratio;
+            self.width = width;
+            self.height = height;
             self.scale = ratio;
             self.object.size(self.width, self.height);
             self.context.scale(ratio, ratio);
-            self.element.style.width = w + 'px';
-            self.element.style.height = h + 'px';
+            self.element.style.width = width + 'px';
+            self.element.style.height = height + 'px';
             if (whiteAlpha) {
                 const alpha = new CanvasGraphics(self.width, self.height);
                 alpha.fillStyle = 'rgba(255, 255, 255, 0.004)';
@@ -83,8 +83,8 @@ class Canvas {
             return Utils.nullObject(this);
         };
 
-        this.getImageData = (x = 0, y = 0, w = this.element.width, h = this.element.height) => {
-            this.imageData = this.context.getImageData(x, y, w, h);
+        this.getImageData = (x = 0, y = 0, width = this.element.width, height = this.element.height) => {
+            this.imageData = this.context.getImageData(x, y, width, height);
             return this.imageData;
         };
 

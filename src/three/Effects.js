@@ -87,12 +87,12 @@ class Effects extends Component {
 
         this.destroy = () => {
             scene.remove(mesh);
-            mesh.geometry.dispose();
             mesh.material.dispose();
-            renderTarget1.dispose();
+            mesh.geometry.dispose();
             renderTarget2.dispose();
-            renderTarget1 = null;
+            renderTarget1.dispose();
             renderTarget2 = null;
+            renderTarget1 = null;
             mesh = null;
             camera = null;
             scene = null;

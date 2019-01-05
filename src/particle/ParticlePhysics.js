@@ -103,7 +103,7 @@ class ParticlePhysics extends Component {
         };
 
         this.addParticle = p => {
-            if (!integrator.type) integrator.type = typeof p.pos.z === 'number' ? '3D' : '2D';
+            if (!integrator.type) integrator.type = typeof p.pos.z === 'number' ? '3d' : '2d';
             p.system = this;
             this.particles.push(p);
             if (this.initializers.length) init(p);
