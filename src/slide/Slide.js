@@ -5,6 +5,7 @@
  */
 
 import { Events } from '../util/Events.js';
+import { Device } from '../util/Device.js';
 import { Component } from '../util/Component.js';
 import { Interaction } from '../util/Interaction.js';
 import { Mouse } from '../util/Mouse.js';
@@ -64,15 +65,22 @@ class Slide extends Component {
         }
 
         function addListeners() {
-            window.addEventListener('wheel', scroll);
-            self.events.add(Mouse.input, Interaction.START, down);
-            self.events.add(Mouse.input, Interaction.DRAG, drag);
+            if (Device.mobile) {
+                self.events.add(Mouse.input, Interaction.START, down);
+                self.events.add(Mouse.input, Interaction.DRAG, drag);
+                self.events.add(Mouse.input, Interaction.END, up);
+            } else {
+                window.addEventListener('wheel', scroll);
+            }
             self.events.add(Events.KEYBOARD_DOWN, keyDown);
             self.events.add(Events.RESIZE, resize);
             resize();
         }
 
         function stopInertia() {
+            axes.forEach(axis => {
+                scrollInertia[axis] = 0;
+            });
             clearTween(scrollTarget);
         }
 
@@ -81,7 +89,9 @@ class Slide extends Component {
             stopInertia();
             axes.forEach(axis => {
                 if (!self.max[axis]) return;
-                scrollTarget[axis] += e['delta' + axis.toUpperCase()];
+                const delta = 'delta' + axis.toUpperCase();
+                scrollTarget[axis] += e[delta];
+                scrollInertia[axis] = e[delta];
             });
         }
 
@@ -94,9 +104,22 @@ class Slide extends Component {
             if (!self.enabled) return;
             axes.forEach(axis => {
                 if (!self.max[axis]) return;
-                scrollTarget[axis] += -Mouse.input.delta[axis] * 4;
-                scrollInertia[axis] = -Mouse.input.delta[axis] * 4;
+                scrollTarget[axis] += -Mouse.input.delta[axis];
+                scrollInertia[axis] = -Mouse.input.delta[axis];
             });
+        }
+
+        function up() {
+            if (!self.enabled) return;
+            const multiplier = (() => {
+                    if (Device.os === 'android') return 35;
+                    return 25;
+                })(),
+                obj = {};
+            axes.forEach(axis => {
+                obj[axis] = scrollTarget[axis] - Mouse.input.delta[axis] * multiplier;
+            });
+            if (!self.preventInertia) tween(scrollTarget, obj, 2500, 'easeOutQuint');
         }
 
         function keyDown(e) {
@@ -122,14 +145,12 @@ class Slide extends Component {
                     scrollInertia[axis] *= 0.9;
                     if (Math.abs(scrollInertia[axis]) < 0.001) scrollInertia[axis] = 0;
                     scrollTarget[axis] += scrollInertia[axis];
-                    scrollTarget[axis] = Math.round(scrollTarget[axis] * 100) / 100;
                 }
                 const limit = self.max[axis] * 0.035;
                 scrollTarget[axis] += Sine.easeOut.getRatio(Math.round(self.progress) - self.progress) * limit;
-                scrollTarget[axis] = Math.round(scrollTarget[axis] * 100) / 100;
-                if (Math.abs(scrollTarget[axis] - self[axis]) > limit) scrollTarget[axis] -= (scrollTarget[axis] - self[axis]) * 0.5;
+                if (Math.abs(scrollTarget[axis] - self[axis]) > limit) scrollTarget[axis] -= (scrollTarget[axis] - self[axis]) * 0.6;
                 self.delta[axis] = scrollTarget[axis] - self[axis];
-                self.delta[axis] = self.delta[axis] < 0 ? Math.max(self.delta[axis], -limit) : Math.min(self.delta[axis], limit);
+                self.delta[axis] = Math.clamp(self.delta[axis], -limit, limit);
                 self[axis] += self.delta[axis];
                 self[axis] = Math.round(self[axis] * 100) / 100;
             });
@@ -166,6 +187,8 @@ class Slide extends Component {
                 slide = Math.round(progress);
             this.moveTo(slide - 1);
         };
+
+        this.stopInertia = stopInertia;
 
         this.destroy = () => {
             window.removeEventListener('wheel', scroll);
