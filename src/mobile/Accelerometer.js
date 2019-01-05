@@ -69,6 +69,11 @@ class Accelerometer {
                         }
                         break;
                 }
+                if (Device.os === 'android') {
+                    this.x *= -1;
+                    this.y *= -1;
+                    this.z *= -1;
+                }
             };
 
             const updateOrientation = e => {
@@ -98,7 +103,7 @@ class Accelerometer {
                 this.tilt = e.beta * this.toRadians;
                 this.yaw = e.alpha * this.toRadians;
                 this.roll = -e.gamma * this.toRadians;
-                if (Device.os === 'Android') this.heading = compassHeading(e.alpha, e.beta, e.gamma);
+                if (Device.os === 'android') this.heading = compassHeading(e.alpha, e.beta, e.gamma);
             };
 
             const compassHeading = (alpha, beta, gamma) => {
