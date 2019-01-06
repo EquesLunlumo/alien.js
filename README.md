@@ -15,6 +15,7 @@ Future web framework.
 * Canvas graphics engine.
 * Web audio engine.
 * SVG support and line animations.
+* Multi-pass post processing effects.
 * WebGL with [three.js](https://threejs.org/).
 * GLSL shaders with [glslify](https://github.com/glslify/glslify) (a node.js-style module system for GLSL).
 
