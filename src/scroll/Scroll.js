@@ -71,7 +71,6 @@ class Scroll extends Component {
                 const input = self.hitObject ? self.initClass(Interaction, self.hitObject) : Mouse.input;
                 self.events.add(input, Interaction.START, down);
                 self.events.add(input, Interaction.DRAG, drag);
-                self.events.add(input, Interaction.END, up);
             }
             self.events.add(Events.RESIZE, resize);
             resize();
@@ -106,19 +105,6 @@ class Scroll extends Component {
                 scrollTarget[axis] += -Mouse.input.delta[axis];
                 scrollInertia[axis] = -Mouse.input.delta[axis];
             });
-        }
-
-        function up() {
-            if (!self.enabled) return;
-            const multiplier = (() => {
-                    if (Device.os === 'android') return 35;
-                    return 25;
-                })(),
-                obj = {};
-            axes.forEach(axis => {
-                obj[axis] = scrollTarget[axis] - Mouse.input.delta[axis] * multiplier;
-            });
-            if (!self.preventInertia) tween(scrollTarget, obj, 2500, 'easeOutQuint');
         }
 
         function resize() {
