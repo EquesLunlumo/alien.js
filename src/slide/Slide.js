@@ -68,7 +68,6 @@ class Slide extends Component {
             if (Device.mobile) {
                 self.events.add(Mouse.input, Interaction.START, down);
                 self.events.add(Mouse.input, Interaction.DRAG, drag);
-                self.events.add(Mouse.input, Interaction.END, up);
             } else {
                 window.addEventListener('wheel', scroll);
             }
@@ -104,22 +103,9 @@ class Slide extends Component {
             if (!self.enabled) return;
             axes.forEach(axis => {
                 if (!self.max[axis]) return;
-                scrollTarget[axis] += -Mouse.input.delta[axis];
-                scrollInertia[axis] = -Mouse.input.delta[axis];
+                scrollTarget[axis] += -Mouse.input.delta[axis] * 4;
+                scrollInertia[axis] = -Mouse.input.delta[axis] * 4;
             });
-        }
-
-        function up() {
-            if (!self.enabled) return;
-            const multiplier = (() => {
-                    if (Device.os === 'android') return 35;
-                    return 25;
-                })(),
-                obj = {};
-            axes.forEach(axis => {
-                obj[axis] = scrollTarget[axis] - Mouse.input.delta[axis] * multiplier;
-            });
-            if (!self.preventInertia) tween(scrollTarget, obj, 2500, 'easeOutQuint');
         }
 
         function keyDown(e) {
