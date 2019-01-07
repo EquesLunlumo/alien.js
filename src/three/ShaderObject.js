@@ -43,6 +43,7 @@ class ShaderObject {
         const shader = new Shader(vertShaderObject, fragShaderObject, {
             tMap: { value: typeof map === 'string' ? Utils3D.getTexture(map) : map },
             uAlpha: { value: 1 },
+            blending: THREE.NoBlending,
             transparent: true,
             depthWrite: false,
             depthTest: false
@@ -69,7 +70,7 @@ class ShaderObject {
         function getAlpha() {
             let alpha = self.alpha,
                 parent = self.parent;
-            while (parent) {
+            while (parent && parent.alpha) {
                 alpha *= parent.alpha;
                 parent = parent.parent;
             }
