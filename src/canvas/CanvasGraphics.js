@@ -150,84 +150,84 @@ class CanvasGraphics extends CanvasObject {
         };
     }
 
-    set strokeStyle(v) {
-        this.props.strokeStyle = v;
-    }
-
     get strokeStyle() {
         return this.props.strokeStyle;
     }
 
-    set fillStyle(v) {
-        this.props.fillStyle = v;
+    set strokeStyle(v) {
+        this.props.strokeStyle = v;
     }
 
     get fillStyle() {
         return this.props.fillStyle;
     }
 
-    set lineWidth(v) {
-        this.props.lineWidth = v;
+    set fillStyle(v) {
+        this.props.fillStyle = v;
     }
 
     get lineWidth() {
         return this.props.lineWidth;
     }
 
-    set lineCap(v) {
-        this.props.lineCap = v;
+    set lineWidth(v) {
+        this.props.lineWidth = v;
     }
 
     get lineCap() {
         return this.props.lineCap;
     }
 
-    set lineDashOffset(v) {
-        this.props.lineDashOffset = v;
+    set lineCap(v) {
+        this.props.lineCap = v;
     }
 
     get lineDashOffset() {
         return this.props.lineDashOffset;
     }
 
-    set lineJoin(v) {
-        this.props.lineJoin = v;
+    set lineDashOffset(v) {
+        this.props.lineDashOffset = v;
     }
 
     get lineJoin() {
         return this.props.lineJoin;
     }
 
-    set miterLimit(v) {
-        this.props.miterLimit = v;
+    set lineJoin(v) {
+        this.props.lineJoin = v;
     }
 
     get miterLimit() {
         return this.props.miterLimit;
     }
 
-    set font(v) {
-        this.props.font = v;
+    set miterLimit(v) {
+        this.props.miterLimit = v;
     }
 
     get font() {
         return this.props.font;
     }
 
-    set textAlign(v) {
-        this.props.textAlign = v;
+    set font(v) {
+        this.props.font = v;
     }
 
     get textAlign() {
         return this.props.textAlign;
     }
 
-    set textBaseline(v) {
-        this.props.textBaseline = v;
+    set textAlign(v) {
+        this.props.textAlign = v;
     }
 
     get textBaseline() {
         return this.props.textBaseline;
+    }
+
+    set textBaseline(v) {
+        this.props.textBaseline = v;
     }
 }
 

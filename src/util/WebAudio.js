@@ -32,66 +32,66 @@ class WebAudio {
                 this.output.gain.setValueAtTime(0, WebAudio.context.currentTime);
 
                 this.gain = {
+                    get value() {
+                        return self.volume;
+                    },
                     set value(value) {
                         self.volume = value;
                         self.output.gain.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
-                    },
-                    get value() {
-                        return self.volume;
                     }
                 };
 
                 this.playbackRate = {
+                    get value() {
+                        return self.rate;
+                    },
                     set value(value) {
                         self.rate = value;
                         if (self.source) self.source.playbackRate.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
-                    },
-                    get value() {
-                        return self.rate;
                     }
                 };
 
                 this.stereoPan = {
+                    get value() {
+                        return self.pan;
+                    },
                     set value(value) {
                         self.pan = value;
                         if (self.stereo) self.stereo.pan.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
-                    },
-                    get value() {
-                        return self.pan;
                     }
                 };
+            }
 
-                this.play = () => {
-                    if (this.element) {
-                        this.playing = true;
-                        this.element.loop = this.loop;
-                        this.element.play();
-                    } else {
-                        if (!this.ready) WebAudio.loadSound(this.id);
-                        this.ready().then(() => {
-                            if (this.complete) {
-                                if (this.stopping && this.loop) {
-                                    this.stopping = false;
-                                    return;
-                                }
-                                this.playing = true;
-                                this.source = WebAudio.context.createBufferSource();
-                                this.source.buffer = this.buffer;
-                                this.source.loop = this.loop;
-                                this.source.playbackRate.setValueAtTime(this.rate, WebAudio.context.currentTime);
-                                this.source.connect(this.stereo ? this.stereo : this.output);
-                                this.source.start();
+            play() {
+                if (this.element) {
+                    this.playing = true;
+                    this.element.loop = this.loop;
+                    this.element.play();
+                } else {
+                    if (!this.ready) WebAudio.loadSound(this.id);
+                    this.ready().then(() => {
+                        if (this.complete) {
+                            if (this.stopping && this.loop) {
+                                this.stopping = false;
+                                return;
                             }
-                        });
-                    }
-                    this.output.gain.linearRampToValueAtTime(this.volume, WebAudio.context.currentTime + 0.015);
-                };
+                            this.playing = true;
+                            this.source = WebAudio.context.createBufferSource();
+                            this.source.buffer = this.buffer;
+                            this.source.loop = this.loop;
+                            this.source.playbackRate.setValueAtTime(this.rate, WebAudio.context.currentTime);
+                            this.source.connect(this.stereo ? this.stereo : this.output);
+                            this.source.start();
+                        }
+                    });
+                }
+                this.output.gain.linearRampToValueAtTime(this.volume, WebAudio.context.currentTime + 0.015);
+            }
 
-                this.stop = () => {
-                    if (this.element) this.element.pause();
-                    else this.source.stop();
-                    this.playing = false;
-                };
+            stop() {
+                if (this.element) this.element.pause();
+                else this.source.stop();
+                this.playing = false;
             }
         }
 
@@ -108,12 +108,12 @@ class WebAudio {
                 this.volume = 1;
                 this.output.connect(context.destination);
                 this.gain = {
+                    get value() {
+                        return self.volume;
+                    },
                     set value(value) {
                         self.volume = value;
                         self.output.gain.linearRampToValueAtTime(value, context.currentTime + 0.015);
-                    },
-                    get value() {
-                        return self.volume;
                     }
                 };
                 this.context = context;

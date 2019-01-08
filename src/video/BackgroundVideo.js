@@ -4,8 +4,8 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Interface } from '../util/Interface.js';
 import { Device } from '../util/Device.js';
+import { Interface } from '../util/Interface.js';
 import { Video } from './Video.js';
 
 class BackgroundVideo extends Interface {
