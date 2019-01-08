@@ -6,8 +6,8 @@
 
 import * as THREE from 'three';
 
-import { Component } from '../util/Component.js';
 import { Device } from '../util/Device.js';
+import { Component } from '../util/Component.js';
 import { Interaction } from '../util/Interaction.js';
 import { Mouse } from '../util/Mouse.js';
 import { Stage } from '../view/Stage.js';
@@ -60,8 +60,7 @@ class ShaderInteraction2D extends Component {
             if (!self.enabled || self.parent.preventRender) return;
             const hit = self.ray.checkHit(testObjects(), e);
             if (hit[0]) {
-                const i = self.meshes.indexOf(hit[0].object),
-                    object = self.objects[i];
+                const object = self.objects[self.meshes.indexOf(hit[0].object)];
                 if (!over) {
                     over = object;
                     over.onOver({ action: 'over', object });
