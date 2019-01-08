@@ -63,6 +63,7 @@ class Events {
             Events.RESIZE         = 'resize';
             Events.CLICK          = 'click';
             Events.HOVER          = 'hover';
+            Events.ORIENTATION    = 'orientation';
             Events.FULLSCREEN     = 'fullscreen';
             Events.KEYBOARD_PRESS = 'keyboard_press';
             Events.KEYBOARD_DOWN  = 'keyboard_down';
