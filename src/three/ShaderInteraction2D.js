@@ -23,7 +23,7 @@ class ShaderInteraction2D extends Component {
             calc = new THREE.Vector2();
         let over, click, preventHit;
 
-        this.ray = new Raycaster(camera);
+        this.ray = this.initClass(Raycaster, camera);
         this.meshes = [];
         this.objects = [];
         this.enabled = true;
@@ -31,9 +31,9 @@ class ShaderInteraction2D extends Component {
         addListeners();
         if (!Device.mobile) this.startRender(() => move(), 10);
 
-        function canTest(object) {
-            if (!object.visible) return false;
-            let parent = object.parent;
+        function canTest(mesh) {
+            if (!mesh.visible) return false;
+            let parent = mesh.parent;
             while (parent) {
                 if (!parent.visible) return false;
                 parent = parent.parent;
@@ -44,8 +44,8 @@ class ShaderInteraction2D extends Component {
         function testObjects() {
             test.length = 0;
             for (let i = self.meshes.length - 1; i >= 0; i--) {
-                const object = self.meshes[i];
-                if (canTest(object)) test.push(object);
+                const mesh = self.meshes[i];
+                if (canTest(mesh)) test.push(mesh);
             }
             return test;
         }
@@ -57,10 +57,10 @@ class ShaderInteraction2D extends Component {
         }
 
         function move(e = Mouse) {
-            if (!self.enabled || self.parent.preventRender) return;
-            const hit = self.ray.checkHit(testObjects(), e);
-            if (hit[0]) {
-                const object = self.objects[self.meshes.indexOf(hit[0].object)];
+            if (!self.enabled) return;
+            const hit = self.ray.checkHit(testObjects(), e)[0];
+            if (hit) {
+                const object = self.objects[self.meshes.indexOf(hit.object)];
                 if (!over) {
                     over = object;
                     over.onOver({ action: 'over', object });
@@ -81,7 +81,7 @@ class ShaderInteraction2D extends Component {
         function start(e) {
             const element = document.elementFromPoint(Mouse.x, Mouse.y);
             if (element && element.className === 'hit') return preventHit = true;
-            if (!self.enabled || self.parent.preventRender) return;
+            if (!self.enabled) return;
             if (Device.mobile) move(e);
             if (over) {
                 click = over;
@@ -92,7 +92,7 @@ class ShaderInteraction2D extends Component {
 
         function end(e) {
             if (preventHit) return preventHit = false;
-            if (!self.enabled || self.parent.preventRender) return;
+            if (!self.enabled) return;
             preventHit = false;
             if (click) {
                 if (performance.now() - hold.time > 750 || calc.subVectors(e, hold).length() > 50) return click = null;
