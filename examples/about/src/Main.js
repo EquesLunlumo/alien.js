@@ -1536,7 +1536,9 @@ class Fluid extends Component {
                 stencilBuffer: false
             };
             buffer1 = new THREE.WebGLRenderTarget(Stage.width * World.dpr, Stage.height * World.dpr, params);
+            buffer1.texture.generateMipmaps = false;
             buffer2 = new THREE.WebGLRenderTarget(Stage.width * World.dpr, Stage.height * World.dpr, params);
+            buffer2.texture.generateMipmaps = false;
         }
 
         function initShaders() {
