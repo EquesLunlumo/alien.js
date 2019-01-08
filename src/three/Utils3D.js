@@ -14,37 +14,41 @@ class Utils3D {
         local.matrixWorld.decompose(world.position, world.quaternion, world.scale);
     }
 
-    static createRT(width, height) {
-        const params = {
+    static createRT(width, height, type, format) {
+        const rt = new THREE.WebGLRenderTarget(width, height, {
             minFilter: THREE.LinearFilter,
             magFilter: THREE.LinearFilter,
-            format: THREE.RGBAFormat,
+            format: format || THREE.RGBAFormat,
+            type,
+            depthBuffer: false,
             stencilBuffer: false
-        };
-        return new THREE.WebGLRenderTarget(width, height, params);
+        });
+        rt.texture.generateMipmaps = false;
+        return rt;
     }
 
-    static getTexture(src) {
+    static getTexture(path) {
         if (!this.textures) this.textures = {};
-        if (!this.textures[src]) {
-            const img = Assets.createImage(src),
-                texture = new THREE.Texture(img);
+        if (!this.textures[path]) {
+            const texture = new THREE.Texture();
+            texture.format = /jpe?g/.test(path) ? THREE.RGBFormat : THREE.RGBAFormat;
+            const img = Assets.createImage(path);
             img.onload = () => {
+                texture.image = img;
                 texture.needsUpdate = true;
-                if (texture.onload) {
-                    texture.onload();
-                    texture.onload = null;
+                if (!THREE.Math.isPowerOfTwo(img.width * img.height)) {
+                    texture.minFilter = texture.magFilter = THREE.LinearFilter;
+                    texture.generateMipmaps = false;
                 }
-                if (!THREE.Math.isPowerOfTwo(img.width * img.height)) texture.minFilter = THREE.LinearFilter;
             };
-            this.textures[src] = texture;
+            this.textures[path] = texture;
         }
-        return this.textures[src];
+        return this.textures[path];
     }
 
-    static getRepeatTexture(src) {
-        const texture = this.getTexture(src);
-        texture.onload = () => texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    static getRepeatTexture(path) {
+        const texture = this.getTexture(path);
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
         return texture;
     }
 }
