@@ -25,7 +25,7 @@ const Stage = new (class extends Interface {
             window.addEventListener('keyup', keyUp);
             window.addEventListener('keypress', keyPress);
             window.addEventListener('resize', resize);
-            window.addEventListener('orientationchange', resize);
+            window.addEventListener('orientationchange', orientationchange);
             if (Device.mobile) window.addEventListener('touchstart', preventScroll, { passive: false });
             resize();
         }
@@ -58,18 +58,21 @@ const Stage = new (class extends Interface {
 
         function resize(e) {
             self.size();
-            if (Device.mobile) {
-                if (window.innerWidth > window.innerHeight) {
-                    self.orientation = 'landscape';
-                    self.landscape = true;
-                    self.portrait = false;
-                } else {
-                    self.orientation = 'portrait';
-                    self.landscape = false;
-                    self.portrait = true;
-                }
-            }
             Events.emitter.fire(Events.RESIZE, e);
+        }
+
+        function orientationchange(e) {
+            resize(e);
+            if (window.innerWidth > window.innerHeight) {
+                self.orientation = 'landscape';
+                self.landscape = true;
+                self.portrait = false;
+            } else {
+                self.orientation = 'portrait';
+                self.landscape = false;
+                self.portrait = true;
+            }
+            Events.emitter.fire(Events.ORIENTATION, e);
         }
 
         function preventScroll(e) {
