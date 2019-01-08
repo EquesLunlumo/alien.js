@@ -58,6 +58,8 @@ class Events {
             Events.PROGRESS       = 'progress';
             Events.UPDATE         = 'update';
             Events.LOADED         = 'loaded';
+            Events.SELECT         = 'select';
+            Events.END            = 'end';
             Events.ERROR          = 'error';
             Events.READY          = 'ready';
             Events.RESIZE         = 'resize';
