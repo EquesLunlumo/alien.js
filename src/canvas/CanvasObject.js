@@ -12,16 +12,16 @@ class CanvasObject {
     constructor() {
         this.visible = true;
         this.blendMode = 'source-over';
+        this.clipWidth = 0;
+        this.clipHeight = 0;
+        this.clipX = 0;
+        this.clipY = 0;
+        this.width = 0;
+        this.height = 0;
         this.x = 0;
         this.y = 0;
         this.px = 0;
         this.py = 0;
-        this.clipX = 0;
-        this.clipY = 0;
-        this.clipWidth = 0;
-        this.clipHeight = 0;
-        this.width = 0;
-        this.height = 0;
         this.rotation = 0;
         this.scale = 1;
         this.opacity = 1;
