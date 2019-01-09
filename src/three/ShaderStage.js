@@ -20,9 +20,7 @@ class ShaderStage extends Component {
             camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
 
         this.interaction = this.initClass(ShaderInteraction2D, camera);
-        this.renderer = renderer;
-        this.scene = scene;
-        this.camera = camera;
+        this.alpha = 1;
         this.children = [];
 
         addListeners();
@@ -43,7 +41,7 @@ class ShaderStage extends Component {
         }
 
         this.render = rt => {
-            if (this.preventRender) return;
+            if (!scene.children.length) return;
             const clear = renderer.autoClear;
             renderer.autoClear = false;
             renderer.render(scene, camera, rt || this.rt);

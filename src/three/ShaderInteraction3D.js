@@ -9,7 +9,7 @@ import { Interaction3D } from './Interaction3D.js';
 
 class ShaderInteraction3D extends Component {
 
-    constructor() {
+    constructor(camera) {
         super();
 
         this.meshes = [];
@@ -25,13 +25,13 @@ class ShaderInteraction3D extends Component {
             object.onClick({ action: e.action, object });
         }
 
-        this.add = (object, camera) => {
+        this.add = object => {
             this.meshes.push(object.mesh);
             this.objects.push(object);
             Interaction3D.find(camera).add(object.mesh, hover, click);
         };
 
-        this.remove = (object, camera) => {
+        this.remove = object => {
             Interaction3D.find(camera).remove(object.mesh);
             const i = this.meshes.indexOf(object.mesh);
             if (~i) {

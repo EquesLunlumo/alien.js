@@ -11,21 +11,28 @@ import { ShaderInteraction3D } from './ShaderInteraction3D.js';
 
 class ShaderScene extends Component {
 
-    constructor(scene) {
+    constructor(renderer, camera) {
         super();
+        const scene = new THREE.Scene();
 
-        this.group = new THREE.Group();
-        this.interaction = this.initClass(ShaderInteraction3D);
-        this.scene = scene;
+        this.interaction = this.initClass(ShaderInteraction3D, camera);
+        this.alpha = 1;
         this.children = [];
 
-        scene.add(this.group);
+        this.render = rt => {
+            if (!scene.children.length) return;
+            const clear = renderer.autoClear;
+            renderer.autoClear = false;
+            renderer.render(scene, camera, rt || this.rt);
+            renderer.autoClear = clear;
+        };
 
         this.add = child => {
             child.setStage(this);
             child.parent = this;
             this.children.push(child);
-            this.group.add(child.group);
+            scene.add(child.group);
+            if (child.type !== '3d') child.enable3D();
         };
 
         this.remove = child => {
@@ -33,14 +40,19 @@ class ShaderScene extends Component {
             child.parent = null;
             this.children.remove(child);
             this.interaction.remove(child);
-            this.group.remove(child.group);
+            scene.remove(child.group);
             child.mesh.material.dispose();
             child.mesh.geometry.dispose();
         };
 
         this.destroy = () => {
             if (this.children) for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
-            if (this.group.parent) this.group.parent.remove(this.group);
+            for (let i = scene.children.length - 1; i >= 0; i--) {
+                const object = scene.children[i];
+                scene.remove(object);
+                if (object.material) object.material.dispose();
+                if (object.geometry) object.geometry.dispose();
+            }
             return super.destroy();
         };
     }
