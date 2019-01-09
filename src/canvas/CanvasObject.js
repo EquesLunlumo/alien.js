@@ -82,6 +82,15 @@ class CanvasObject {
         this.children.remove(child);
     }
 
+    tween(props, time, ease, delay, complete, update) {
+        return tween(this, props, time, ease, delay, complete, update);
+    }
+
+    clearTween() {
+        clearTween(this);
+        return this;
+    }
+
     isMask() {
         let object = this;
         while (object) {
