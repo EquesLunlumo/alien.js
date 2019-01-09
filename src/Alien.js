@@ -54,7 +54,6 @@ export { Raycaster } from './three/Raycaster.js';
 export { ScreenProjection } from './three/ScreenProjection.js';
 export { Shader } from './three/Shader.js';
 export { ShaderStage } from './three/ShaderStage.js';
-export { ShaderScene } from './three/ShaderScene.js';
 export { ShaderObject } from './three/ShaderObject.js';
 export { ShaderInteraction2D } from './three/ShaderInteraction2D.js';
 export { ShaderInteraction3D } from './three/ShaderInteraction3D.js';
