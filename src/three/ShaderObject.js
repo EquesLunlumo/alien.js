@@ -234,7 +234,7 @@ class ShaderObject {
     getAlpha() {
         let alpha = this.alpha,
             parent = this.parent;
-        while (parent) {
+        while (parent && parent.alpha) {
             alpha *= parent.alpha;
             parent = parent.parent;
         }
