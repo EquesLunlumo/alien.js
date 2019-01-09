@@ -38,6 +38,7 @@ class ShaderObject {
             ShaderObject.initialized = true;
         }
 
+        this.type = '2d';
         this.shader = new Shader(vertShaderObject, fragShaderObject, {
             tMap: { value: typeof map === 'string' ? Utils3D.getTexture(map) : map },
             uAlpha: { value: 1 },

@@ -1,5 +1,5 @@
 /**
- * Shader 2D scene.
+ * Shader 2D or 3D scene.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
@@ -10,20 +10,27 @@ import { Events } from '../util/Events.js';
 import { Component } from '../util/Component.js';
 import { Stage } from '../view/Stage.js';
 import { ShaderInteraction2D } from './ShaderInteraction2D.js';
+import { ShaderInteraction3D } from './ShaderInteraction3D.js';
 
 class ShaderStage extends Component {
 
-    constructor(renderer) {
+    constructor(renderer, camera) {
         super();
         const self = this;
-        const scene = new THREE.Scene(),
-            camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+        const scene = new THREE.Scene();
 
-        this.interaction = this.initClass(ShaderInteraction2D, camera);
         this.alpha = 1;
         this.children = [];
 
-        addListeners();
+        if (camera) {
+            this.type = '3d';
+            this.interaction = this.initClass(ShaderInteraction3D, camera);
+        } else {
+            camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+            this.type = '2d';
+            this.interaction = this.initClass(ShaderInteraction2D, camera);
+            addListeners();
+        }
 
         function addListeners() {
             self.events.add(Events.RESIZE, resize);
@@ -53,6 +60,7 @@ class ShaderStage extends Component {
             child.parent = this;
             this.children.push(child);
             scene.add(child.group);
+            if (this.type === '3d' && child.type !== '3d') child.enable3D();
         };
 
         this.remove = child => {
