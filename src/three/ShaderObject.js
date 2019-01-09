@@ -67,7 +67,6 @@ class ShaderObject {
         this.group.add(this.mesh);
         this.children = [];
         this.isDirty = true;
-        this.updateValues();
     }
 
     updateValues() {
