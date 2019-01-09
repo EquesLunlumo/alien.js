@@ -57,22 +57,22 @@ class AlienKittyTexture extends Component {
         }
 
         function blink1() {
-            tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
-                tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
+            eyelid1.tween({ scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+                eyelid1.tween({ scaleY: 0.01 }, 180, 'easeOutCubic');
             });
-            tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 120, 'easeOutCubic', () => {
-                tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 180, 'easeOutCubic', () => {
+            eyelid2.tween({ scaleX: 1.3, scaleY: 1.3 }, 120, 'easeOutCubic', () => {
+                eyelid2.tween({ scaleX: 1, scaleY: 0.01 }, 180, 'easeOutCubic', () => {
                     blink();
                 });
             });
         }
 
         function blink2() {
-            tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
-                tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
+            eyelid1.tween({ scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+                eyelid1.tween({ scaleY: 0.01 }, 180, 'easeOutCubic');
             });
-            tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 180, 'easeOutCubic', () => {
-                tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 240, 'easeOutCubic', () => {
+            eyelid2.tween({ scaleX: 1.3, scaleY: 1.3 }, 180, 'easeOutCubic', () => {
+                eyelid2.tween({ scaleX: 1, scaleY: 0.01 }, 240, 'easeOutCubic', () => {
                     blink();
                 });
             });
