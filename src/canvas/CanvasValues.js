@@ -7,9 +7,12 @@
 class CanvasValues {
 
     constructor(style) {
-        this.styles = {};
-        if (!style) this.data = new Float32Array(6);
-        else this.styled = false;
+        if (!style) {
+            this.data = new Float32Array(6);
+        } else {
+            this.styles = {};
+            this.styled = false;
+        }
     }
 
     setTRSA(x, y, r, sx, sy, a) {
@@ -23,14 +26,14 @@ class CanvasValues {
     }
 
     calculate(values) {
-        const v = values.data,
-            m = this.data;
-        m[0] = m[0] + v[0];
-        m[1] = m[1] + v[1];
-        m[2] = m[2] + v[2];
-        m[3] = m[3] * v[3];
-        m[4] = m[4] * v[4];
-        m[5] = m[5] * v[5];
+        const m = this.data,
+            v = values.data;
+        m[0] += v[0];
+        m[1] += v[1];
+        m[2] += v[2];
+        m[3] *= v[3];
+        m[4] *= v[4];
+        m[5] *= v[5];
     }
 
     calculateStyle(parent) {
@@ -45,8 +48,8 @@ class CanvasValues {
     }
 
     set shadowOffsetX(v) {
-        this.styled = true;
         this.styles.shadowOffsetX = v;
+        this.styled = true;
     }
 
     get shadowOffsetY() {
@@ -54,8 +57,8 @@ class CanvasValues {
     }
 
     set shadowOffsetY(v) {
-        this.styled = true;
         this.styles.shadowOffsetY = v;
+        this.styled = true;
     }
 
     get shadowBlur() {
@@ -63,8 +66,8 @@ class CanvasValues {
     }
 
     set shadowBlur(v) {
-        this.styled = true;
         this.styles.shadowBlur = v;
+        this.styled = true;
     }
 
     get shadowColor() {
@@ -72,8 +75,8 @@ class CanvasValues {
     }
 
     set shadowColor(v) {
-        this.styled = true;
         this.styles.shadowColor = v;
+        this.styled = true;
     }
 
     get values() {

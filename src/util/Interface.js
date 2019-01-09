@@ -202,11 +202,11 @@ class Interface {
         return this;
     }
 
-    bg(src, x, y, repeat) {
+    bg(path, x, y, repeat) {
         const style = {};
-        if (~src.indexOf('.') && !~src.indexOf(',') && !~src.indexOf('data:')) src = Assets.getPath(src);
-        if ((~src.indexOf('.') && !~src.indexOf(',')) || ~src.indexOf('data:')) style.backgroundImage = 'url(' + src + ')';
-        else style.backgroundColor = src;
+        if (~path.indexOf('.') && !~path.indexOf(',') && !~path.indexOf('data:')) path = Assets.getPath(path);
+        if ((~path.indexOf('.') && !~path.indexOf(',')) || ~path.indexOf('data:')) style.backgroundImage = 'url(' + path + ')';
+        else style.backgroundColor = path;
         if (typeof x !== 'undefined') {
             x = typeof x === 'number' ? x + 'px' : x;
             y = typeof y === 'number' ? y + 'px' : y;
@@ -251,9 +251,9 @@ class Interface {
         return this;
     }
 
-    mask(src) {
-        if (~src.indexOf('.')) src = Assets.getPath(src);
-        const mask = (src.includes(['data:', '.']) ? 'url(' + src + ')' : src) + ' center / contain no-repeat';
+    mask(path) {
+        if (~path.indexOf('.')) path = Assets.getPath(path);
+        const mask = (path.includes(['data:', '.']) ? 'url(' + path + ')' : path) + ' center / contain no-repeat';
         TweenMax.set(this.element, {
             mask,
             '-webkit-mask': mask
