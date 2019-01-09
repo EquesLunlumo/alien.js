@@ -31,21 +31,11 @@ class ShaderInteraction2D extends Component {
         addListeners();
         if (!Device.mobile) this.startRender(() => move(), 10);
 
-        function canTest(mesh) {
-            if (!mesh.visible) return false;
-            let parent = mesh.parent;
-            while (parent) {
-                if (!parent.visible) return false;
-                parent = parent.parent;
-            }
-            return true;
-        }
-
         function testObjects() {
             test.length = 0;
-            for (let i = self.meshes.length - 1; i >= 0; i--) {
-                const mesh = self.meshes[i];
-                if (canTest(mesh)) test.push(mesh);
+            for (let i = self.objects.length - 1; i >= 0; i--) {
+                const object = self.objects[i];
+                if (object.determineVisible()) test.push(object.mesh);
             }
             return test;
         }

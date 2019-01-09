@@ -38,9 +38,7 @@ class ShaderObject {
             ShaderObject.initialized = true;
         }
 
-        const self = this;
-
-        const shader = new Shader(vertShaderObject, fragShaderObject, {
+        this.shader = new Shader(vertShaderObject, fragShaderObject, {
             tMap: { value: typeof map === 'string' ? Utils3D.getTexture(map) : map },
             uAlpha: { value: 1 },
             blending: THREE.NoBlending,
@@ -48,64 +46,62 @@ class ShaderObject {
             depthWrite: false,
             depthTest: false
         });
-
         this.usingMap = !!map;
-        this.tMap = shader.uniforms.tMap;
-        this.group = new THREE.Group();
-        this.x = 0;
-        this.y = 0;
-        this.z = 0;
-        this.rotation = 0;
-        this.scaleX = 1;
-        this.scaleY = 1;
-        this.scale = 1;
+        this.tMap = this.shader.uniforms.tMap;
         this.alpha = 1;
+        this.values = {
+            x: 0,
+            y: 0,
+            z: 0,
+            rotation: 0,
+            scaleX: 1,
+            scaleY: 1,
+            scale: 1
+        };
         this.dimensions = new THREE.Vector3(width, height, 1);
-        this.children = [];
-        this.shader = shader;
-        this.mesh = new THREE.Mesh(ShaderObject.getGeometry('2d'), map ? shader.material : new THREE.MeshBasicMaterial({ transparent: true, opacity: 0 }));
+        this.group = new THREE.Group();
+        this.mesh = new THREE.Mesh(ShaderObject.getGeometry('2d'), this.shader.material);
         this.mesh.frustumCulled = false;
+        this.mesh.onBeforeRender = () => this.updateValues();
         this.group.add(this.mesh);
+        this.children = [];
+        this.isDirty = true;
+        this.updateValues();
+    }
 
-        function getAlpha() {
-            let alpha = self.alpha,
-                parent = self.parent;
-            while (parent && parent.alpha) {
-                alpha *= parent.alpha;
-                parent = parent.parent;
-            }
-            return alpha;
+    updateValues() {
+        if (!this.determineVisible()) return;
+        if (this.mesh.material.uniforms.uAlpha) this.mesh.material.uniforms.uAlpha.value = this.getAlpha();
+        if (!this.isDirty) return;
+        this.group.position.x = this.values.x;
+        this.group.position.y = this.type === '3d' ? this.values.y : -this.values.y;
+        this.group.position.z = this.values.z;
+        if (this.type !== '3d') this.group.rotation.z = Math.radians(-this.values.rotation);
+        if (this.values.scale !== 1) {
+            this.group.position.x += (this.dimensions.x - this.dimensions.x * this.values.scale) / 2;
+            this.group.position.y -= (this.dimensions.y - this.dimensions.y * this.values.scale) / 2;
         }
-
-        function update() {
-            self.group.position.x = self.x;
-            self.group.position.y = -self.y;
-            self.group.position.z = self.z;
-            self.group.rotation.z = Math.radians(-self.rotation);
-            if (self.scale !== 1) {
-                self.group.position.x += (self.dimensions.x - (self.dimensions.x * self.scale)) / 2;
-                self.group.position.y -= (self.dimensions.y - (self.dimensions.y * self.scale)) / 2;
-            }
-            if (map) {
-                self.mesh.scale.set(1, 1, 1).multiply(self.dimensions);
-                self.group.scale.x = self.scaleX * self.scale;
-                self.group.scale.y = self.scaleY * self.scale;
-            } else {
-                self.group.scale.set(self.scaleX * self.scale, self.scaleY * self.scale, 1);
-            }
-            const shader = self.mesh.material.shader;
-            if (shader && shader.uniforms && shader.uniforms.uAlpha) shader.uniforms.uAlpha.value = getAlpha();
-            if (self.calcMask) {
-                const v = self.isMasked;
-                v.copy(v.origin);
-                self.group.localToWorld(v);
-                v.z = v.width;
-                v.w = v.height;
-            }
+        if (this.usingMap) {
+            this.mesh.scale.set(1, 1, 1).multiply(this.dimensions);
+            this.group.scale.x = this.values.scaleX * this.values.scale;
+            this.group.scale.y = this.values.scaleY * this.values.scale;
+        } else {
+            this.group.scale.set(this.values.scaleX * this.values.scale, this.values.scaleY * this.values.scale, 1);
         }
+        if (this.calcMask) {
+            const v = this.isMasked;
+            v.copy(v.origin);
+            this.group.localToWorld(v);
+            v.z = v.width;
+            v.w = v.height;
+        }
+        this.isDirty = false;
+    }
 
-        this.mesh.onBeforeRender = update;
-        update();
+    size(width, height = width) {
+        this.width = width;
+        this.height = height;
+        return this;
     }
 
     add(child) {
@@ -114,7 +110,7 @@ class ShaderObject {
         this.children.push(child);
         this.group.add(child.group);
         if (this.isMasked) child.mask(this.isMasked, this.maskVertexShader, this.maskFragmentShader);
-        if (this.type === '3d') child.enable3D();
+        if (this.type === '3d' && child.type !== '3d') child.enable3D();
     }
 
     setStage(stage) {
@@ -153,13 +149,12 @@ class ShaderObject {
         return this;
     }
 
-    enable3D() {
+    enable3D(style2d) {
         this.type = '3d';
-        this.dimensions.x *= 0.005;
-        this.dimensions.y *= 0.005;
-        this.mesh.geometry = ShaderObject.getGeometry('3d');
+        this.mesh.geometry = ShaderObject.getGeometry(style2d ? '2d' : '3d');
         this.mesh.material.depthWrite = true;
         this.mesh.material.depthTest = true;
+        this.mesh.frustumCulled = true;
         return this;
     }
 
@@ -178,31 +173,37 @@ class ShaderObject {
         return this;
     }
 
-    useShader(shader) {
-        this.mesh.material = shader.material;
-    }
-
     useGeometry(geom) {
         this.mesh.geometry = geom;
+        return this;
     }
 
-    updateMap(map = null) {
-        this.shader.uniforms.tMap.value = typeof map === 'string' ? Utils3D.getTexture(map) : map;
+    useShader(shader) {
+        if (shader) {
+            shader.uniforms.tMap = this.shader.uniforms.tMap;
+            shader.uniforms.uAlpha = this.shader.uniforms.uAlpha;
+            this.mesh.material = shader.material;
+        } else {
+            this.mesh.material = this.shader.material;
+        }
+        return this;
     }
 
     mask(d, vertexShader, fragmentShader) {
         let v;
-        if (!(d instanceof THREE.Vector4)) {
+        if (d instanceof THREE.Vector4) {
+            this.isMasked = true;
+            v = d;
+        } else {
             v = new THREE.Vector4(d.x, d.y, 0, 1);
-            v.origin = new THREE.Vector4().copy(v);
+            v.origin = (new THREE.Vector4).copy(v);
             v.width = d.width;
             v.height = d.height;
             this.calcMask = true;
             this.isMasked = v;
-        } else {
-            this.isMasked = true;
-            v = d;
         }
+        this.maskVertexShader = vertexShader;
+        this.maskFragmentShader = fragmentShader;
         if (this.usingMap) {
             const shader = new Shader(vertexShader || vertShaderObjectMask, fragmentShader || fragShaderObjectMask, {
                 tMap: this.tMap,
@@ -214,23 +215,116 @@ class ShaderObject {
             });
             this.useShader(shader);
         }
-        this.maskVertexShader = vertexShader;
-        this.maskFragmentShader = fragmentShader;
         for (let i = 0; i < this.children.length; i++) this.children[i].mask(v, vertexShader, fragmentShader);
         return v;
     }
 
-    getScreenCoords() {
-        const v3 = new THREE.Vector3();
-        this.mesh.localToWorld(v3);
-        v3.y *= -1;
-        return v3;
+    determineVisible() {
+        let mesh = this.mesh;
+        if (!mesh.visible) return false;
+        let parent = mesh.parent;
+        while (parent) {
+            if (!parent.visible) return false;
+            parent = parent.parent;
+        }
+        return true;
+    }
+
+    getAlpha() {
+        let alpha = this.alpha,
+            parent = this.parent;
+        while (parent) {
+            alpha *= parent.alpha;
+            parent = parent.parent;
+        }
+        return alpha;
     }
 
     destroy() {
         if (this.children) for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
         if (this.parent) this.parent.remove(this);
         return Utils.nullObject(this);
+    }
+
+    get width() {
+        return this.dimensions.x;
+    }
+
+    set width(v) {
+        this.dimensions.x = v;
+        this.isDirty = true;
+    }
+
+    get height() {
+        return this.dimensions.y;
+    }
+
+    set height(v) {
+        this.dimensions.y = v;
+        this.isDirty = true;
+    }
+
+    get x() {
+        return this.values.x;
+    }
+
+    set x(v) {
+        this.values.x = v;
+        this.isDirty = true;
+    }
+
+    get y() {
+        return this.values.y;
+    }
+
+    set y(v) {
+        this.values.y = v;
+        this.isDirty = true;
+    }
+
+    get z() {
+        return this.values.z;
+    }
+
+    set z(v) {
+        this.values.z = v;
+        this.isDirty = true;
+    }
+
+    get rotation() {
+        return this.values.rotation;
+    }
+
+    set rotation(v) {
+        this.values.rotation = v;
+        this.isDirty = true;
+    }
+
+    get scale() {
+        return this.values.scale;
+    }
+
+    set scale(v) {
+        this.values.scale = v;
+        this.isDirty = true;
+    }
+
+    get scaleX() {
+        return this.values.scaleX;
+    }
+
+    set scaleX(v) {
+        this.values.scaleX = v;
+        this.isDirty = true;
+    }
+
+    get scaleY() {
+        return this.values.scaleY;
+    }
+
+    set scaleY(v) {
+        this.values.scaleY = v;
+        this.isDirty = true;
     }
 }
 
