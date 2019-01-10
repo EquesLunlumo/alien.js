@@ -18,6 +18,7 @@ Future web framework.
 * Multi-pass post processing effects.
 * WebGL with [three.js](https://threejs.org/).
 * GLSL shaders with [glslify](https://github.com/glslify/glslify) (a node.js-style module system for GLSL).
+* Shader interface system.
 
 ### Examples
 
@@ -42,6 +43,7 @@ glslify [shader](https://alien.js.org/examples/shader/public/)
 [noise dizzy](https://alien.js.org/examples/noise_dizzy/public/)  
 [directional warp](https://alien.js.org/examples/directional_warp/public/)  
 [directional warp 2](https://alien.js.org/examples/directional_warp2/public/) (scroll transition)  
+[directional warp 3](https://alien.js.org/examples/directional_warp3/public/) (shader interface)  
 [ripple](https://alien.js.org/examples/ripple/public/)  
 [perlin](https://alien.js.org/examples/perlin/public/)  
 [glitch displace](https://alien.js.org/examples/glitch_displace/public/)  
@@ -370,7 +372,6 @@ await this.wait(250);
 
 * Docs
 * Tests
-* Shader interface examples
 * Particle examples
 * FX and lighting
 * Error handling
