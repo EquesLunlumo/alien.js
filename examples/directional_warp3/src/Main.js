@@ -10,6 +10,8 @@ import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont
     Assets, Slide, SlideLoader, SlideVideo, MultiLoader, AssetLoader, FontLoader, StateDispatcher, Utils3D,
     Shader, ShaderStage, ShaderObject, Effects } from '../alien.js/src/Alien.js';
 
+import vertTitleListItem from './shaders/title_list_item.vert';
+import fragTitleListItem from './shaders/title_list_item.frag';
 import vertRipple from './shaders/ripple.vert';
 import fragRipple from './shaders/ripple.frag';
 import vertDirectionalWarp from './shaders/directional_warp.vert';
@@ -127,7 +129,7 @@ class TitleTexture extends Component {
     }
 }
 
-class TitleStageItem extends Component {
+class TitleListItem extends Component {
 
     constructor(wrapper, data) {
         super();
@@ -135,7 +137,7 @@ class TitleStageItem extends Component {
         const fontSize = Device.phone ? 28 : 66,
             lineHeight = Device.phone ? 35 : 80,
             offset = -fontSize / 10;
-        let ui, title, texture,
+        let ui, title, texture, shader,
             width = 1200,
             height = lineHeight * 2;
 
@@ -152,7 +154,19 @@ class TitleStageItem extends Component {
             ui.add(texture);
             wrapper.add(ui);
 
+            shader = self.initClass(Shader, vertTitleListItem, fragTitleListItem, {
+                tMap: { value: title.texture },
+                uActive: { value: 0 },
+                uResolution: World.resolution,
+                uTime: World.time,
+                blending: THREE.NoBlending,
+                transparent: true,
+                depthWrite: false,
+                depthTest: false
+            });
+
             texture.interact(hover, click);
+            texture.useShader(shader);
         }
 
         function hover(e) {
@@ -174,15 +188,17 @@ class TitleStageItem extends Component {
 
         this.hoverIn = () => {
             texture.tween({ scale: 1.025 }, 300, 'easeOutCubic');
+            tween(shader.uniforms.uActive, { value: 1 }, 300, 'easeOutCubic');
         };
 
         this.hoverOut = () => {
             texture.tween({ scale: 1 }, 600, 'easeOutCubic');
+            tween(shader.uniforms.uActive, { value: 0 }, 600, 'easeOutCubic');
         };
     }
 }
 
-class TitleStage extends Component {
+class TitleList extends Component {
 
     constructor() {
         super();
@@ -223,7 +239,7 @@ class TitleStage extends Component {
 
         function initLayout() {
             Config.LIST.forEach(data => {
-                const item = self.initClass(TitleStageItem, ui, data);
+                const item = self.initClass(TitleListItem, ui, data);
                 self.events.add(item, Events.HOVER, itemHover);
                 self.events.add(item, Events.CLICK, itemClick);
                 items.push(item);
@@ -278,7 +294,7 @@ class Title extends Component {
     constructor() {
         super();
         const self = this;
-        let stage, shader, mesh;
+        let list, shader, mesh;
 
         this.group = new THREE.Group();
         World.scene.add(this.group);
@@ -287,12 +303,12 @@ class Title extends Component {
         initMesh();
 
         function initViews() {
-            stage = self.initClass(TitleStage);
+            list = self.initClass(TitleList);
         }
 
         function initMesh() {
             shader = self.initClass(Shader, vertRipple, fragRipple, {
-                tMap: { value: stage.rt.texture },
+                tMap: { value: list.rt.texture },
                 uAlpha: { value: 0 },
                 uTransition: { value: 0 },
                 uAmplitude: { value: Device.phone ? 75 : 100 },
@@ -310,12 +326,12 @@ class Title extends Component {
         }
 
         this.resize = () => {
-            stage.resize();
+            list.resize();
             mesh.scale.set(Stage.width, Stage.height, 1);
         };
 
         this.update = () => {
-            stage.update();
+            list.update();
         };
 
         this.animateIn = callback => {
