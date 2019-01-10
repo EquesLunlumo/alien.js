@@ -19,10 +19,10 @@
     "glsl-halftone": "^1.0.4",
     "glsl-hash-blur": "^1.0.3",
     "http-server": "^0.11.1",
-    "rollup": "^0.68.2",
-    "rollup-plugin-bundleutils": "^1.0.10",
+    "rollup": "^1.1.0",
+    "rollup-plugin-bundleutils": "^1.1.0",
     "rollup-plugin-eslint": "^5.0.0",
-    "rollup-plugin-glslify": "^1.0.7",
+    "rollup-plugin-glslify": "^1.1.0",
     "rollup-plugin-replace": "^2.1.0",
     "rollup-watch": "^4.3.1"
   }
