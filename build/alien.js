@@ -8182,17 +8182,13 @@ Array.prototype.shuffle = function () {
     return this;
 };
 
-Array.storeRandom = function (arr) {
-    arr.randomStore = [];
-};
-
 Array.prototype.random = function (range) {
     let value = Math.floor(Math.random() * this.length);
-    if (range && !this.randomStore) Array.storeRandom(this);
+    if (range && !this.randomStore) this.randomStore = [];
     if (!this.randomStore) return this[value];
-    if (range > this.length - 1) range = this.length;
+    if (range > this.length) range = this.length;
     if (range > 1) {
-        while (~this.randomStore.indexOf(value)) if (value++ > this.length - 1) value = 0;
+        while (~this.randomStore.indexOf(value)) if (++value > this.length - 1) value = 0;
         this.randomStore.push(value);
         if (this.randomStore.length >= range) this.randomStore.shift();
     }
@@ -8278,6 +8274,11 @@ window.post = function (url, body, options = {}) {
 };
 
 window.defer = function (callback) {
+    if (!callback) {
+        const promise = Promise.create();
+        TweenMax$1.delayedCall(0.001, promise.resolve);
+        return promise;
+    }
     TweenMax$1.delayedCall(0.001, callback);
 };
 
@@ -8301,10 +8302,6 @@ window.tween = function (object, props, time, ease, delay, complete, update) {
 
 window.clearTween = function (object) {
     TweenMax$1.killTweensOf(object);
-};
-
-window.getURL = function (url, target = '_blank') {
-    window.open(url, target);
 };
 
 if (!window.Config) window.Config = {};
@@ -8409,10 +8406,10 @@ class Render {
 
         function tick() {
             const t = TweenMax$1.ticker.time * 1000,
-                delta = Math.min(skipLimit, t - last);
+                dt = Math.min(skipLimit, t - last);
             last = t;
             self.time = t;
-            self.delta = delta;
+            self.delta = dt;
             for (let i = render.length - 1; i >= 0; i--) {
                 const callback = render[i];
                 if (!callback) {
@@ -8425,7 +8422,7 @@ class Render {
                     callback.last = t;
                     continue;
                 }
-                callback(t, delta);
+                callback(t, dt);
             }
         }
 
@@ -8510,11 +8507,14 @@ class Events {
             Events.PROGRESS       = 'progress';
             Events.UPDATE         = 'update';
             Events.LOADED         = 'loaded';
+            Events.SELECT         = 'select';
+            Events.END            = 'end';
             Events.ERROR          = 'error';
             Events.READY          = 'ready';
             Events.RESIZE         = 'resize';
             Events.CLICK          = 'click';
             Events.HOVER          = 'hover';
+            Events.ORIENTATION    = 'orientation';
             Events.FULLSCREEN     = 'fullscreen';
             Events.KEYBOARD_PRESS = 'keyboard_press';
             Events.KEYBOARD_DOWN  = 'keyboard_down';
@@ -8574,6 +8574,139 @@ class Events {
 
         this.unlink = emitter => {
             linked.remove(emitter);
+        };
+    }
+}
+
+/**
+ * Alien component.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Component {
+
+    constructor() {
+        this.events = new Events();
+        this.classes = [];
+        this.timers = [];
+        this.loops = [];
+    }
+
+    initClass(object, ...params) {
+        const child = new object(...params);
+        this.add(child);
+        return child;
+    }
+
+    add(child) {
+        if (!this.classes) return;
+        if (child.destroy) {
+            this.classes.push(child);
+            child.parent = this;
+        }
+    }
+
+    delayedCall(callback, time = 0, ...params) {
+        if (!this.timers) return;
+        TweenMax$1.delayedCall(time * 0.001, callback, params);
+        this.timers.push(callback);
+        if (this.timers.length > 50) this.timers.shift();
+        return callback;
+    }
+
+    clearTimeout(callback) {
+        TweenMax$1.killDelayedCallsTo(callback);
+    }
+
+    clearTimers() {
+        if (!this.timers) return;
+        for (let i = this.timers.length - 1; i >= 0; i--) this.clearTimeout(this.timers[i]);
+        this.timers.length = 0;
+    }
+
+    startRender(callback, fps) {
+        if (!this.loops) return;
+        this.loops.push(callback);
+        Render.start(callback, fps);
+    }
+
+    stopRender(callback) {
+        if (!this.loops) return;
+        this.loops.remove(callback);
+        Render.stop(callback);
+    }
+
+    clearRenders() {
+        if (!this.loops) return;
+        for (let i = this.loops.length - 1; i >= 0; i--) this.stopRender(this.loops[i]);
+        this.loops.length = 0;
+    }
+
+    wait(time = 0) {
+        const promise = Promise.create();
+        this.delayedCall(promise.resolve, time);
+        return promise;
+    }
+
+    destroy() {
+        if (!this.classes) return;
+        this.removed = true;
+        const parent = this.parent;
+        if (parent && !parent.removed && parent.remove) parent.remove(this);
+        for (let i = this.classes.length - 1; i >= 0; i--) {
+            const child = this.classes[i];
+            if (child && child.destroy) child.destroy();
+        }
+        this.classes.length = 0;
+        this.clearRenders();
+        this.clearTimers();
+        this.events.destroy();
+        return Utils.nullObject(this);
+    }
+
+    remove(child) {
+        if (!this.classes) return;
+        this.classes.remove(child);
+    }
+}
+
+/**
+ * Render worker.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class Worker extends Component {
+
+    constructor(callback, budget = 4) {
+        super();
+        const self = this;
+        let elapsed = 0;
+
+        this.startRender(loop);
+
+        function loop() {
+            while (elapsed < budget) {
+                if (self.dead) return;
+                const start = performance.now();
+                if (callback) callback();
+                elapsed += performance.now() - start;
+            }
+            elapsed = 0;
+        }
+
+        this.stop = () => {
+            this.dead = true;
+            this.stopRender(loop);
+        };
+
+        this.pause = () => {
+            this.stopRender(loop);
+        };
+
+        this.resume = () => {
+            this.startRender(loop);
         };
     }
 }
@@ -8663,88 +8796,6 @@ class Device {
 }
 
 Device.init();
-
-/**
- * Alien component.
- *
- * @author Patrick Schroen / https://github.com/pschroen
- */
-
-class Component {
-
-    constructor() {
-        this.events = new Events();
-        this.classes = [];
-        this.timers = [];
-        this.loops = [];
-    }
-
-    initClass(object, ...params) {
-        const child = new object(...params);
-        this.add(child);
-        return child;
-    }
-
-    add(child) {
-        if (child.destroy) {
-            this.classes.push(child);
-            child.parent = this;
-        }
-        return this;
-    }
-
-    delayedCall(callback, time = 0, ...params) {
-        if (!this.timers) return;
-        TweenMax$1.delayedCall(time * 0.001, callback, params);
-        this.timers.push(callback);
-        if (this.timers.length > 50) this.timers.shift();
-        return callback;
-    }
-
-    clearTimeout(callback) {
-        TweenMax$1.killDelayedCallsTo(callback);
-    }
-
-    clearTimers() {
-        for (let i = this.timers.length - 1; i >= 0; i--) this.clearTimeout(this.timers[i]);
-        this.timers.length = 0;
-    }
-
-    startRender(callback, fps) {
-        this.loops.push(callback);
-        Render.start(callback, fps);
-    }
-
-    stopRender(callback) {
-        this.loops.remove(callback);
-        Render.stop(callback);
-    }
-
-    clearRenders() {
-        for (let i = this.loops.length - 1; i >= 0; i--) this.stopRender(this.loops[i]);
-        this.loops.length = 0;
-    }
-
-    destroy() {
-        if (!this.classes) return;
-        this.removed = true;
-        const parent = this.parent;
-        if (parent && !parent.removed && parent.remove) parent.remove(this);
-        for (let i = this.classes.length - 1; i >= 0; i--) {
-            const child = this.classes[i];
-            if (child && child.destroy) child.destroy();
-        }
-        this.classes.length = 0;
-        this.clearRenders();
-        this.clearTimers();
-        this.events.destroy();
-        return Utils.nullObject(this);
-    }
-
-    remove(child) {
-        this.classes.remove(child);
-    }
-}
 
 /**
  * Assets helper class with image promise method.
@@ -8847,13 +8898,13 @@ class Interface {
     }
 
     add(child) {
+        if (!this.classes) return;
         if (child.destroy) {
             this.classes.push(child);
             child.parent = this;
         }
         if (child.element) this.element.appendChild(child.element);
         else if (child.nodeName) this.element.appendChild(child);
-        return this;
     }
 
     delayedCall(callback, time = 0, ...params) {
@@ -8869,23 +8920,33 @@ class Interface {
     }
 
     clearTimers() {
+        if (!this.timers) return;
         for (let i = this.timers.length - 1; i >= 0; i--) this.clearTimeout(this.timers[i]);
         this.timers.length = 0;
     }
 
     startRender(callback, fps) {
+        if (!this.loops) return;
         this.loops.push(callback);
         Render.start(callback, fps);
     }
 
     stopRender(callback) {
+        if (!this.loops) return;
         this.loops.remove(callback);
         Render.stop(callback);
     }
 
     clearRenders() {
+        if (!this.loops) return;
         for (let i = this.loops.length - 1; i >= 0; i--) this.stopRender(this.loops[i]);
         this.loops.length = 0;
+    }
+
+    wait(time = 0) {
+        const promise = Promise.create();
+        this.delayedCall(promise.resolve, time);
+        return promise;
     }
 
     destroy() {
@@ -8906,6 +8967,7 @@ class Interface {
     }
 
     remove(child) {
+        if (!this.classes) return;
         if (child.element) child.element.parentNode.removeChild(child.element);
         else if (child.nodeName) child.parentNode.removeChild(child);
         this.classes.remove(child);
@@ -8992,11 +9054,11 @@ class Interface {
         return this;
     }
 
-    bg(src, x, y, repeat) {
+    bg(path, x, y, repeat) {
         const style = {};
-        if (~src.indexOf('.')) src = Assets.getPath(src);
-        if (src.includes(['data:', '.'])) style.backgroundImage = 'url(' + src + ')';
-        else style.backgroundColor = src;
+        if (~path.indexOf('.') && !~path.indexOf(',') && !~path.indexOf('data:')) path = Assets.getPath(path);
+        if ((~path.indexOf('.') && !~path.indexOf(',')) || ~path.indexOf('data:')) style.backgroundImage = 'url(' + path + ')';
+        else style.backgroundColor = path;
         if (typeof x !== 'undefined') {
             x = typeof x === 'number' ? x + 'px' : x;
             y = typeof y === 'number' ? y + 'px' : y;
@@ -9041,9 +9103,9 @@ class Interface {
         return this;
     }
 
-    mask(src) {
-        if (~src.indexOf('.')) src = Assets.getPath(src);
-        const mask = (src.includes(['data:', '.']) ? 'url(' + src + ')' : src) + ' center / contain no-repeat';
+    mask(path) {
+        if (~path.indexOf('.')) path = Assets.getPath(path);
+        const mask = (path.includes(['data:', '.']) ? 'url(' + path + ')' : path) + ' center / contain no-repeat';
         TweenMax$1.set(this.element, {
             mask,
             '-webkit-mask': mask
@@ -9157,8 +9219,7 @@ class Interface {
     }
 
     tween(props, time, ease, delay, complete, update) {
-        tween(this.element, props, time, ease, delay, complete, update);
-        return this;
+        return tween(this.element, props, time, ease, delay, complete, update);
     }
 
     clearTween() {
@@ -9283,7 +9344,7 @@ class Interface {
         return this;
     }
 
-    touchClick(hover, click) {
+    touchClick(overCallback, clickCallback) {
         const start = {};
         let time, move, touch;
 
@@ -9313,21 +9374,20 @@ class Interface {
             e.object = this.element.className === 'hit' ? this.parent : this;
             e.action = 'over';
             setTouch(e);
-            if (hover && !move) hover(e);
+            if (overCallback && !move) overCallback(e);
         };
 
         const touchEnd = e => {
             if (!this.element) return false;
-            const t = performance.now();
             e.object = this.element.className === 'hit' ? this.parent : this;
             setTouch(e);
-            if (time && t - time < 750 && click && !move) {
+            if (time && performance.now() - time < 750 && clickCallback && !move) {
                 e.action = 'click';
-                click(e);
+                clickCallback(e);
             }
-            if (hover) {
+            if (overCallback) {
                 e.action = 'out';
-                hover(e);
+                overCallback(e);
             }
             move = false;
         };
@@ -9456,12 +9516,7 @@ const Stage = new (class extends Interface {
         const self = this;
         let last;
 
-        initHTML();
         addListeners();
-
-        function initHTML() {
-            self.css({ overflow: 'hidden' });
-        }
 
         function addListeners() {
             window.addEventListener('focus', focus);
@@ -9470,7 +9525,7 @@ const Stage = new (class extends Interface {
             window.addEventListener('keyup', keyUp);
             window.addEventListener('keypress', keyPress);
             window.addEventListener('resize', resize);
-            window.addEventListener('orientationchange', resize);
+            window.addEventListener('orientationchange', orientationchange);
             if (Device.mobile) window.addEventListener('touchstart', preventScroll, { passive: false });
             resize();
         }
@@ -9503,8 +9558,21 @@ const Stage = new (class extends Interface {
 
         function resize(e) {
             self.size();
-            self.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
             Events.emitter.fire(Events.RESIZE, e);
+        }
+
+        function orientationchange(e) {
+            resize(e);
+            if (window.innerWidth > window.innerHeight) {
+                self.orientation = 'landscape';
+                self.landscape = true;
+                self.portrait = false;
+            } else {
+                self.orientation = 'portrait';
+                self.landscape = false;
+                self.portrait = true;
+            }
+            Events.emitter.fire(Events.ORIENTATION, e);
         }
 
         function preventScroll(e) {
@@ -9914,6 +9982,11 @@ class Accelerometer {
                         }
                         break;
                 }
+                if (Device.os === 'android') {
+                    this.x *= -1;
+                    this.y *= -1;
+                    this.z *= -1;
+                }
             };
 
             const updateOrientation = e => {
@@ -9943,7 +10016,7 @@ class Accelerometer {
                 this.tilt = e.beta * this.toRadians;
                 this.yaw = e.alpha * this.toRadians;
                 this.roll = -e.gamma * this.toRadians;
-                if (Device.os === 'Android') this.heading = compassHeading(e.alpha, e.beta, e.gamma);
+                if (Device.os === 'android') this.heading = compassHeading(e.alpha, e.beta, e.gamma);
             };
 
             const compassHeading = (alpha, beta, gamma) => {
@@ -10498,54 +10571,82 @@ class WebAudio {
 
         class Sound {
 
-            constructor(path) {
+            constructor(id, path) {
                 const self = this;
 
+                this.id = id;
                 this.path = Assets.getPath(path);
                 if (WebAudio.context.createStereoPanner) this.stereo = WebAudio.context.createStereoPanner();
                 this.output = WebAudio.context.createGain();
                 this.volume = 1;
                 this.rate = 1;
+                this.pan = 0;
+                this.loop = false;
                 if (this.stereo) this.stereo.connect(this.output);
                 this.output.connect(WebAudio.output);
                 this.output.gain.setValueAtTime(0, WebAudio.context.currentTime);
 
                 this.gain = {
+                    get value() {
+                        return self.volume;
+                    },
                     set value(value) {
                         self.volume = value;
                         self.output.gain.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
-                    },
-                    get value() {
-                        return self.volume;
                     }
                 };
 
                 this.playbackRate = {
+                    get value() {
+                        return self.rate;
+                    },
                     set value(value) {
                         self.rate = value;
                         if (self.source) self.source.playbackRate.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
-                    },
-                    get value() {
-                        return self.rate;
                     }
                 };
 
                 this.stereoPan = {
+                    get value() {
+                        return self.pan;
+                    },
                     set value(value) {
                         self.pan = value;
                         if (self.stereo) self.stereo.pan.linearRampToValueAtTime(value, WebAudio.context.currentTime + 0.015);
-                    },
-                    get value() {
-                        return self.pan;
                     }
                 };
+            }
 
-                this.stop = () => {
-                    if (this.source) {
-                        this.source.stop();
-                        this.playing = false;
-                    }
-                };
+            play() {
+                if (this.element) {
+                    this.playing = true;
+                    this.element.loop = this.loop;
+                    this.element.play();
+                } else {
+                    if (!this.ready) WebAudio.loadSound(this.id);
+                    this.ready().then(() => {
+                        if (this.complete) {
+                            if (this.stopping && this.loop) {
+                                this.stopping = false;
+                                return;
+                            }
+                            this.playing = true;
+                            this.source = WebAudio.context.createBufferSource();
+                            this.source.buffer = this.buffer;
+                            this.source.loop = this.loop;
+                            this.source.playbackRate.setValueAtTime(this.rate, WebAudio.context.currentTime);
+                            this.source.connect(this.stereo ? this.stereo : this.output);
+                            this.source.start();
+                        }
+                    });
+                }
+                this.output.gain.linearRampToValueAtTime(this.volume, WebAudio.context.currentTime + 0.015);
+            }
+
+            stop() {
+                if (this.element) this.element.pause();
+                else this.source.stop();
+                this.playing = false;
             }
         }
 
@@ -10562,12 +10663,12 @@ class WebAudio {
                 this.volume = 1;
                 this.output.connect(context.destination);
                 this.gain = {
+                    get value() {
+                        return self.volume;
+                    },
                     set value(value) {
                         self.volume = value;
                         self.output.gain.linearRampToValueAtTime(value, context.currentTime + 0.015);
-                    },
-                    get value() {
-                        return self.volume;
                     }
                 };
                 this.context = context;
@@ -10577,7 +10678,7 @@ class WebAudio {
                 const promise = Promise.create();
                 if (callback) promise.then(callback);
                 callback = promise.resolve;
-                const sound = this.getSound(id);
+                const sound = sounds[id];
                 window.fetch(sound.path, Assets.OPTIONS).then(response => {
                     if (!response.ok) return callback();
                     response.arrayBuffer().then(data => {
@@ -10596,9 +10697,23 @@ class WebAudio {
             };
 
             this.createSound = (id, path, callback) => {
-                sounds[id] = new Sound(path);
+                sounds[id] = new Sound(id, path);
                 if (Device.os === 'ios' && callback) callback();
                 else this.loadSound(id, callback);
+                return sounds[id];
+            };
+
+            this.createStream = (id, path) => {
+                const sound = new Sound(id, path),
+                    audio = document.createElement('audio');
+                audio.src = sound.path;
+                audio.crossOrigin = Assets.CORS;
+                audio.autoplay = false;
+                audio.loop = sound.loop;
+                sound.source = context.createMediaElementSource(audio);
+                sound.source.connect(sound.stereo ? sound.stereo : sound.output);
+                sound.element = audio;
+                sounds[id] = sound;
                 return sounds[id];
             };
 
@@ -10609,24 +10724,8 @@ class WebAudio {
             this.trigger = id => {
                 if (!context) return;
                 if (context.state === 'suspended') context.resume();
-                const sound = this.getSound(id);
-                if (!sound.ready) this.loadSound(id);
-                sound.ready().then(() => {
-                    if (sound.complete) {
-                        if (sound.stopping && sound.loop) {
-                            sound.stopping = false;
-                            return;
-                        }
-                        sound.playing = true;
-                        sound.source = context.createBufferSource();
-                        sound.source.buffer = sound.buffer;
-                        sound.source.loop = sound.loop;
-                        sound.source.playbackRate.setValueAtTime(sound.rate, context.currentTime);
-                        sound.source.connect(sound.stereo ? sound.stereo : sound.output);
-                        sound.source.start();
-                        sound.output.gain.linearRampToValueAtTime(sound.volume, context.currentTime + 0.015);
-                    }
-                });
+                const sound = sounds[id];
+                if (sound) sound.play();
             };
 
             this.play = (id, volume = 1, loop) => {
@@ -10635,7 +10734,7 @@ class WebAudio {
                     loop = volume;
                     volume = 1;
                 }
-                const sound = this.getSound(id);
+                const sound = sounds[id];
                 if (sound) {
                     sound.volume = volume;
                     sound.loop = !!loop;
@@ -10645,7 +10744,7 @@ class WebAudio {
 
             this.fadeInAndPlay = (id, volume, loop, time, ease, delay = 0) => {
                 if (!context) return;
-                const sound = this.getSound(id);
+                const sound = sounds[id];
                 if (sound) {
                     sound.volume = 0;
                     sound.loop = !!loop;
@@ -10656,7 +10755,7 @@ class WebAudio {
 
             this.fadeOutAndStop = (id, time, ease, delay = 0) => {
                 if (!context) return;
-                const sound = this.getSound(id);
+                const sound = sounds[id];
                 if (sound && sound.playing) {
                     tween(sound.gain, { value: 0 }, time, ease, delay, () => {
                         if (!sound.stopping) return;
@@ -10668,10 +10767,15 @@ class WebAudio {
             };
 
             this.remove = id => {
-                const sound = this.getSound(id);
+                const sound = sounds[id];
                 if (sound && sound.source) {
-                    sound.source.buffer = null;
-                    sound.source.stop();
+                    if (sound.element) {
+                        sound.element.pause();
+                        sound.element.src = '';
+                    } else {
+                        sound.source.stop();
+                        sound.source.buffer = null;
+                    }
                     sound.source.disconnect();
                     sound.source = null;
                     sound.playing = false;
@@ -10692,10 +10796,7 @@ class WebAudio {
             this.stop = () => {
                 this.active = false;
                 if (!context) return;
-                for (let id in sounds) {
-                    const sound = sounds[id];
-                    if (sound) sound.stop();
-                }
+                for (let id in sounds) this.remove(id);
                 context.close();
             };
         }
@@ -10713,9 +10814,12 @@ class WebAudio {
 class CanvasValues {
 
     constructor(style) {
-        this.styles = {};
-        if (!style) this.data = new Float32Array(6);
-        else this.styled = false;
+        if (!style) {
+            this.data = new Float32Array(6);
+        } else {
+            this.styles = {};
+            this.styled = false;
+        }
     }
 
     setTRSA(x, y, r, sx, sy, a) {
@@ -10729,14 +10833,14 @@ class CanvasValues {
     }
 
     calculate(values) {
-        const v = values.data,
-            m = this.data;
-        m[0] = m[0] + v[0];
-        m[1] = m[1] + v[1];
-        m[2] = m[2] + v[2];
-        m[3] = m[3] * v[3];
-        m[4] = m[4] * v[4];
-        m[5] = m[5] * v[5];
+        const m = this.data,
+            v = values.data;
+        m[0] += v[0];
+        m[1] += v[1];
+        m[2] += v[2];
+        m[3] *= v[3];
+        m[4] *= v[4];
+        m[5] *= v[5];
     }
 
     calculateStyle(parent) {
@@ -10746,40 +10850,40 @@ class CanvasValues {
         for (let key in values) if (!this.styles[key]) this.styles[key] = values[key];
     }
 
-    set shadowOffsetX(val) {
-        this.styled = true;
-        this.styles.shadowOffsetX = val;
-    }
-
     get shadowOffsetX() {
         return this.styles.shadowOffsetX;
     }
 
-    set shadowOffsetY(val) {
+    set shadowOffsetX(v) {
+        this.styles.shadowOffsetX = v;
         this.styled = true;
-        this.styles.shadowOffsetY = val;
     }
 
     get shadowOffsetY() {
         return this.styles.shadowOffsetY;
     }
 
-    set shadowBlur(val) {
+    set shadowOffsetY(v) {
+        this.styles.shadowOffsetY = v;
         this.styled = true;
-        this.styles.shadowBlur = val;
     }
 
     get shadowBlur() {
         return this.styles.shadowBlur;
     }
 
-    set shadowColor(val) {
+    set shadowBlur(v) {
+        this.styles.shadowBlur = v;
         this.styled = true;
-        this.styles.shadowColor = val;
     }
 
     get shadowColor() {
         return this.styles.shadowColor;
+    }
+
+    set shadowColor(v) {
+        this.styles.shadowColor = v;
+        this.styled = true;
     }
 
     get values() {
@@ -10798,16 +10902,16 @@ class CanvasObject {
     constructor() {
         this.visible = true;
         this.blendMode = 'source-over';
+        this.clipWidth = 0;
+        this.clipHeight = 0;
+        this.clipX = 0;
+        this.clipY = 0;
+        this.width = 0;
+        this.height = 0;
         this.x = 0;
         this.y = 0;
         this.px = 0;
         this.py = 0;
-        this.clipX = 0;
-        this.clipY = 0;
-        this.clipWidth = 0;
-        this.clipHeight = 0;
-        this.width = 0;
-        this.height = 0;
         this.rotation = 0;
         this.scale = 1;
         this.opacity = 1;
@@ -10829,11 +10933,11 @@ class CanvasObject {
         for (let i = 0; i < this.children.length; i++) this.children[i].render(override);
     }
 
-    startDraw(ox = 0, oy = 0, override) {
+    startDraw(px = 0, py = 0, override) {
         const context = this.canvas.context,
             v = this.values.data,
-            x = v[0] + ox,
-            y = v[1] + oy;
+            x = v[0] + px,
+            y = v[1] + py;
         context.save();
         if (!override) context.globalCompositeOperation = this.blendMode;
         context.translate(x, y);
@@ -10868,11 +10972,20 @@ class CanvasObject {
         this.children.remove(child);
     }
 
+    tween(props, time, ease, delay, complete, update) {
+        return tween(this, props, time, ease, delay, complete, update);
+    }
+
+    clearTween() {
+        clearTween(this);
+        return this;
+    }
+
     isMask() {
-        let obj = this;
-        while (obj) {
-            if (obj.masked) return true;
-            obj = obj.parent;
+        let object = this;
+        while (object) {
+            if (object.masked) return true;
+            object = object.parent;
         }
         return false;
     }
@@ -10928,16 +11041,17 @@ class CanvasObject {
         return this;
     }
 
-    clip(x, y, w, h) {
+    clip(x, y, width, height) {
         this.clipX = x;
         this.clipY = y;
-        this.clipWidth = w;
-        this.clipHeight = h;
+        this.clipWidth = width;
+        this.clipHeight = height;
         return this;
     }
 
     destroy() {
         if (this.children) for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
+        if (this.parent) this.parent.remove(this);
         return Utils.nullObject(this);
     }
 }
@@ -10950,14 +11064,14 @@ class CanvasObject {
 
 class CanvasGraphics extends CanvasObject {
 
-    constructor(w = 0, h = w) {
+    constructor(width = 0, height = width) {
         super();
         const self = this;
         let draw = [],
             mask;
 
-        this.width = w;
-        this.height = h;
+        this.width = width;
+        this.height = height;
         this.props = {};
 
         function setProperties(context) {
@@ -11011,16 +11125,16 @@ class CanvasGraphics extends CanvasObject {
             draw.push(['bezierCurveTo', cp1x, cp1y, cp2x, cp2y, x, y]);
         };
 
-        this.fillRect = (x, y, w, h) => {
-            draw.push(['fillRect', x, y, w, h]);
+        this.fillRect = (x, y, width, height) => {
+            draw.push(['fillRect', x, y, width, height]);
         };
 
-        this.clearRect = (x, y, w, h) => {
-            draw.push(['clearRect', x, y, w, h]);
+        this.clearRect = (x, y, width, height) => {
+            draw.push(['clearRect', x, y, width, height]);
         };
 
-        this.strokeRect = (x, y, w, h) => {
-            draw.push(['strokeRect', x, y, w, h]);
+        this.strokeRect = (x, y, width, height) => {
+            draw.push(['strokeRect', x, y, width, height]);
         };
 
         this.moveTo = (x, y) => {
@@ -11091,84 +11205,84 @@ class CanvasGraphics extends CanvasObject {
         };
     }
 
-    set strokeStyle(val) {
-        this.props.strokeStyle = val;
-    }
-
     get strokeStyle() {
         return this.props.strokeStyle;
     }
 
-    set fillStyle(val) {
-        this.props.fillStyle = val;
+    set strokeStyle(v) {
+        this.props.strokeStyle = v;
     }
 
     get fillStyle() {
         return this.props.fillStyle;
     }
 
-    set lineWidth(val) {
-        this.props.lineWidth = val;
+    set fillStyle(v) {
+        this.props.fillStyle = v;
     }
 
     get lineWidth() {
         return this.props.lineWidth;
     }
 
-    set lineCap(val) {
-        this.props.lineCap = val;
+    set lineWidth(v) {
+        this.props.lineWidth = v;
     }
 
     get lineCap() {
         return this.props.lineCap;
     }
 
-    set lineDashOffset(val) {
-        this.props.lineDashOffset = val;
+    set lineCap(v) {
+        this.props.lineCap = v;
     }
 
     get lineDashOffset() {
         return this.props.lineDashOffset;
     }
 
-    set lineJoin(val) {
-        this.props.lineJoin = val;
+    set lineDashOffset(v) {
+        this.props.lineDashOffset = v;
     }
 
     get lineJoin() {
         return this.props.lineJoin;
     }
 
-    set miterLimit(val) {
-        this.props.miterLimit = val;
+    set lineJoin(v) {
+        this.props.lineJoin = v;
     }
 
     get miterLimit() {
         return this.props.miterLimit;
     }
 
-    set font(val) {
-        this.props.font = val;
+    set miterLimit(v) {
+        this.props.miterLimit = v;
     }
 
     get font() {
         return this.props.font;
     }
 
-    set textAlign(val) {
-        this.props.textAlign = val;
+    set font(v) {
+        this.props.font = v;
     }
 
     get textAlign() {
         return this.props.textAlign;
     }
 
-    set textBaseline(val) {
-        this.props.textBaseline = val;
+    set textAlign(v) {
+        this.props.textAlign = v;
     }
 
     get textBaseline() {
         return this.props.textBaseline;
+    }
+
+    set textBaseline(v) {
+        this.props.textBaseline = v;
     }
 }
 
@@ -11180,11 +11294,11 @@ class CanvasGraphics extends CanvasObject {
 
 class Canvas {
 
-    constructor(w, h = w, retina, whiteAlpha) {
+    constructor(width, height = width, retina, whiteAlpha) {
 
-        if (typeof h === 'boolean') {
-            retina = h;
-            h = w;
+        if (typeof height === 'boolean') {
+            retina = height;
+            height = width;
         }
 
         const self = this;
@@ -11195,19 +11309,19 @@ class Canvas {
         this.children = [];
         this.retina = retina;
 
-        size(w, h);
+        size(width, height);
 
-        function size(w, h = w) {
+        function size(width, height = width) {
             const ratio = retina ? 2 : 1;
-            self.element.width = w * ratio;
-            self.element.height = h * ratio;
-            self.width = w;
-            self.height = h;
+            self.element.width = width * ratio;
+            self.element.height = height * ratio;
+            self.width = width;
+            self.height = height;
             self.scale = ratio;
             self.object.size(self.width, self.height);
             self.context.scale(ratio, ratio);
-            self.element.style.width = w + 'px';
-            self.element.style.height = h + 'px';
+            self.element.style.width = width + 'px';
+            self.element.style.height = height + 'px';
             if (whiteAlpha) {
                 const alpha = new CanvasGraphics(self.width, self.height);
                 alpha.fillStyle = 'rgba(255, 255, 255, 0.004)';
@@ -11253,8 +11367,8 @@ class Canvas {
             return Utils.nullObject(this);
         };
 
-        this.getImageData = (x = 0, y = 0, w = this.element.width, h = this.element.height) => {
-            this.imageData = this.context.getImageData(x, y, w, h);
+        this.getImageData = (x = 0, y = 0, width = this.element.width, height = this.element.height) => {
+            this.imageData = this.context.getImageData(x, y, width, height);
             return this.imageData;
         };
 
@@ -11284,13 +11398,13 @@ class Canvas {
 
 class CanvasTexture extends CanvasObject {
 
-    constructor(texture, w = 0, h = w) {
+    constructor(texture, width = 0, height = width) {
         super();
         const self = this;
         let mask;
 
-        this.width = w;
-        this.height = h;
+        this.width = width;
+        this.height = height;
 
         initTexture();
 
@@ -11660,12 +11774,39 @@ class SVG extends Interface {
 
     constructor(type = 'svg') {
         super(null, 'svg', type);
+
+        this.start = 0;
+        this.offset = 0;
+        this.alpha = 0;
     }
 
     size(w, h = w) {
         this.attr('width', w);
         this.attr('height', h);
         return this;
+    }
+
+    line(offset = 0) {
+        if (offset) this.offset = offset;
+        const length = this.element.getTotalLength();
+        let dash = length * this.alpha;
+        dash = Math.round(dash * 100) / 100;
+        let gap = length - dash;
+        gap = Math.round(gap * 100) / 100;
+        let dashoffset = -length * (this.start + this.offset);
+        dashoffset = Math.round(dashoffset * 100) / 100;
+        this.attr('stroke-dasharray', `${dash},${gap}`);
+        this.attr('stroke-dashoffset', dashoffset);
+        return this;
+    }
+
+    get length() {
+        return this.alpha;
+    }
+
+    set length(alpha) {
+        this.alpha = alpha;
+        this.line();
     }
 }
 
@@ -11887,12 +12028,23 @@ class BackgroundVideo extends Interface {
         let cover, wrapper, video,
             tick = 0;
 
-        this.fade = params.fade !== false;
-
+        initParameters();
         initHTML();
         if (BackgroundVideo.test) {
             initVideo();
-            if (this.fade) addListeners();
+            if (params.fade) addListeners();
+        }
+
+        function initParameters() {
+            const defaults = {
+                preload: true,
+                loop: true,
+                width: 640,
+                height: 360,
+                ticks: 10,
+                fade: true
+            };
+            params = Object.assign(defaults, params);
         }
 
         function initHTML() {
@@ -11904,14 +12056,14 @@ class BackgroundVideo extends Interface {
         function initVideo() {
             wrapper = self.create('.wrapper');
             wrapper.size('100%');
-            if (self.fade) wrapper.css({ opacity: 0 });
+            if (params.fade) wrapper.css({ opacity: 0 });
             video = wrapper.initClass(Video, {
                 src: params.src,
-                loop: params.loop !== false,
-                events: ['timeupdate', 'ended'],
+                preload: params.preload,
+                loop: params.loop,
                 width: params.width,
                 height: params.height,
-                preload: true
+                events: ['timeupdate', 'ended']
             });
             video.object.css({ position: 'absolute' });
             self.video = video;
@@ -11922,7 +12074,7 @@ class BackgroundVideo extends Interface {
         }
 
         function update() {
-            if (tick++ < 10) return;
+            if (tick++ < params.ticks) return;
             self.events.remove(video, Video.UPDATE, update);
             wrapper.tween({ opacity: params.opacity || 1 }, 500, 'easeOutSine', () => {
                 if (!params.opacity) wrapper.clearOpacity();
@@ -11975,6 +12127,10 @@ class Scroll extends Component {
             scrollTarget = {
                 x: 0,
                 y: 0
+            },
+            scrollInertia = {
+                x: 0,
+                y: 0
             };
         let axes = ['x', 'y'];
 
@@ -11999,32 +12155,43 @@ class Scroll extends Component {
             self.hitObject = params.hitObject || self.object;
             self.max.y = params.height || 0;
             self.max.x = params.width || 0;
+            self.drag = (() => {
+                if (typeof params.drag !== 'undefined') return params.drag;
+                return Device.mobile;
+            })();
+            self.mouseWheel = params.mouseWheel !== false;
             self.limit = params.limit !== false;
             if (Array.isArray(params.axes)) axes = params.axes;
             if (self.object) self.object.css({ overflow: 'auto' });
         }
 
         function addListeners() {
-            window.addEventListener('wheel', scroll);
-            if (self.hitObject) self.hitObject.bind('touchstart', e => e.preventDefault());
-            const input = self.hitObject ? self.initClass(Interaction, self.hitObject) : Mouse.input;
-            self.events.add(input, Interaction.START, down);
-            self.events.add(input, Interaction.DRAG, drag);
-            self.events.add(input, Interaction.END, up);
+            if (!Device.mobile) window.addEventListener('wheel', scroll);
+            if (self.drag) {
+                if (self.hitObject) self.hitObject.bind('touchstart', e => e.preventDefault());
+                const input = self.hitObject ? self.initClass(Interaction, self.hitObject) : Mouse.input;
+                self.events.add(input, Interaction.START, down);
+                self.events.add(input, Interaction.DRAG, drag);
+            }
             self.events.add(Events.RESIZE, resize);
             resize();
         }
 
         function stopInertia() {
+            axes.forEach(axis => {
+                scrollInertia[axis] = 0;
+            });
             clearTween(scrollTarget);
         }
 
         function scroll(e) {
             if (!self.enabled) return;
+            if (!self.mouseWheel) return;
             stopInertia();
             axes.forEach(axis => {
-                if (!self.max[axis]) return;
-                scrollTarget[axis] += e['delta' + axis.toUpperCase()];
+                const delta = 'delta' + axis.toUpperCase();
+                scrollTarget[axis] += e[delta];
+                scrollInertia[axis] = e[delta];
             });
         }
 
@@ -12036,48 +12203,38 @@ class Scroll extends Component {
         function drag() {
             if (!self.enabled) return;
             axes.forEach(axis => {
-                if (!self.max[axis]) return;
-                scrollTarget[axis] -= Mouse.input.delta[axis];
+                scrollTarget[axis] += -Mouse.input.delta[axis];
+                scrollInertia[axis] = -Mouse.input.delta[axis];
             });
-        }
-
-        function up() {
-            if (!self.enabled) return;
-            const multiplier = (() => {
-                    if (Device.os === 'android') return 35;
-                    return 25;
-                })(),
-                obj = {};
-            axes.forEach(axis => {
-                if (!self.max[axis]) return;
-                obj[axis] = scrollTarget[axis] - Mouse.input.delta[axis] * multiplier;
-            });
-            tween(scrollTarget, obj, 2500, 'easeOutQuint');
         }
 
         function resize() {
             if (!self.enabled) return;
             stopInertia();
             if (!self.object) return;
-            const p = {};
-            if (Device.mobile) axes.forEach(axis => p[axis] = self.max[axis] ? scrollTarget[axis] / self.max[axis] : 0);
+            const progress = {};
+            if (Device.mobile) axes.forEach(axis => progress[axis] = self.max[axis] ? scrollTarget[axis] / self.max[axis] : 0);
             if (typeof params.height === 'undefined') self.max.y = self.object.element.scrollHeight - self.object.element.clientHeight;
             if (typeof params.width === 'undefined') self.max.x = self.object.element.scrollWidth - self.object.element.clientWidth;
-            if (Device.mobile) axes.forEach(axis => self[axis] = scrollTarget[axis] = p[axis] * self.max[axis]);
+            if (Device.mobile) axes.forEach(axis => self[axis] = scrollTarget[axis] = progress[axis] * self.max[axis]);
         }
 
         function loop() {
-            if (!self.enabled) return;
             axes.forEach(axis => {
-                if (!self.max[axis]) return;
+                if (scrollInertia[axis] !== 0) {
+                    scrollInertia[axis] *= 0.9;
+                    if (Math.abs(scrollInertia[axis]) < 0.001) scrollInertia[axis] = 0;
+                    scrollTarget[axis] += scrollInertia[axis];
+                }
                 if (self.limit) scrollTarget[axis] = Math.clamp(scrollTarget[axis], 0, self.max[axis]);
                 self.delta[axis] = scrollTarget[axis] - self[axis];
                 self[axis] += self.delta[axis];
-                if (self.object) {
-                    if (axis === 'x') self.object.element.scrollLeft = self.x;
-                    if (axis === 'y') self.object.element.scrollTop = self.y;
-                }
+                self[axis] = Math.round(self[axis] * 100) / 100;
             });
+            if (self.object) {
+                self.object.element.scrollLeft = self.x;
+                self.object.element.scrollTop = self.y;
+            }
             callback(self.delta);
         }
 
@@ -12092,6 +12249,8 @@ class Scroll extends Component {
         this.unlink = callback => {
             callbacks.remove(callback);
         };
+
+        this.stopInertia = stopInertia;
 
         this.destroy = () => {
             window.removeEventListener('wheel', scroll);
@@ -12168,24 +12327,25 @@ class ScrollWarp extends Component {
 
         function initParameters() {
             self.object = object;
-            self.container = container || document.body;
+            self.container = container ? container.parent.element : document.body;
+            self.inner = container ? container.element : document.body;
             self.object.willChange('transform');
         }
 
         function addListeners() {
-            window.addEventListener('scroll', scroll);
+            self.container.addEventListener('scroll', scroll);
             self.events.add(Events.RESIZE, resize);
             defer(resize);
         }
 
         function setHeight() {
             const height = self.object.element.getBoundingClientRect().height;
-            TweenMax$1.set(self.container, { height });
+            TweenMax$1.set(self.inner, { height });
         }
 
         function scroll() {
             if (!self.enabled) return;
-            self.current = window.scrollY;
+            self.current = self.container.scrollTop;
         }
 
         function resize() {
@@ -12202,7 +12362,7 @@ class ScrollWarp extends Component {
         }
 
         this.destroy = () => {
-            window.removeEventListener('scroll', scroll);
+            this.container.removeEventListener('scroll', scroll);
             return super.destroy();
         };
     }
@@ -12268,15 +12428,21 @@ class Slide extends Component {
         }
 
         function addListeners() {
-            window.addEventListener('wheel', scroll);
-            self.events.add(Mouse.input, Interaction.START, down);
-            self.events.add(Mouse.input, Interaction.DRAG, drag);
+            if (Device.mobile) {
+                self.events.add(Mouse.input, Interaction.START, down);
+                self.events.add(Mouse.input, Interaction.DRAG, drag);
+            } else {
+                window.addEventListener('wheel', scroll);
+            }
             self.events.add(Events.KEYBOARD_DOWN, keyDown);
             self.events.add(Events.RESIZE, resize);
             resize();
         }
 
         function stopInertia() {
+            axes.forEach(axis => {
+                scrollInertia[axis] = 0;
+            });
             clearTween(scrollTarget);
         }
 
@@ -12285,7 +12451,9 @@ class Slide extends Component {
             stopInertia();
             axes.forEach(axis => {
                 if (!self.max[axis]) return;
-                scrollTarget[axis] += e['delta' + axis.toUpperCase()];
+                const delta = 'delta' + axis.toUpperCase();
+                scrollTarget[axis] += e[delta];
+                scrollInertia[axis] = e[delta];
             });
         }
 
@@ -12326,14 +12494,12 @@ class Slide extends Component {
                     scrollInertia[axis] *= 0.9;
                     if (Math.abs(scrollInertia[axis]) < 0.001) scrollInertia[axis] = 0;
                     scrollTarget[axis] += scrollInertia[axis];
-                    scrollTarget[axis] = Math.round(scrollTarget[axis] * 100) / 100;
                 }
                 const limit = self.max[axis] * 0.035;
                 scrollTarget[axis] += Sine.easeOut.getRatio(Math.round(self.progress) - self.progress) * limit;
-                scrollTarget[axis] = Math.round(scrollTarget[axis] * 100) / 100;
-                if (Math.abs(scrollTarget[axis] - self[axis]) > limit) scrollTarget[axis] -= (scrollTarget[axis] - self[axis]) * 0.5;
+                if (Math.abs(scrollTarget[axis] - self[axis]) > limit) scrollTarget[axis] -= (scrollTarget[axis] - self[axis]) * 0.6;
                 self.delta[axis] = scrollTarget[axis] - self[axis];
-                self.delta[axis] = self.delta[axis] < 0 ? Math.max(self.delta[axis], -limit) : Math.min(self.delta[axis], limit);
+                self.delta[axis] = Math.clamp(self.delta[axis], -limit, limit);
                 self[axis] += self.delta[axis];
                 self[axis] = Math.round(self[axis] * 100) / 100;
             });
@@ -12370,6 +12536,8 @@ class Slide extends Component {
                 slide = Math.round(progress);
             this.moveTo(slide - 1);
         };
+
+        this.stopInertia = stopInertia;
 
         this.destroy = () => {
             window.removeEventListener('wheel', scroll);
@@ -13168,7 +13336,7 @@ class Vector3 {
 }
 
 /**
- * 3D utilities with texture promise method.
+ * 3D utilities.
  *
  * @author Patrick Schroen / https://github.com/pschroen
  */
@@ -13179,132 +13347,42 @@ class Utils3D {
         local.matrixWorld.decompose(world.position, world.quaternion, world.scale);
     }
 
-    static createDebug(size = 40, color) {
-        const geom = new THREE.IcosahedronGeometry(size, 1),
-            mat = color ? new THREE.MeshBasicMaterial({ color }) : new THREE.MeshNormalMaterial();
-        return new THREE.Mesh(geom, mat);
-    }
-
-    static createRT(width, height) {
-        const params = {
+    static createRT(width, height, type, format) {
+        const rt = new THREE.WebGLRenderTarget(width, height, {
             minFilter: THREE.LinearFilter,
             magFilter: THREE.LinearFilter,
-            format: THREE.RGBAFormat,
+            format: format || THREE.RGBAFormat,
+            type,
+            depthBuffer: false,
             stencilBuffer: false
-        };
-        return new THREE.WebGLRenderTarget(width, height, params);
+        });
+        rt.texture.generateMipmaps = false;
+        return rt;
     }
 
-    static getTexture(src) {
-        if (!this.textures) this.textures = {};
-        if (!this.textures[src]) {
-            const img = Assets.createImage(src),
-                texture = new THREE.Texture(img);
-            img.onload = () => {
-                texture.needsUpdate = true;
-                if (texture.onload) {
-                    texture.onload();
-                    texture.onload = null;
-                }
-                if (!THREE.Math.isPowerOfTwo(img.width * img.height)) texture.minFilter = THREE.LinearFilter;
-            };
-            this.textures[src] = texture;
-        }
-        return this.textures[src];
-    }
-
-    static setInfinity(v) {
-        const inf = Number.POSITIVE_INFINITY;
-        v.set(inf, inf, inf);
-        return v;
-    }
-
-    static freezeMatrix(mesh) {
-        mesh.matrixAutoUpdate = false;
-        mesh.updateMatrix();
-    }
-
-    static getCubemap(src) {
-        const path = 'cube_' + (Array.isArray(src) ? src[0] : src);
+    static getTexture(path) {
         if (!this.textures) this.textures = {};
         if (!this.textures[path]) {
-            const images = [];
-            for (let i = 0; i < 6; i++) {
-                const img = Assets.createImage(Array.isArray(src) ? src[i] : src);
-                images.push(img);
-                img.onload = () => this.textures[path].needsUpdate = true;
-            }
-            this.textures[path] = new THREE.Texture(images);
-            this.textures[path].minFilter = THREE.LinearFilter;
+            const texture = new THREE.Texture();
+            texture.format = /jpe?g/.test(path) ? THREE.RGBFormat : THREE.RGBAFormat;
+            const img = Assets.createImage(path);
+            img.onload = () => {
+                texture.image = img;
+                texture.needsUpdate = true;
+                if (!THREE.Math.isPowerOfTwo(img.width * img.height)) {
+                    texture.minFilter = texture.magFilter = THREE.LinearFilter;
+                    texture.generateMipmaps = false;
+                }
+            };
+            this.textures[path] = texture;
         }
         return this.textures[path];
     }
 
-    static loadObject(data) {
-        if (!this.objectLoader) this.objectLoader = new THREE.ObjectLoader();
-        return this.objectLoader.parse(data);
-    }
-
-    static loadGeometry(data) {
-        if (!this.geomLoader) this.geomLoader = new THREE.JSONLoader();
-        if (!this.bufferGeomLoader) this.bufferGeomLoader = new THREE.BufferGeometryLoader();
-        if (data.type === 'BufferGeometry') return this.bufferGeomLoader.parse(data);
-        else return this.geomLoader.parse(data.data).geometry;
-    }
-
-    static disposeAllTextures() {
-        for (let key in this.textures) this.textures[key].dispose();
-    }
-
-    static loadBufferGeometry(data) {
-        const geom = new THREE.BufferGeometry();
-        if (data.data) data = data.data;
-        geom.addAttribute('position', new THREE.BufferAttribute(new Float32Array(data.position), 3));
-        geom.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(data.normal || data.position.length), 3));
-        geom.addAttribute('uv', new THREE.BufferAttribute(new Float32Array(data.uv || data.position.length / 3 * 2), 2));
-        return geom;
-    }
-
-    static loadSkinnedGeometry(data) {
-        const geom = new THREE.BufferGeometry();
-        geom.addAttribute('position', new THREE.BufferAttribute(new Float32Array(data.position), 3));
-        geom.addAttribute('normal', new THREE.BufferAttribute(new Float32Array(data.normal), 3));
-        geom.addAttribute('uv', new THREE.BufferAttribute(new Float32Array(data.uv), 2));
-        geom.addAttribute('skinIndex', new THREE.BufferAttribute(new Float32Array(data.skinIndices), 4));
-        geom.addAttribute('skinWeight', new THREE.BufferAttribute(new Float32Array(data.skinWeights), 4));
-        geom.bones = data.bones;
-        return geom;
-    }
-
-    static loadCurve(data) {
-        const points = [];
-        for (let i = 0; i < data.length; i += 3) points.push(new THREE.Vector3(data[i + 0], data[i + 1], data[i + 2]));
-        return new THREE.CatmullRomCurve3(points);
-    }
-
-    static setLightCamera(light, size, near, far, texture) {
-        light.shadow.camera.left = -size;
-        light.shadow.camera.right = size;
-        light.shadow.camera.top = size;
-        light.shadow.camera.bottom = -size;
-        light.castShadow = true;
-        if (near) light.shadow.camera.near = near;
-        if (far) light.shadow.camera.far = far;
-        if (texture) light.shadow.mapSize.width = light.shadow.mapSize.height = texture;
-        light.shadow.camera.updateProjectionMatrix();
-    }
-
-    static getRepeatTexture(src) {
-        const texture = this.getTexture(src);
-        texture.onload = () => texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    static getRepeatTexture(path) {
+        const texture = this.getTexture(path);
+        texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
         return texture;
-    }
-
-    static loadTexture(src) {
-        const texture = this.getTexture(src),
-            promise = Promise.create();
-        texture.onload = () => promise.resolve(texture);
-        return promise;
     }
 }
 
@@ -13325,18 +13403,18 @@ class Raycaster extends Component {
         this.camera = camera;
 
         function ascSort(a, b) {
-            return a.distance - b.distance;
+            return Math.round(a.distance * 100) / 100 - Math.round(b.distance * 100) / 100;
         }
 
         function intersectObject(object, raycaster, intersects, recursive) {
-            if (object.visible === false) return;
+            if (!object.visible) return;
             let parent = object.parent;
             while (parent) {
-                if (parent.visible === false) return;
+                if (!parent.visible) return;
                 parent = parent.parent;
             }
             object.raycast(raycaster, intersects);
-            if (recursive === true) object.children.forEach(object => intersectObject(object, raycaster, intersects, true));
+            if (recursive) object.children.forEach(object => intersectObject(object, raycaster, intersects, true));
         }
 
         function intersect(objects) {
@@ -13376,7 +13454,7 @@ class Raycaster extends Component {
                 calc.x = mouse.x / rect.width * 2 - 1;
                 calc.y = -(mouse.y / rect.height) * 2 + 1;
             }
-            raycaster.setFromCamera(calc, camera);
+            raycaster.setFromCamera(calc, this.camera);
             return intersect(objects);
         };
 
@@ -13401,26 +13479,69 @@ class Interaction3D extends Component {
             Interaction3D.HOVER = 'interaction3d_hover';
             Interaction3D.CLICK = 'interaction3d_click';
 
+            const map = new Map();
+            let input = Mouse;
+
+            Interaction3D.find = camera => {
+                if (!map.has(camera)) {
+                    const interaction = new Interaction3D(camera);
+                    interaction.input(input);
+                    map.set(camera, interaction);
+                }
+                return map.get(camera);
+            };
+
+            Interaction3D.useInput = v => {
+                for (let [interaction] of map) interaction.input(v);
+                input = v;
+            };
+
             Interaction3D.initialized = true;
         }
 
         super();
         const self = this;
-        const event = {};
-        let hoverTarget, clickTarget;
+        const test = [],
+            event = {},
+            v3 = new THREE.Vector3();
+        let hoverTarget, clickTarget, input;
 
-        this.ray = new Raycaster(camera);
+        this.ray = this.initClass(Raycaster, camera);
         this.meshes = [];
-        this.meshCallbacks = [];
-        this.cursor = 'auto';
+        this.callbacks = [];
         this.enabled = true;
 
-        addListeners();
+        function canTest(mesh) {
+            if (!mesh.visible) return false;
+            let parent = mesh.parent;
+            while (parent) {
+                if (!parent.visible) return false;
+                parent = parent.parent;
+            }
+            return true;
+        }
+
+        function testObjects() {
+            test.length = 0;
+            for (let i = self.meshes.length - 1; i >= 0; i--) {
+                const mesh = self.meshes[i];
+                if (canTest(mesh)) test.push(mesh);
+            }
+            return test;
+        }
 
         function addListeners() {
             self.events.add(Mouse.input, Interaction.START, start);
             self.events.add(Mouse.input, Interaction.MOVE, move);
             self.events.add(Mouse.input, Interaction.CLICK, click);
+            if (Device.mobile) self.events.add(Mouse.input, Interaction.END, end);
+        }
+
+        function removeListeners() {
+            self.events.remove(Mouse.input, Interaction.START, start);
+            self.events.remove(Mouse.input, Interaction.MOVE, move);
+            self.events.remove(Mouse.input, Interaction.CLICK, click);
+            if (Device.mobile) self.events.remove(Mouse.input, Interaction.END, end);
         }
 
         function start() {
@@ -13436,90 +13557,113 @@ class Interaction3D extends Component {
 
         function move() {
             if (!self.enabled) return;
-            const hit = self.ray.checkHit(self.meshes)[0];
+            let hit;
+            if (input.type === '3d') {
+                v3.set(0, 0, -1).applyQuaternion(input.quaternion);
+                hit = self.ray.checkFromValues(testObjects(), input.position, v3)[0];
+            } else {
+                hit = self.ray.checkHit(testObjects(), input.position)[0];
+            }
             if (hit) {
                 const mesh = hit.object;
+                if (input.object && input.object.setHitPosition) input.object.setHitPosition(hit);
                 if (mesh !== hoverTarget) {
-                    if (hoverTarget) triggerHover('out', hoverTarget);
+                    if (hoverTarget) triggerHover('out', hoverTarget, hit);
                     hoverTarget = mesh;
-                    triggerHover('over', hoverTarget);
-                    Stage.css('cursor', 'pointer');
+                    triggerHover('over', hoverTarget, hit);
+                    Stage.css('cursor', self.callbacks[self.meshes.indexOf(hoverTarget)].clickCallback ? 'pointer' : '');
                 }
                 return hit;
             } else {
-                if (hoverTarget) {
-                    triggerHover('out', hoverTarget);
-                    hoverTarget = null;
-                    Stage.css('cursor', self.cursor);
-                }
+                end();
+                if (input.object && input.object.setHitPosition) input.object.setHitPosition(false);
                 return false;
             }
         }
 
-        function click() {
+        function end() {
+            if (!self.enabled) return;
+            if (hoverTarget) {
+                triggerHover('out', hoverTarget, null);
+                hoverTarget = null;
+                Stage.css('cursor', '');
+            }
+        }
+
+        function click(e) {
             if (!self.enabled) return;
             if (!clickTarget) return;
-            const hit = self.ray.checkHit(self.meshes)[0];
-            if (hit && hit.object === clickTarget) triggerClick(clickTarget);
-            clickTarget = null;
+            let hit;
+            if (input.type === '3d') {
+                v3.set(0, 0, -1).applyQuaternion(input.quaternion);
+                hit = self.ray.checkFromValues(testObjects(), input.position, v3)[0];
+            } else {
+                const element = document.elementFromPoint(e.x, e.y);
+                if (element && element.className === 'hit') return;
+                hit = self.ray.checkHit(testObjects(), input.position)[0];
+            }
+            if (hit && hit.object === clickTarget) {
+                triggerClick(clickTarget, hit);
+                clickTarget = null;
+            }
         }
 
-        function triggerHover(action, mesh) {
+        function triggerHover(action, mesh, hit) {
             event.action = action;
             event.mesh = mesh;
+            event.hit = hit;
             self.events.fire(Interaction3D.HOVER, event, true);
             const i = self.meshes.indexOf(hoverTarget);
-            if (self.meshCallbacks[i].hoverCallback) self.meshCallbacks[i].hoverCallback(event);
+            if (self.callbacks[i].overCallback) self.callbacks[i].overCallback(event);
         }
 
-        function triggerClick(mesh) {
+        function triggerClick(mesh, hit) {
             event.action = 'click';
             event.mesh = mesh;
+            event.hit = hit;
             self.events.fire(Interaction3D.CLICK, event, true);
             const i = self.meshes.indexOf(clickTarget);
-            if (self.meshCallbacks[i].clickCallback) self.meshCallbacks[i].clickCallback(event);
+            if (self.callbacks[i].clickCallback) self.callbacks[i].clickCallback(event);
         }
 
-        function parseMeshes(meshes) {
+        this.add = (meshes, overCallback, clickCallback) => {
             if (!Array.isArray(meshes)) meshes = [meshes];
-            const output = [];
-            meshes.forEach(checkMesh);
-
-            function checkMesh(mesh) {
-                if (mesh.type === 'Mesh' && mesh.mouseEnabled) output.push(mesh);
-                if (mesh.children.length) mesh.children.forEach(checkMesh);
-            }
-            return output;
-        }
-
-        this.add = (meshes, hoverCallback, clickCallback, parse) => {
-            if (!Array.isArray(meshes) || parse) meshes = parseMeshes(meshes);
             meshes.forEach(mesh => {
                 this.meshes.push(mesh);
-                this.meshCallbacks.push({ hoverCallback, clickCallback });
+                this.callbacks.push({ overCallback, clickCallback });
             });
         };
 
-        this.remove = (meshes, parse) => {
-            if (!Array.isArray(meshes) || parse) meshes = parseMeshes(meshes);
+        this.remove = meshes => {
+            if (!Array.isArray(meshes)) meshes = [meshes];
             meshes.forEach(mesh => {
                 if (mesh === hoverTarget) {
-                    triggerHover('out', hoverTarget);
                     hoverTarget = null;
-                    Stage.css('cursor', this.cursor);
+                    Stage.css('cursor', '');
                 }
-                for (let i = this.meshes.length - 1; i >= 0; i--) {
-                    if (this.meshes[i] === mesh) {
-                        this.meshes.splice(i, 1);
-                        this.meshCallbacks.splice(i, 1);
-                    }
+                const i = this.meshes.indexOf(mesh);
+                if (~i) {
+                    this.meshes.splice(i, 1);
+                    this.callbacks.splice(i, 1);
                 }
             });
         };
-    }
 
-    set camera(v) {
-        this.ray.camera = v;
+        this.input = object => {
+            input = {};
+            input.object = object;
+            input.position = object.group && object.group.position || object;
+            input.quaternion = object.group && object.group.quaternion;
+            input.type = typeof input.position.z === 'number' ? '3d' : '2d';
+            if (object === Mouse) {
+                addListeners();
+            } else {
+                removeListeners();
+                this.events.add(object, Events.SELECT, start);
+                this.events.add(object, Events.END, click);
+                this.startRender(move, 24);
+            }
+        };
     }
 }
 
@@ -13537,15 +13681,13 @@ class ScreenProjection extends Component {
             v32 = new THREE.Vector3(),
             value = new THREE.Vector3;
 
-        this.set = v => {
-            camera = v;
-        };
+        this.camera = camera;
 
         this.unproject = (mouse, distance) => {
             const rect = this.rect || Stage;
             v3.set(mouse.x / rect.width * 2 - 1, -(mouse.y / rect.height) * 2 + 1, 0.5);
-            v3.unproject(camera);
-            const pos = camera.position;
+            v3.unproject(this.camera);
+            const pos = this.camera.position;
             v3.sub(pos).normalize();
             const dist = distance || -pos.z / v3.z;
             value.copy(pos).add(v3.multiplyScalar(dist));
@@ -13560,7 +13702,7 @@ class ScreenProjection extends Component {
             } else {
                 v32.copy(pos);
             }
-            v32.project(camera);
+            v32.project(this.camera);
             v32.x = (v32.x + 1) / 2 * rect.width;
             v32.y = -(v32.y - 1) / 2 * rect.height;
             return v32;
@@ -13633,17 +13775,631 @@ class Shader extends Component {
                     'uniform vec3 cameraPosition;'
                 ].join('\n');
             }
-            code = header + '\n\n' + code;
-            const threeChunk = (a, b) => {
-                return THREE.ShaderChunk[b] + '\n';
-            };
-            return code.replace(/#s?chunk\(\s?(\w+)\s?\);/g, threeChunk);
+            return header + '\n\n' + code;
         }
+
+        this.clone = () => {
+            const shader = new Shader(vertexShader, fragmentShader, props);
+            shader.properties = this.properties;
+            this.copyUniformsTo(shader);
+            return shader;
+        };
+
+        this.copyUniformsTo = shader => {
+            for (let key in this.uniforms) shader.uniforms[key] = { type: this.uniforms[key].type, value: this.uniforms[key].value };
+        };
 
         this.destroy = () => {
             this.material.dispose();
             return super.destroy();
         };
+    }
+}
+
+/**
+ * Shader 2D interaction.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class ShaderInteraction2D extends Component {
+
+    constructor(camera) {
+        super();
+        const self = this;
+        const test = [],
+            hold = new THREE.Vector2(),
+            calc = new THREE.Vector2();
+        let over, click, preventHit;
+
+        this.ray = this.initClass(Raycaster, camera);
+        this.meshes = [];
+        this.objects = [];
+        this.enabled = true;
+
+        addListeners();
+        if (!Device.mobile) this.startRender(() => move(), 10);
+
+        function testObjects() {
+            test.length = 0;
+            for (let i = self.objects.length - 1; i >= 0; i--) {
+                const object = self.objects[i];
+                if (object.determineVisible()) test.push(object.mesh);
+            }
+            return test;
+        }
+
+        function addListeners() {
+            self.events.add(Mouse.input, Interaction.MOVE, move);
+            self.events.add(Mouse.input, Interaction.START, start);
+            self.events.add(Mouse.input, Interaction.END, end);
+        }
+
+        function move(e = Mouse) {
+            if (!self.enabled) return;
+            const hit = self.ray.checkHit(testObjects(), e)[0];
+            if (hit) {
+                const object = self.objects[self.meshes.indexOf(hit.object)];
+                if (!over) {
+                    over = object;
+                    over.onOver({ action: 'over', object });
+                    Stage.css('cursor', 'pointer');
+                } else if (over !== object) {
+                    over.onOver({ action: 'out', object: over });
+                    over = object;
+                    over.onOver({ action: 'over', object });
+                    Stage.css('cursor', 'pointer');
+                }
+            } else if (over) {
+                over.onOver({ action: 'out', object: over });
+                over = null;
+                Stage.css('cursor', '');
+            }
+        }
+
+        function start(e) {
+            const element = document.elementFromPoint(Mouse.x, Mouse.y);
+            if (element && element.className === 'hit') return preventHit = true;
+            if (!self.enabled) return;
+            if (Device.mobile) move(e);
+            if (over) {
+                click = over;
+                hold.copy(e);
+                hold.time = performance.now();
+            }
+        }
+
+        function end(e) {
+            if (preventHit) return preventHit = false;
+            if (!self.enabled) return;
+            preventHit = false;
+            if (click) {
+                if (performance.now() - hold.time > 750 || calc.subVectors(e, hold).length() > 50) return click = null;
+                if (click === over) click.onClick({ action: 'click', object: click });
+            }
+            if (over) {
+                over.onOver({ action: 'out', object: over });
+                over = null;
+                Stage.css('cursor', '');
+            }
+            click = null;
+        }
+
+        this.add = object => {
+            this.meshes.push(object.mesh);
+            this.objects.push(object);
+        };
+
+        this.remove = object => {
+            if (object === over) {
+                over.onOver({ action: 'out', object: over });
+                over = null;
+                Stage.css('cursor', '');
+            }
+            const i = this.meshes.indexOf(object.mesh);
+            if (~i) {
+                this.meshes.splice(i, 1);
+                this.objects.splice(i, 1);
+            }
+        };
+    }
+}
+
+/**
+ * Shader 3D interaction.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class ShaderInteraction3D extends Component {
+
+    constructor(camera) {
+        super();
+
+        this.meshes = [];
+        this.objects = [];
+
+        function hover(e) {
+            const object = self.objects[self.meshes.indexOf(e.mesh)];
+            object.onOver({ action: e.action, object });
+        }
+
+        function click(e) {
+            const object = self.objects[self.meshes.indexOf(e.mesh)];
+            object.onClick({ action: e.action, object });
+        }
+
+        this.add = object => {
+            this.meshes.push(object.mesh);
+            this.objects.push(object);
+            Interaction3D.find(camera).add(object.mesh, hover, click);
+        };
+
+        this.remove = object => {
+            Interaction3D.find(camera).remove(object.mesh);
+            const i = this.meshes.indexOf(object.mesh);
+            if (~i) {
+                this.meshes.splice(i, 1);
+                this.objects.splice(i, 1);
+            }
+        };
+    }
+}
+
+/**
+ * Shader 2D or 3D scene.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class ShaderStage extends Component {
+
+    constructor(renderer, camera) {
+        super();
+        const self = this;
+        const scene = new THREE.Scene();
+
+        this.alpha = 1;
+        this.children = [];
+
+        if (camera) {
+            this.type = '3d';
+            this.interaction = this.initClass(ShaderInteraction3D, camera);
+        } else {
+            camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+            this.type = '2d';
+            this.interaction = this.initClass(ShaderInteraction2D, camera);
+            addListeners();
+        }
+
+        function addListeners() {
+            self.events.add(Events.RESIZE, resize);
+            resize();
+        }
+
+        function resize() {
+            camera.left = -Stage.width / 2;
+            camera.right = Stage.width / 2;
+            camera.top = Stage.height / 2;
+            camera.bottom = -Stage.height / 2;
+            camera.updateProjectionMatrix();
+            camera.position.x = Stage.width / 2;
+            camera.position.y = -Stage.height / 2;
+        }
+
+        this.render = rt => {
+            if (!scene.children.length) return;
+            const clear = renderer.autoClear;
+            renderer.autoClear = false;
+            renderer.render(scene, camera, rt || this.rt);
+            renderer.autoClear = clear;
+        };
+
+        this.add = child => {
+            child.setStage(this);
+            child.parent = this;
+            this.children.push(child);
+            scene.add(child.group);
+            if (this.type === '3d' && child.type !== '3d') child.enable3D();
+        };
+
+        this.remove = child => {
+            child.stage = null;
+            child.parent = null;
+            this.children.remove(child);
+            this.interaction.remove(child);
+            scene.remove(child.group);
+            child.mesh.material.dispose();
+            child.mesh.geometry.dispose();
+        };
+
+        this.destroy = () => {
+            if (this.children) for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
+            for (let i = scene.children.length - 1; i >= 0; i--) {
+                const object = scene.children[i];
+                scene.remove(object);
+                if (object.material) object.material.dispose();
+                if (object.geometry) object.geometry.dispose();
+            }
+            return super.destroy();
+        };
+    }
+}
+
+var vertShaderObject = `
+uniform sampler2D tMap;
+uniform float uAlpha;
+
+varying vec2 vUv;
+
+void main() {
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+var fragShaderObject = `
+uniform sampler2D tMap;
+uniform float uAlpha;
+
+varying vec2 vUv;
+
+void main() {
+    gl_FragColor = texture2D(tMap, vUv);
+    gl_FragColor.a *= uAlpha;
+}
+`;
+
+var vertShaderObjectMask = `
+uniform sampler2D tMap;
+uniform float uAlpha;
+uniform vec4 uMask;
+
+varying vec2 vUv;
+varying vec2 vWorldPos;
+
+void main() {
+    vUv = uv;
+    vWorldPos = (modelMatrix * vec4(position.xy, 0.0, 1.0)).xy;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+var fragShaderObjectMask = `
+uniform sampler2D tMap;
+uniform float uAlpha;
+uniform vec4 uMask;
+
+varying vec2 vUv;
+varying vec2 vWorldPos;
+
+void main() {
+    gl_FragColor = texture2D(tMap, vUv);
+    gl_FragColor.a *= uAlpha;
+
+    if (vWorldPos.x > uMask.x + uMask.z) discard;
+    if (vWorldPos.x < uMask.x) discard;
+    if (vWorldPos.y > uMask.y) discard;
+    if (vWorldPos.y < uMask.y - uMask.w) discard;
+}
+`;
+
+/**
+ * Shader object.
+ *
+ * @author Patrick Schroen / https://github.com/pschroen
+ */
+
+class ShaderObject {
+
+    constructor(width = 0, height = width, map = null) {
+
+        if (!ShaderObject.initialized) {
+            let geom2d, geom3d;
+
+            ShaderObject.getGeometry = type => {
+                if (type === '3d') {
+                    if (!geom3d) geom3d = new THREE.PlaneBufferGeometry(1, 1);
+                    return geom3d;
+                } else {
+                    if (!geom2d) {
+                        geom2d = new THREE.PlaneBufferGeometry(1, 1);
+                        geom2d.translate(0.5, -0.5, 0);
+                    }
+                    return geom2d;
+                }
+            };
+
+            ShaderObject.initialized = true;
+        }
+
+        this.type = '2d';
+        this.shader = new Shader(vertShaderObject, fragShaderObject, {
+            tMap: { value: typeof map === 'string' ? Utils3D.getTexture(map) : map },
+            uAlpha: { value: 1 },
+            blending: THREE.NoBlending,
+            transparent: true,
+            depthWrite: false,
+            depthTest: false
+        });
+        this.usingMap = !!map;
+        this.tMap = this.shader.uniforms.tMap;
+        this.alpha = 1;
+        this.values = {
+            x: 0,
+            y: 0,
+            z: 0,
+            rotation: 0,
+            scaleX: 1,
+            scaleY: 1,
+            scale: 1
+        };
+        this.dimensions = new THREE.Vector3(width, height, 1);
+        this.group = new THREE.Group();
+        this.mesh = new THREE.Mesh(ShaderObject.getGeometry('2d'), this.shader.material);
+        this.mesh.frustumCulled = false;
+        this.mesh.onBeforeRender = () => this.updateValues();
+        this.group.add(this.mesh);
+        this.children = [];
+        this.isDirty = true;
+    }
+
+    updateValues() {
+        if (!this.determineVisible()) return;
+        if (this.mesh.material.uniforms.uAlpha) this.mesh.material.uniforms.uAlpha.value = this.getAlpha();
+        if (!this.isDirty) return;
+        this.group.position.x = this.values.x;
+        this.group.position.y = this.type === '3d' ? this.values.y : -this.values.y;
+        this.group.position.z = this.values.z;
+        if (this.type !== '3d') this.group.rotation.z = Math.radians(-this.values.rotation);
+        if (this.values.scale !== 1) {
+            this.group.position.x += (this.dimensions.x - this.dimensions.x * this.values.scale) / 2;
+            this.group.position.y -= (this.dimensions.y - this.dimensions.y * this.values.scale) / 2;
+        }
+        if (this.usingMap) {
+            this.mesh.scale.set(1, 1, 1).multiply(this.dimensions);
+            this.group.scale.x = this.values.scaleX * this.values.scale;
+            this.group.scale.y = this.values.scaleY * this.values.scale;
+        } else {
+            this.group.scale.set(this.values.scaleX * this.values.scale, this.values.scaleY * this.values.scale, 1);
+        }
+        if (this.calcMask) {
+            const v = this.isMasked;
+            v.copy(v.origin);
+            this.group.localToWorld(v);
+            v.z = v.width;
+            v.w = v.height;
+        }
+        this.isDirty = false;
+    }
+
+    size(width, height = width) {
+        this.width = width;
+        this.height = height;
+        return this;
+    }
+
+    add(child) {
+        child.setStage(this.stage);
+        child.parent = this;
+        this.children.push(child);
+        this.group.add(child.group);
+        if (this.isMasked) child.mask(this.isMasked, this.maskVertexShader, this.maskFragmentShader);
+        if (this.type === '3d' && child.type !== '3d') child.enable3D();
+    }
+
+    setStage(stage) {
+        this.stage = stage;
+        for (let i = 0; i < this.children.length; i++) this.children[i].setStage(stage);
+    }
+
+    interact(overCallback, clickCallback) {
+        this.onOver = overCallback;
+        this.onClick = clickCallback;
+        if (overCallback) this.stage.interaction.add(this);
+        else this.stage.interaction.remove(this);
+        return this;
+    }
+
+    remove(child) {
+        child.stage = null;
+        child.parent = null;
+        this.children.remove(child);
+        this.stage.interaction.remove(child);
+        this.group.remove(child.group);
+    }
+
+    create(width, height, map) {
+        const child = new ShaderObject(width, height, map);
+        this.add(child);
+        return child;
+    }
+
+    tween(props, time, ease, delay, complete, update) {
+        return tween(this, props, time, ease, delay, complete, update);
+    }
+
+    clearTween() {
+        clearTween(this);
+        return this;
+    }
+
+    enable3D(style2d) {
+        this.type = '3d';
+        this.mesh.geometry = ShaderObject.getGeometry(style2d ? '2d' : '3d');
+        this.mesh.material.depthWrite = true;
+        this.mesh.material.depthTest = true;
+        this.mesh.frustumCulled = true;
+        return this;
+    }
+
+    setZ(z) {
+        this.mesh.renderOrder = z;
+        return this;
+    }
+
+    show() {
+        this.group.visible = true;
+        return this;
+    }
+
+    hide() {
+        this.group.visible = false;
+        return this;
+    }
+
+    useGeometry(geom) {
+        this.mesh.geometry = geom;
+        return this;
+    }
+
+    useShader(shader) {
+        if (shader) {
+            shader.uniforms.tMap = this.shader.uniforms.tMap;
+            shader.uniforms.uAlpha = this.shader.uniforms.uAlpha;
+            this.mesh.material = shader.material;
+        } else {
+            this.mesh.material = this.shader.material;
+        }
+        return this;
+    }
+
+    mask(d, vertexShader, fragmentShader) {
+        let v;
+        if (d instanceof THREE.Vector4) {
+            this.isMasked = true;
+            v = d;
+        } else {
+            v = new THREE.Vector4(d.x, d.y, 0, 1);
+            v.origin = (new THREE.Vector4).copy(v);
+            v.width = d.width;
+            v.height = d.height;
+            this.calcMask = true;
+            this.isMasked = v;
+        }
+        this.maskVertexShader = vertexShader;
+        this.maskFragmentShader = fragmentShader;
+        if (this.usingMap) {
+            const shader = new Shader(vertexShader || vertShaderObjectMask, fragmentShader || fragShaderObjectMask, {
+                tMap: this.tMap,
+                uAlpha: { value: 1 },
+                uMask: { value: v },
+                transparent: true,
+                depthWrite: false,
+                depthTest: false
+            });
+            this.useShader(shader);
+        }
+        for (let i = 0; i < this.children.length; i++) this.children[i].mask(v, vertexShader, fragmentShader);
+        return v;
+    }
+
+    determineVisible() {
+        let mesh = this.mesh;
+        if (!mesh.visible) return false;
+        let parent = mesh.parent;
+        while (parent) {
+            if (!parent.visible) return false;
+            parent = parent.parent;
+        }
+        return true;
+    }
+
+    getAlpha() {
+        let alpha = this.alpha,
+            parent = this.parent;
+        while (parent && parent.alpha) {
+            alpha *= parent.alpha;
+            parent = parent.parent;
+        }
+        return alpha;
+    }
+
+    destroy() {
+        if (this.children) for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
+        if (this.parent) this.parent.remove(this);
+        return Utils.nullObject(this);
+    }
+
+    get width() {
+        return this.dimensions.x;
+    }
+
+    set width(v) {
+        this.dimensions.x = v;
+        this.isDirty = true;
+    }
+
+    get height() {
+        return this.dimensions.y;
+    }
+
+    set height(v) {
+        this.dimensions.y = v;
+        this.isDirty = true;
+    }
+
+    get x() {
+        return this.values.x;
+    }
+
+    set x(v) {
+        this.values.x = v;
+        this.isDirty = true;
+    }
+
+    get y() {
+        return this.values.y;
+    }
+
+    set y(v) {
+        this.values.y = v;
+        this.isDirty = true;
+    }
+
+    get z() {
+        return this.values.z;
+    }
+
+    set z(v) {
+        this.values.z = v;
+        this.isDirty = true;
+    }
+
+    get rotation() {
+        return this.values.rotation;
+    }
+
+    set rotation(v) {
+        this.values.rotation = v;
+        this.isDirty = true;
+    }
+
+    get scale() {
+        return this.values.scale;
+    }
+
+    set scale(v) {
+        this.values.scale = v;
+        this.isDirty = true;
+    }
+
+    get scaleX() {
+        return this.values.scaleX;
+    }
+
+    set scaleX(v) {
+        this.values.scaleX = v;
+        this.isDirty = true;
+    }
+
+    get scaleY() {
+        return this.values.scaleY;
+    }
+
+    set scaleY(v) {
+        this.values.scaleY = v;
+        this.isDirty = true;
     }
 }
 
@@ -13681,6 +14437,11 @@ class Effects extends Component {
             scene.add(mesh);
         }
 
+        function finalRender(scene, camera, rt) {
+            self.renderer.render(scene, camera, rt);
+            if (self.postRender) self.postRender();
+        }
+
         function addListeners() {
             self.events.add(Events.RESIZE, resize);
         }
@@ -13705,7 +14466,7 @@ class Effects extends Component {
 
         this.render = rt => {
             if (!this.enabled || !this.passes.length) {
-                this.renderer.render(this.scene, this.camera, rt || this.rt);
+                finalRender(this.scene, this.camera, rt || this.rt);
                 return;
             }
             this.renderer.render(this.scene, this.camera, renderTarget1, true);
@@ -13719,7 +14480,7 @@ class Effects extends Component {
             }
             mesh.material = this.passes[this.passes.length - 1].material;
             mesh.material.uniforms.tDiffuse.value = renderTarget1.texture;
-            this.renderer.render(scene, camera, rt || this.rt);
+            finalRender(scene, camera, rt || this.rt);
         };
 
         this.setSize = (width, height) => {
@@ -13730,12 +14491,12 @@ class Effects extends Component {
 
         this.destroy = () => {
             scene.remove(mesh);
-            mesh.geometry.dispose();
             mesh.material.dispose();
-            renderTarget1.dispose();
+            mesh.geometry.dispose();
             renderTarget2.dispose();
-            renderTarget1 = null;
+            renderTarget1.dispose();
             renderTarget2 = null;
+            renderTarget1 = null;
             mesh = null;
             camera = null;
             scene = null;
@@ -13759,7 +14520,7 @@ class EulerIntegrator {
         this.useDeltaTime = false;
 
         function createVectors() {
-            const Vector = self.type === '3D' ? Vector3 : Vector2;
+            const Vector = self.type === '3d' ? Vector3 : Vector2;
             vel = new Vector();
             acc = new Vector();
         }
@@ -13891,7 +14652,7 @@ class ParticlePhysics extends Component {
         };
 
         this.addParticle = p => {
-            if (!integrator.type) integrator.type = typeof p.pos.z === 'number' ? '3D' : '2D';
+            if (!integrator.type) integrator.type = typeof p.pos.z === 'number' ? '3d' : '2d';
             p.system = this;
             this.particles.push(p);
             if (this.initializers.length) init(p);
@@ -14112,4 +14873,4 @@ class WiggleBehavior {
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-export { Interpolation, Utils, Render, Events, Device, Component, Interface, Interaction, Accelerometer, Mouse, Magnetic, Assets, AssetLoader, MultiLoader, FontLoader, Fullscreen, StateDispatcher, Storage, WebAudio, Canvas, CanvasGraphics, CanvasTexture, CanvasFont, Color, SVG, Video, BackgroundVideo, Scroll, ScrollLock, ScrollWarp, Slide, SlideLoader, SlideVideo, Webcam, WebcamMotion, LinkedList, ObjectPool, Vector2, Vector3, Utils3D, Interaction3D, Raycaster, ScreenProjection, Shader, Effects, ParticlePhysics, Particle, RandomEulerRotation, WiggleBehavior, EulerIntegrator, Stage, TweenMax$1 as TweenMax, TweenLite, TimelineLite, TimelineMax, CSSPlugin, AttrPlugin, BezierPlugin, DirectionalRotationPlugin, RoundPropsPlugin, TweenPlugin, Ease, Power0, Power1, Power2, Power3, Power4, Linear, Back, Elastic, Bounce, RoughEase, SlowMo, SteppedEase, Circ, Expo, Sine, ExpoScaleEase };
+export { Interpolation, Utils, Render, Worker, Events, Device, Component, Interface, Interaction, Accelerometer, Mouse, Magnetic, Assets, AssetLoader, MultiLoader, FontLoader, Fullscreen, StateDispatcher, Storage, WebAudio, Canvas, CanvasGraphics, CanvasTexture, CanvasFont, Color, SVG, Video, BackgroundVideo, Scroll, ScrollLock, ScrollWarp, Slide, SlideLoader, SlideVideo, Webcam, WebcamMotion, LinkedList, ObjectPool, Vector2, Vector3, Utils3D, Interaction3D, Raycaster, ScreenProjection, Shader, ShaderStage, ShaderObject, ShaderInteraction2D, ShaderInteraction3D, Effects, ParticlePhysics, Particle, RandomEulerRotation, WiggleBehavior, EulerIntegrator, Stage, TweenMax$1 as TweenMax, TweenLite, TimelineLite, TimelineMax, CSSPlugin, AttrPlugin, BezierPlugin, DirectionalRotationPlugin, RoundPropsPlugin, TweenPlugin, Ease, Power0, Power1, Power2, Power3, Power4, Linear, Back, Elastic, Bounce, RoughEase, SlowMo, SteppedEase, Circ, Expo, Sine, ExpoScaleEase };
