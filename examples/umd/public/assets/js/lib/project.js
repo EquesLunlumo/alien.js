@@ -1,10 +1,8 @@
 (function (global, factory) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('three')) :
-	typeof define === 'function' && define.amd ? define(['three'], factory) :
-	(global.Project = factory(global.THREE));
-}(this, (function (THREE) { 'use strict';
-
-	THREE = THREE && THREE.hasOwnProperty('default') ? THREE['default'] : THREE;
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+	typeof define === 'function' && define.amd ? define(factory) :
+	(global = global || self, global.Project = factory());
+}(this, function () { 'use strict';
 
 	/*!
 	 * VERSION: 2.0.2
@@ -8189,17 +8187,13 @@
 	    return this;
 	};
 
-	Array.storeRandom = function (arr) {
-	    arr.randomStore = [];
-	};
-
 	Array.prototype.random = function (range) {
 	    let value = Math.floor(Math.random() * this.length);
-	    if (range && !this.randomStore) Array.storeRandom(this);
+	    if (range && !this.randomStore) this.randomStore = [];
 	    if (!this.randomStore) return this[value];
-	    if (range > this.length - 1) range = this.length;
+	    if (range > this.length) range = this.length;
 	    if (range > 1) {
-	        while (~this.randomStore.indexOf(value)) if (value++ > this.length - 1) value = 0;
+	        while (~this.randomStore.indexOf(value)) if (++value > this.length - 1) value = 0;
 	        this.randomStore.push(value);
 	        if (this.randomStore.length >= range) this.randomStore.shift();
 	    }
@@ -8285,6 +8279,11 @@
 	};
 
 	window.defer = function (callback) {
+	    if (!callback) {
+	        const promise = Promise.create();
+	        TweenMax$1.delayedCall(0.001, promise.resolve);
+	        return promise;
+	    }
 	    TweenMax$1.delayedCall(0.001, callback);
 	};
 
@@ -8308,10 +8307,6 @@
 
 	window.clearTween = function (object) {
 	    TweenMax$1.killTweensOf(object);
-	};
-
-	window.getURL = function (url, target = '_blank') {
-	    window.open(url, target);
 	};
 
 	if (!window.Config) window.Config = {};
@@ -8416,10 +8411,10 @@
 
 	        function tick() {
 	            const t = TweenMax$1.ticker.time * 1000,
-	                delta = Math.min(skipLimit, t - last);
+	                dt = Math.min(skipLimit, t - last);
 	            last = t;
 	            self.time = t;
-	            self.delta = delta;
+	            self.delta = dt;
 	            for (let i = render.length - 1; i >= 0; i--) {
 	                const callback = render[i];
 	                if (!callback) {
@@ -8432,7 +8427,7 @@
 	                    callback.last = t;
 	                    continue;
 	                }
-	                callback(t, delta);
+	                callback(t, dt);
 	            }
 	        }
 
@@ -8517,11 +8512,14 @@
 	            Events.PROGRESS       = 'progress';
 	            Events.UPDATE         = 'update';
 	            Events.LOADED         = 'loaded';
+	            Events.SELECT         = 'select';
+	            Events.END            = 'end';
 	            Events.ERROR          = 'error';
 	            Events.READY          = 'ready';
 	            Events.RESIZE         = 'resize';
 	            Events.CLICK          = 'click';
 	            Events.HOVER          = 'hover';
+	            Events.ORIENTATION    = 'orientation';
 	            Events.FULLSCREEN     = 'fullscreen';
 	            Events.KEYBOARD_PRESS = 'keyboard_press';
 	            Events.KEYBOARD_DOWN  = 'keyboard_down';
@@ -8584,6 +8582,105 @@
 	        };
 	    }
 	}
+
+	/**
+	 * Alien component.
+	 *
+	 * @author Patrick Schroen / https://github.com/pschroen
+	 */
+
+	class Component {
+
+	    constructor() {
+	        this.events = new Events();
+	        this.classes = [];
+	        this.timers = [];
+	        this.loops = [];
+	    }
+
+	    initClass(object, ...params) {
+	        const child = new object(...params);
+	        this.add(child);
+	        return child;
+	    }
+
+	    add(child) {
+	        if (!this.classes) return;
+	        if (child.destroy) {
+	            this.classes.push(child);
+	            child.parent = this;
+	        }
+	    }
+
+	    delayedCall(callback, time = 0, ...params) {
+	        if (!this.timers) return;
+	        TweenMax$1.delayedCall(time * 0.001, callback, params);
+	        this.timers.push(callback);
+	        if (this.timers.length > 50) this.timers.shift();
+	        return callback;
+	    }
+
+	    clearTimeout(callback) {
+	        TweenMax$1.killDelayedCallsTo(callback);
+	    }
+
+	    clearTimers() {
+	        if (!this.timers) return;
+	        for (let i = this.timers.length - 1; i >= 0; i--) this.clearTimeout(this.timers[i]);
+	        this.timers.length = 0;
+	    }
+
+	    startRender(callback, fps) {
+	        if (!this.loops) return;
+	        this.loops.push(callback);
+	        Render.start(callback, fps);
+	    }
+
+	    stopRender(callback) {
+	        if (!this.loops) return;
+	        this.loops.remove(callback);
+	        Render.stop(callback);
+	    }
+
+	    clearRenders() {
+	        if (!this.loops) return;
+	        for (let i = this.loops.length - 1; i >= 0; i--) this.stopRender(this.loops[i]);
+	        this.loops.length = 0;
+	    }
+
+	    wait(time = 0) {
+	        const promise = Promise.create();
+	        this.delayedCall(promise.resolve, time);
+	        return promise;
+	    }
+
+	    destroy() {
+	        if (!this.classes) return;
+	        this.removed = true;
+	        const parent = this.parent;
+	        if (parent && !parent.removed && parent.remove) parent.remove(this);
+	        for (let i = this.classes.length - 1; i >= 0; i--) {
+	            const child = this.classes[i];
+	            if (child && child.destroy) child.destroy();
+	        }
+	        this.classes.length = 0;
+	        this.clearRenders();
+	        this.clearTimers();
+	        this.events.destroy();
+	        return Utils.nullObject(this);
+	    }
+
+	    remove(child) {
+	        if (!this.classes) return;
+	        this.classes.remove(child);
+	    }
+	}
+
+	/**
+	 * Render worker.
+	 *
+	 * @author Patrick Schroen / https://github.com/pschroen
+	 */
 
 	/**
 	 * Browser detection and helper functions.
@@ -8670,88 +8767,6 @@
 	}
 
 	Device.init();
-
-	/**
-	 * Alien component.
-	 *
-	 * @author Patrick Schroen / https://github.com/pschroen
-	 */
-
-	class Component {
-
-	    constructor() {
-	        this.events = new Events();
-	        this.classes = [];
-	        this.timers = [];
-	        this.loops = [];
-	    }
-
-	    initClass(object, ...params) {
-	        const child = new object(...params);
-	        this.add(child);
-	        return child;
-	    }
-
-	    add(child) {
-	        if (child.destroy) {
-	            this.classes.push(child);
-	            child.parent = this;
-	        }
-	        return this;
-	    }
-
-	    delayedCall(callback, time = 0, ...params) {
-	        if (!this.timers) return;
-	        TweenMax$1.delayedCall(time * 0.001, callback, params);
-	        this.timers.push(callback);
-	        if (this.timers.length > 50) this.timers.shift();
-	        return callback;
-	    }
-
-	    clearTimeout(callback) {
-	        TweenMax$1.killDelayedCallsTo(callback);
-	    }
-
-	    clearTimers() {
-	        for (let i = this.timers.length - 1; i >= 0; i--) this.clearTimeout(this.timers[i]);
-	        this.timers.length = 0;
-	    }
-
-	    startRender(callback, fps) {
-	        this.loops.push(callback);
-	        Render.start(callback, fps);
-	    }
-
-	    stopRender(callback) {
-	        this.loops.remove(callback);
-	        Render.stop(callback);
-	    }
-
-	    clearRenders() {
-	        for (let i = this.loops.length - 1; i >= 0; i--) this.stopRender(this.loops[i]);
-	        this.loops.length = 0;
-	    }
-
-	    destroy() {
-	        if (!this.classes) return;
-	        this.removed = true;
-	        const parent = this.parent;
-	        if (parent && !parent.removed && parent.remove) parent.remove(this);
-	        for (let i = this.classes.length - 1; i >= 0; i--) {
-	            const child = this.classes[i];
-	            if (child && child.destroy) child.destroy();
-	        }
-	        this.classes.length = 0;
-	        this.clearRenders();
-	        this.clearTimers();
-	        this.events.destroy();
-	        return Utils.nullObject(this);
-	    }
-
-	    remove(child) {
-	        this.classes.remove(child);
-	    }
-	}
 
 	/**
 	 * Assets helper class with image promise method.
@@ -8854,13 +8869,13 @@
 	    }
 
 	    add(child) {
+	        if (!this.classes) return;
 	        if (child.destroy) {
 	            this.classes.push(child);
 	            child.parent = this;
 	        }
 	        if (child.element) this.element.appendChild(child.element);
 	        else if (child.nodeName) this.element.appendChild(child);
-	        return this;
 	    }
 
 	    delayedCall(callback, time = 0, ...params) {
@@ -8876,23 +8891,33 @@
 	    }
 
 	    clearTimers() {
+	        if (!this.timers) return;
 	        for (let i = this.timers.length - 1; i >= 0; i--) this.clearTimeout(this.timers[i]);
 	        this.timers.length = 0;
 	    }
 
 	    startRender(callback, fps) {
+	        if (!this.loops) return;
 	        this.loops.push(callback);
 	        Render.start(callback, fps);
 	    }
 
 	    stopRender(callback) {
+	        if (!this.loops) return;
 	        this.loops.remove(callback);
 	        Render.stop(callback);
 	    }
 
 	    clearRenders() {
+	        if (!this.loops) return;
 	        for (let i = this.loops.length - 1; i >= 0; i--) this.stopRender(this.loops[i]);
 	        this.loops.length = 0;
+	    }
+
+	    wait(time = 0) {
+	        const promise = Promise.create();
+	        this.delayedCall(promise.resolve, time);
+	        return promise;
 	    }
 
 	    destroy() {
@@ -8913,6 +8938,7 @@
 	    }
 
 	    remove(child) {
+	        if (!this.classes) return;
 	        if (child.element) child.element.parentNode.removeChild(child.element);
 	        else if (child.nodeName) child.parentNode.removeChild(child);
 	        this.classes.remove(child);
@@ -8999,11 +9025,11 @@
 	        return this;
 	    }
 
-	    bg(src, x, y, repeat) {
+	    bg(path, x, y, repeat) {
 	        const style = {};
-	        if (~src.indexOf('.')) src = Assets.getPath(src);
-	        if (src.includes(['data:', '.'])) style.backgroundImage = 'url(' + src + ')';
-	        else style.backgroundColor = src;
+	        if (~path.indexOf('.') && !~path.indexOf(',') && !~path.indexOf('data:')) path = Assets.getPath(path);
+	        if ((~path.indexOf('.') && !~path.indexOf(',')) || ~path.indexOf('data:')) style.backgroundImage = 'url(' + path + ')';
+	        else style.backgroundColor = path;
 	        if (typeof x !== 'undefined') {
 	            x = typeof x === 'number' ? x + 'px' : x;
 	            y = typeof y === 'number' ? y + 'px' : y;
@@ -9048,9 +9074,9 @@
 	        return this;
 	    }
 
-	    mask(src) {
-	        if (~src.indexOf('.')) src = Assets.getPath(src);
-	        const mask = (src.includes(['data:', '.']) ? 'url(' + src + ')' : src) + ' center / contain no-repeat';
+	    mask(path) {
+	        if (~path.indexOf('.')) path = Assets.getPath(path);
+	        const mask = (path.includes(['data:', '.']) ? 'url(' + path + ')' : path) + ' center / contain no-repeat';
 	        TweenMax$1.set(this.element, {
 	            mask,
 	            '-webkit-mask': mask
@@ -9164,8 +9190,7 @@
 	    }
 
 	    tween(props, time, ease, delay, complete, update) {
-	        tween(this.element, props, time, ease, delay, complete, update);
-	        return this;
+	        return tween(this.element, props, time, ease, delay, complete, update);
 	    }
 
 	    clearTween() {
@@ -9290,7 +9315,7 @@
 	        return this;
 	    }
 
-	    touchClick(hover, click) {
+	    touchClick(overCallback, clickCallback) {
 	        const start = {};
 	        let time, move, touch;
 
@@ -9320,21 +9345,20 @@
 	            e.object = this.element.className === 'hit' ? this.parent : this;
 	            e.action = 'over';
 	            setTouch(e);
-	            if (hover && !move) hover(e);
+	            if (overCallback && !move) overCallback(e);
 	        };
 
 	        const touchEnd = e => {
 	            if (!this.element) return false;
-	            const t = performance.now();
 	            e.object = this.element.className === 'hit' ? this.parent : this;
 	            setTouch(e);
-	            if (time && t - time < 750 && click && !move) {
+	            if (time && performance.now() - time < 750 && clickCallback && !move) {
 	                e.action = 'click';
-	                click(e);
+	                clickCallback(e);
 	            }
-	            if (hover) {
+	            if (overCallback) {
 	                e.action = 'out';
-	                hover(e);
+	                overCallback(e);
 	            }
 	            move = false;
 	        };
@@ -9463,12 +9487,7 @@
 	        const self = this;
 	        let last;
 
-	        initHTML();
 	        addListeners();
-
-	        function initHTML() {
-	            self.css({ overflow: 'hidden' });
-	        }
 
 	        function addListeners() {
 	            window.addEventListener('focus', focus);
@@ -9477,7 +9496,7 @@
 	            window.addEventListener('keyup', keyUp);
 	            window.addEventListener('keypress', keyPress);
 	            window.addEventListener('resize', resize);
-	            window.addEventListener('orientationchange', resize);
+	            window.addEventListener('orientationchange', orientationchange);
 	            if (Device.mobile) window.addEventListener('touchstart', preventScroll, { passive: false });
 	            resize();
 	        }
@@ -9510,8 +9529,21 @@
 
 	        function resize(e) {
 	            self.size();
-	            self.orientation = window.innerWidth > window.innerHeight ? 'landscape' : 'portrait';
 	            Events.emitter.fire(Events.RESIZE, e);
+	        }
+
+	        function orientationchange(e) {
+	            resize(e);
+	            if (window.innerWidth > window.innerHeight) {
+	                self.orientation = 'landscape';
+	                self.landscape = true;
+	                self.portrait = false;
+	            } else {
+	                self.orientation = 'portrait';
+	                self.landscape = false;
+	                self.portrait = true;
+	            }
+	            Events.emitter.fire(Events.ORIENTATION, e);
 	        }
 
 	        function preventScroll(e) {
@@ -9701,9 +9733,12 @@
 	class CanvasValues {
 
 	    constructor(style) {
-	        this.styles = {};
-	        if (!style) this.data = new Float32Array(6);
-	        else this.styled = false;
+	        if (!style) {
+	            this.data = new Float32Array(6);
+	        } else {
+	            this.styles = {};
+	            this.styled = false;
+	        }
 	    }
 
 	    setTRSA(x, y, r, sx, sy, a) {
@@ -9717,14 +9752,14 @@
 	    }
 
 	    calculate(values) {
-	        const v = values.data,
-	            m = this.data;
-	        m[0] = m[0] + v[0];
-	        m[1] = m[1] + v[1];
-	        m[2] = m[2] + v[2];
-	        m[3] = m[3] * v[3];
-	        m[4] = m[4] * v[4];
-	        m[5] = m[5] * v[5];
+	        const m = this.data,
+	            v = values.data;
+	        m[0] += v[0];
+	        m[1] += v[1];
+	        m[2] += v[2];
+	        m[3] *= v[3];
+	        m[4] *= v[4];
+	        m[5] *= v[5];
 	    }
 
 	    calculateStyle(parent) {
@@ -9734,40 +9769,40 @@
 	        for (let key in values) if (!this.styles[key]) this.styles[key] = values[key];
 	    }
 
-	    set shadowOffsetX(val) {
-	        this.styled = true;
-	        this.styles.shadowOffsetX = val;
-	    }
-
 	    get shadowOffsetX() {
 	        return this.styles.shadowOffsetX;
 	    }
 
-	    set shadowOffsetY(val) {
+	    set shadowOffsetX(v) {
+	        this.styles.shadowOffsetX = v;
 	        this.styled = true;
-	        this.styles.shadowOffsetY = val;
 	    }
 
 	    get shadowOffsetY() {
 	        return this.styles.shadowOffsetY;
 	    }
 
-	    set shadowBlur(val) {
+	    set shadowOffsetY(v) {
+	        this.styles.shadowOffsetY = v;
 	        this.styled = true;
-	        this.styles.shadowBlur = val;
 	    }
 
 	    get shadowBlur() {
 	        return this.styles.shadowBlur;
 	    }
 
-	    set shadowColor(val) {
+	    set shadowBlur(v) {
+	        this.styles.shadowBlur = v;
 	        this.styled = true;
-	        this.styles.shadowColor = val;
 	    }
 
 	    get shadowColor() {
 	        return this.styles.shadowColor;
+	    }
+
+	    set shadowColor(v) {
+	        this.styles.shadowColor = v;
+	        this.styled = true;
 	    }
 
 	    get values() {
@@ -9786,16 +9821,16 @@
 	    constructor() {
 	        this.visible = true;
 	        this.blendMode = 'source-over';
+	        this.clipWidth = 0;
+	        this.clipHeight = 0;
+	        this.clipX = 0;
+	        this.clipY = 0;
+	        this.width = 0;
+	        this.height = 0;
 	        this.x = 0;
 	        this.y = 0;
 	        this.px = 0;
 	        this.py = 0;
-	        this.clipX = 0;
-	        this.clipY = 0;
-	        this.clipWidth = 0;
-	        this.clipHeight = 0;
-	        this.width = 0;
-	        this.height = 0;
 	        this.rotation = 0;
 	        this.scale = 1;
 	        this.opacity = 1;
@@ -9817,11 +9852,11 @@
 	        for (let i = 0; i < this.children.length; i++) this.children[i].render(override);
 	    }
 
-	    startDraw(ox = 0, oy = 0, override) {
+	    startDraw(px = 0, py = 0, override) {
 	        const context = this.canvas.context,
 	            v = this.values.data,
-	            x = v[0] + ox,
-	            y = v[1] + oy;
+	            x = v[0] + px,
+	            y = v[1] + py;
 	        context.save();
 	        if (!override) context.globalCompositeOperation = this.blendMode;
 	        context.translate(x, y);
@@ -9856,11 +9891,20 @@
 	        this.children.remove(child);
 	    }
 
+	    tween(props, time, ease, delay, complete, update) {
+	        return tween(this, props, time, ease, delay, complete, update);
+	    }
+
+	    clearTween() {
+	        clearTween(this);
+	        return this;
+	    }
+
 	    isMask() {
-	        let obj = this;
-	        while (obj) {
-	            if (obj.masked) return true;
-	            obj = obj.parent;
+	        let object = this;
+	        while (object) {
+	            if (object.masked) return true;
+	            object = object.parent;
 	        }
 	        return false;
 	    }
@@ -9916,16 +9960,17 @@
 	        return this;
 	    }
 
-	    clip(x, y, w, h) {
+	    clip(x, y, width, height) {
 	        this.clipX = x;
 	        this.clipY = y;
-	        this.clipWidth = w;
-	        this.clipHeight = h;
+	        this.clipWidth = width;
+	        this.clipHeight = height;
 	        return this;
 	    }
 
 	    destroy() {
 	        if (this.children) for (let i = this.children.length - 1; i >= 0; i--) this.children[i].destroy();
+	        if (this.parent) this.parent.remove(this);
 	        return Utils.nullObject(this);
 	    }
 	}
@@ -9938,14 +9983,14 @@
 
 	class CanvasGraphics extends CanvasObject {
 
-	    constructor(w = 0, h = w) {
+	    constructor(width = 0, height = width) {
 	        super();
 	        const self = this;
 	        let draw = [],
 	            mask;
 
-	        this.width = w;
-	        this.height = h;
+	        this.width = width;
+	        this.height = height;
 	        this.props = {};
 
 	        function setProperties(context) {
@@ -9999,16 +10044,16 @@
 	            draw.push(['bezierCurveTo', cp1x, cp1y, cp2x, cp2y, x, y]);
 	        };
 
-	        this.fillRect = (x, y, w, h) => {
-	            draw.push(['fillRect', x, y, w, h]);
+	        this.fillRect = (x, y, width, height) => {
+	            draw.push(['fillRect', x, y, width, height]);
 	        };
 
-	        this.clearRect = (x, y, w, h) => {
-	            draw.push(['clearRect', x, y, w, h]);
+	        this.clearRect = (x, y, width, height) => {
+	            draw.push(['clearRect', x, y, width, height]);
 	        };
 
-	        this.strokeRect = (x, y, w, h) => {
-	            draw.push(['strokeRect', x, y, w, h]);
+	        this.strokeRect = (x, y, width, height) => {
+	            draw.push(['strokeRect', x, y, width, height]);
 	        };
 
 	        this.moveTo = (x, y) => {
@@ -10079,84 +10124,84 @@
 	        };
 	    }
 
-	    set strokeStyle(val) {
-	        this.props.strokeStyle = val;
-	    }
-
 	    get strokeStyle() {
 	        return this.props.strokeStyle;
 	    }
 
-	    set fillStyle(val) {
-	        this.props.fillStyle = val;
+	    set strokeStyle(v) {
+	        this.props.strokeStyle = v;
 	    }
 
 	    get fillStyle() {
 	        return this.props.fillStyle;
 	    }
 
-	    set lineWidth(val) {
-	        this.props.lineWidth = val;
+	    set fillStyle(v) {
+	        this.props.fillStyle = v;
 	    }
 
 	    get lineWidth() {
 	        return this.props.lineWidth;
 	    }
 
-	    set lineCap(val) {
-	        this.props.lineCap = val;
+	    set lineWidth(v) {
+	        this.props.lineWidth = v;
 	    }
 
 	    get lineCap() {
 	        return this.props.lineCap;
 	    }
 
-	    set lineDashOffset(val) {
-	        this.props.lineDashOffset = val;
+	    set lineCap(v) {
+	        this.props.lineCap = v;
 	    }
 
 	    get lineDashOffset() {
 	        return this.props.lineDashOffset;
 	    }
 
-	    set lineJoin(val) {
-	        this.props.lineJoin = val;
+	    set lineDashOffset(v) {
+	        this.props.lineDashOffset = v;
 	    }
 
 	    get lineJoin() {
 	        return this.props.lineJoin;
 	    }
 
-	    set miterLimit(val) {
-	        this.props.miterLimit = val;
+	    set lineJoin(v) {
+	        this.props.lineJoin = v;
 	    }
 
 	    get miterLimit() {
 	        return this.props.miterLimit;
 	    }
 
-	    set font(val) {
-	        this.props.font = val;
+	    set miterLimit(v) {
+	        this.props.miterLimit = v;
 	    }
 
 	    get font() {
 	        return this.props.font;
 	    }
 
-	    set textAlign(val) {
-	        this.props.textAlign = val;
+	    set font(v) {
+	        this.props.font = v;
 	    }
 
 	    get textAlign() {
 	        return this.props.textAlign;
 	    }
 
-	    set textBaseline(val) {
-	        this.props.textBaseline = val;
+	    set textAlign(v) {
+	        this.props.textAlign = v;
 	    }
 
 	    get textBaseline() {
 	        return this.props.textBaseline;
+	    }
+
+	    set textBaseline(v) {
+	        this.props.textBaseline = v;
 	    }
 	}
 
@@ -10168,11 +10213,11 @@
 
 	class Canvas {
 
-	    constructor(w, h = w, retina, whiteAlpha) {
+	    constructor(width, height = width, retina, whiteAlpha) {
 
-	        if (typeof h === 'boolean') {
-	            retina = h;
-	            h = w;
+	        if (typeof height === 'boolean') {
+	            retina = height;
+	            height = width;
 	        }
 
 	        const self = this;
@@ -10183,19 +10228,19 @@
 	        this.children = [];
 	        this.retina = retina;
 
-	        size(w, h);
+	        size(width, height);
 
-	        function size(w, h = w) {
+	        function size(width, height = width) {
 	            const ratio = retina ? 2 : 1;
-	            self.element.width = w * ratio;
-	            self.element.height = h * ratio;
-	            self.width = w;
-	            self.height = h;
+	            self.element.width = width * ratio;
+	            self.element.height = height * ratio;
+	            self.width = width;
+	            self.height = height;
 	            self.scale = ratio;
 	            self.object.size(self.width, self.height);
 	            self.context.scale(ratio, ratio);
-	            self.element.style.width = w + 'px';
-	            self.element.style.height = h + 'px';
+	            self.element.style.width = width + 'px';
+	            self.element.style.height = height + 'px';
 	            if (whiteAlpha) {
 	                const alpha = new CanvasGraphics(self.width, self.height);
 	                alpha.fillStyle = 'rgba(255, 255, 255, 0.004)';
@@ -10241,8 +10286,8 @@
 	            return Utils.nullObject(this);
 	        };
 
-	        this.getImageData = (x = 0, y = 0, w = this.element.width, h = this.element.height) => {
-	            this.imageData = this.context.getImageData(x, y, w, h);
+	        this.getImageData = (x = 0, y = 0, width = this.element.width, height = this.element.height) => {
+	            this.imageData = this.context.getImageData(x, y, width, height);
 	            return this.imageData;
 	        };
 
@@ -10272,13 +10317,13 @@
 
 	class CanvasTexture extends CanvasObject {
 
-	    constructor(texture, w = 0, h = w) {
+	    constructor(texture, width = 0, height = width) {
 	        super();
 	        const self = this;
 	        let mask;
 
-	        this.width = w;
-	        this.height = h;
+	        this.width = width;
+	        this.height = height;
 
 	        initTexture();
 
@@ -10424,7 +10469,7 @@
 	 */
 
 	/**
-	 * 3D utilities with texture promise method.
+	 * 3D utilities.
 	 *
 	 * @author Patrick Schroen / https://github.com/pschroen
 	 */
@@ -10449,6 +10494,30 @@
 
 	/**
 	 * Shader helper class.
+	 *
+	 * @author Patrick Schroen / https://github.com/pschroen
+	 */
+
+	/**
+	 * Shader 2D interaction.
+	 *
+	 * @author Patrick Schroen / https://github.com/pschroen
+	 */
+
+	/**
+	 * Shader 3D interaction.
+	 *
+	 * @author Patrick Schroen / https://github.com/pschroen
+	 */
+
+	/**
+	 * Shader 2D or 3D scene.
+	 *
+	 * @author Patrick Schroen / https://github.com/pschroen
+	 */
+
+	/**
+	 * Shader object.
 	 *
 	 * @author Patrick Schroen / https://github.com/pschroen
 	 */
@@ -10550,22 +10619,22 @@
 	        }
 
 	        function blink1() {
-	            tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
-	                tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
+	            eyelid1.tween({ scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+	                eyelid1.tween({ scaleY: 0.01 }, 180, 'easeOutCubic');
 	            });
-	            tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 120, 'easeOutCubic', () => {
-	                tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 180, 'easeOutCubic', () => {
+	            eyelid2.tween({ scaleX: 1.3, scaleY: 1.3 }, 120, 'easeOutCubic', () => {
+	                eyelid2.tween({ scaleX: 1, scaleY: 0.01 }, 180, 'easeOutCubic', () => {
 	                    blink();
 	                });
 	            });
 	        }
 
 	        function blink2() {
-	            tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
-	                tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
+	            eyelid1.tween({ scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+	                eyelid1.tween({ scaleY: 0.01 }, 180, 'easeOutCubic');
 	            });
-	            tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 180, 'easeOutCubic', () => {
-	                tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 240, 'easeOutCubic', () => {
+	            eyelid2.tween({ scaleX: 1.3, scaleY: 1.3 }, 180, 'easeOutCubic', () => {
+	                eyelid2.tween({ scaleX: 1, scaleY: 0.01 }, 240, 'easeOutCubic', () => {
 	                    blink();
 	                });
 	            });
@@ -10731,4 +10800,4 @@
 
 	return Main;
 
-})));
+}));
