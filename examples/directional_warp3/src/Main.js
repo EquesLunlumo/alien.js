@@ -8,7 +8,7 @@ import * as THREE from 'three';
 
 import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Mouse, Utils,
     Assets, Slide, SlideLoader, SlideVideo, MultiLoader, AssetLoader, FontLoader, StateDispatcher, Utils3D,
-    Shader, ShaderStage, ShaderObject, Effects } from '../alien.js/src/Alien.js';
+    Shader, ShaderStage, ShaderObject } from '../alien.js/src/Alien.js';
 
 import vertTitleListItem from './shaders/title_list_item.vert';
 import fragTitleListItem from './shaders/title_list_item.frag';
@@ -203,35 +203,23 @@ class TitleList extends Component {
     constructor() {
         super();
         const self = this;
-        const scene = new THREE.Scene();
-        let effects, rt, stage, ui,
+        let rt, stage, ui,
             items = [];
 
-        this.resolution = 1;
-        this.scene = scene;
-
-        initEffects();
         initRT();
         initStage();
         initLayout();
         this.startRender(loop);
 
-        function initEffects() {
-            effects = self.initClass(Effects, Stage, { renderer: World.renderer, camera: World.camera, scene, dpr: World.dpr });
-            self.effects = effects;
-        }
-
         function initRT() {
-            rt = Utils3D.createRT(effects.stage.width * self.resolution * effects.dpr, effects.stage.height * self.resolution * effects.dpr);
+            rt = Utils3D.createRT(Stage.width * World.dpr, Stage.height * World.dpr);
             self.rt = rt;
-            effects.rt = rt;
         }
 
         function initStage() {
             stage = self.initClass(ShaderStage, World.renderer);
             stage.rt = rt;
             self.stage = stage;
-            effects.postRender = stage.render;
 
             ui = self.initClass(ShaderObject);
             stage.add(ui);
@@ -267,11 +255,11 @@ class TitleList extends Component {
         }
 
         function loop() {
-            effects.render();
+            stage.render();
         }
 
         this.resize = () => {
-            rt.setSize(effects.stage.width * self.resolution * effects.dpr, effects.stage.height * self.resolution * effects.dpr);
+            rt.setSize(Stage.width * World.dpr, Stage.height * World.dpr);
 
             items.forEach(item => {
                 item.resize();
