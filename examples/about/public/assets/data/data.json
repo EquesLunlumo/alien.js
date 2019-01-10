@@ -67,9 +67,9 @@
             "description": ""
         },
         {
-            "id": "directional_warp2",
-            "title": "directional warp 2",
-            "description": "scroll transition"
+            "id": "directional_warp3",
+            "title": "directional warp 3",
+            "description": "shader interface"
         },
         {
             "id": "ripple",

@@ -89,19 +89,85 @@ class AlienKitty extends Interface {
     }
 }
 
+class ProgressClose extends Interface {
+
+    constructor() {
+        super('.ProgressClose');
+        const self = this;
+        const size = 90,
+            radius = size * 0.4;
+        let svg, circle, icon, line1, line2;
+
+        initHTML();
+        initSVG();
+        initCircle();
+        initIcon();
+
+        function initHTML() {
+            self.size(size);
+        }
+
+        function initSVG() {
+            svg = self.initClass(SVG).size(size);
+        }
+
+        function initCircle() {
+            circle = svg.initClass(SVG, 'circle');
+            circle.attr('fill', 'none');
+            circle.attr('cx', size / 2);
+            circle.attr('cy', size / 2);
+            circle.attr('r', radius);
+            circle.attr('stroke', Config.UI_COLOR);
+            circle.attr('stroke-width', 1.5);
+            circle.line(-0.25);
+        }
+
+        function initIcon() {
+            icon = svg.initClass(SVG, 'g');
+            icon.attr('transform', `translate(${(size - 22) / 2}, ${(size - 22) / 2})`);
+            icon.attr('fill', 'none');
+            icon.attr('stroke', Config.UI_COLOR);
+            icon.attr('stroke-width', 1.5);
+            line1 = icon.initClass(SVG, 'line');
+            line1.attr('x1', 0);
+            line1.attr('y1', 0);
+            line1.attr('x2', 22);
+            line1.attr('y2', 22);
+            line1.line();
+            line2 = icon.initClass(SVG, 'line');
+            line2.attr('x1', 22);
+            line2.attr('y1', 0);
+            line2.attr('x2', 0);
+            line2.attr('y2', 22);
+            line2.line();
+        }
+
+        this.animateIn = () => {
+            if (this.animatedIn) return;
+            this.animatedIn = true;
+            tween(circle, { length: 1 }, 1000, 'easeOutCubic', () => {
+                tween(line1, { length: 1 }, 400, 'easeOutCubic', () => {
+                    tween(line2, { length: 1 }, 400, 'easeOutCubic', () => {
+                        this.animatedIn = false;
+                    });
+                });
+            });
+        };
+
+        this.animateOut = callback => {
+            this.animatedIn = false;
+            if (callback) callback();
+        };
+    }
+}
+
 class ProgressIndeterminate extends Interface {
 
     constructor() {
         super('.ProgressIndeterminate');
         const self = this;
         const size = 90,
-            radius = size * 0.4,
-            length = Math.PI * radius * 2,
-            offset = -0.25,
-            data = {
-                start: 0,
-                length: 0
-            };
+            radius = size * 0.4;
         let svg, circle;
 
         initHTML();
@@ -122,40 +188,28 @@ class ProgressIndeterminate extends Interface {
             circle.attr('cx', size / 2);
             circle.attr('cy', size / 2);
             circle.attr('r', radius);
-            circle.css('stroke', Config.UI_COLOR);
-            circle.css('stroke-width', '1.5px');
-            circle.css('stroke-dasharray', `0,${length}`);
-            circle.css('stroke-dashoffset', -length * offset);
-        }
-
-        function loop() {
-            const dash = length * data.length;
-            circle.css('stroke-dasharray', `${dash},${length - dash}`);
-            circle.css('stroke-dashoffset', -length * (data.start + offset));
+            circle.attr('stroke', Config.UI_COLOR);
+            circle.attr('stroke-width', 1.5);
+            circle.line(-0.25);
         }
 
         this.animateIn = () => {
             if (this.animatedIn) return;
             this.animatedIn = true;
             const start = () => {
-                tween(data, { length: 1 }, 1000, 'easeOutCubic', () => {
-                    tween(data, { start: 1 }, 1000, 'easeInOutCubic', () => {
-                        data.start = 0;
+                tween(circle, { length: 1 }, 1000, 'easeOutCubic', () => {
+                    tween(circle, { start: 1 }, 1000, 'easeInOutCubic', () => {
+                        circle.start = 0;
                         this.delayedCall(() => {
-                            if (this.animatedIn) {
-                                start();
-                            } else {
-                                this.stopRender(loop);
-                                this.animatedIn = false;
-                            }
+                            if (this.animatedIn) start();
+                            else this.animatedIn = false;
                         }, 500);
                     }, () => {
-                        data.length = 1 - data.start;
+                        circle.length = 1 - circle.start;
                     });
                 });
             };
             start();
-            this.startRender(loop);
         };
 
         this.animateOut = callback => {
@@ -171,9 +225,7 @@ class Progress extends Interface {
         super('Progress');
         const self = this;
         const size = 90,
-            radius = size * 0.4,
-            length = Math.PI * radius * 2,
-            offset = -0.25;
+            radius = size * 0.4;
         let svg, circle;
 
         this.progress = 0;
@@ -197,17 +249,15 @@ class Progress extends Interface {
             circle.attr('cx', size / 2);
             circle.attr('cy', size / 2);
             circle.attr('r', radius);
-            circle.css('stroke', Config.UI_COLOR);
-            circle.css('stroke-width', '1.5px');
-            circle.css('stroke-dasharray', `0,${length}`);
-            circle.css('stroke-dashoffset', -length * offset);
+            circle.attr('stroke', Config.UI_COLOR);
+            circle.attr('stroke-width', 1.5);
+            circle.line(-0.25);
         }
 
         function loop() {
             if (self.complete) return;
             if (self.progress >= 1) complete();
-            const dash = length * self.progress;
-            circle.css('stroke-dasharray', `${dash},${length - dash}`);
+            circle.length = self.progress;
         }
 
         function complete() {
@@ -243,6 +293,7 @@ class Loader extends Interface {
         }
 
         function initView() {
+            //view = self.initClass(ProgressClose);
             //view = self.initClass(ProgressIndeterminate);
             view = self.initClass(Progress);
             view.center();

@@ -1,8 +1,6 @@
 // Based on https://github.com/mattdesl/three-glslify-example by mattdesl
 
-uniform float uTime;
-uniform vec2 uResolution;
-uniform sampler2D uTexture;
+uniform sampler2D tMap;
 
 varying vec2 vUv;
 varying vec3 vNormal;
@@ -15,7 +13,7 @@ vec3 sample(vec2 uv);
 #pragma glslify: checker = require('glsl-checker')
 
 vec3 sample(vec2 uv) {
-    return texture2D(uTexture, uv).rgb;
+    return texture2D(tMap, uv).rgb;
 }
 
 void main() {

@@ -1,11 +1,11 @@
 // Based on https://gl-transitions.com/editor/GlitchDisplace by mattdesl
 
-uniform float uTime;
-uniform vec2 uResolution;
-uniform sampler2D uTexture1;
-uniform sampler2D uTexture2;
+uniform sampler2D tMap1;
+uniform sampler2D tMap2;
 uniform float uAlpha;
 uniform float uTransition;
+uniform float uTime;
+uniform vec2 uResolution;
 
 varying vec2 vUv;
 
@@ -62,12 +62,12 @@ float ease2(float t) {
 }
 
 void main() {
-    vec4 color1 = texture2D(uTexture1, vUv);
-    vec4 color2 = texture2D(uTexture2, vUv);
+    vec4 color1 = texture2D(tMap1, vUv);
+    vec4 color2 = texture2D(tMap2, vUv);
     vec2 disp1 = displace(color1, vUv, 0.33, 0.7, 1.0 - ease1(uTransition));
     vec2 disp2 = displace(color2, vUv, 0.33, 0.5, ease2(uTransition));
-    vec4 dColor1 = texture2D(uTexture2, disp1);
-    vec4 dColor2 = texture2D(uTexture1, disp2);
+    vec4 dColor1 = texture2D(tMap2, disp1);
+    vec4 dColor2 = texture2D(tMap1, disp2);
     float val = ease1(uTransition);
     //vec3 gray = vec3(dot(min(dColor2, dColor1).rgb, vec3(0.299, 0.587, 0.114)));
     //dColor2 = vec4(gray, 1.0);

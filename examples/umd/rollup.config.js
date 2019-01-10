@@ -1,27 +1,20 @@
-import { regex } from 'rollup-plugin-bundleutils';
-
+import replace from 'rollup-plugin-replace';
 import glslify from 'rollup-plugin-glslify';
 import { eslint } from 'rollup-plugin-eslint';
 
 export default {
     input: 'src/Main.js',
-    external(id) {
-        return /^three$/.test(id);
-    },
-    onwarn(warning, warn) {
-        if (warning.code === 'UNUSED_EXTERNAL_IMPORT') return;
-        if (warning.code === 'CIRCULAR_DEPENDENCY') return;
-        warn(warning);
-    },
     output: {
         file: 'public/assets/js/lib/project.js',
         format: 'umd',
-        name: 'Project',
-        globals: { three: 'THREE' }
+        name: 'Project'
     },
     plugins: [
+        replace({
+            'three': '/* global THREE */',
+            delimiters: ['import * as THREE from \'', '\';']
+        }),
         glslify({ basedir: 'src/shaders' }),
-        eslint({ include: 'src/**' }),
-        regex([[/^import.*[\r\n]+/m, '']]) // strip imports leftover from externals
+        eslint({ include: ['src/**', 'alien.js/**'], exclude: 'alien.js/src/gsap/**' })
     ]
 };

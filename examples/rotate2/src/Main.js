@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import THREE from 'three';
+import * as THREE from 'three';
 
 import { Events, Stage, Interface, Component, Canvas, CanvasGraphics, CanvasFont, Device, Interaction, Mouse, Utils,
     Assets, Video, AssetLoader, FontLoader, Shader, Effects } from '../alien.js/src/Alien.js';
@@ -37,7 +37,7 @@ class Tests {
 
 class TitleTexture extends Component {
 
-    constructor() {
+    constructor(config) {
         super();
         const self = this;
         let canvas, texture, text;
@@ -45,27 +45,28 @@ class TitleTexture extends Component {
         initCanvas();
 
         function initCanvas() {
-            canvas = self.initClass(Canvas, Stage.width, Stage.height, true, true);
+            canvas = self.initClass(Canvas, config.width, config.height, true, true);
             texture = new THREE.Texture(canvas.element);
-            texture.minFilter = THREE.LinearFilter;
+            texture.minFilter = texture.magFilter = THREE.LinearFilter;
+            texture.generateMipmaps = false;
             self.texture = texture;
         }
 
-        this.update = () => {
-            canvas.size(Stage.width, Stage.height);
+        this.update = (width, height) => {
+            canvas.size(width, height);
             if (text) {
                 canvas.remove(text);
                 text = text.destroy();
             }
-            text = CanvasFont.createText(canvas, Stage.width, Stage.height, 'Rotate 2'.toUpperCase(), {
-                font: `200 ${Device.phone ? 28 : 66}px Oswald`,
-                lineHeight: Device.phone ? 35 : 80,
+            text = CanvasFont.createText(canvas, width, height, 'Rotate 2'.toUpperCase(), {
+                font: `200 ${config.fontSize}px Oswald`,
+                lineHeight: config.lineHeight,
                 letterSpacing: 0,
+                textBaseline: 'alphabetic',
                 textAlign: 'center',
                 fillStyle: Config.UI_COLOR
             });
-            const offset = Device.phone ? 55 : 120;
-            text.y = (Stage.height - text.totalHeight + offset) / 2;
+            text.y = config.fontSize + (height - text.totalHeight) / 2;
             canvas.add(text);
             canvas.render();
             texture.needsUpdate = true;
@@ -78,36 +79,43 @@ class Title extends Component {
     constructor() {
         super();
         const self = this;
-        let title, shader, mesh;
+        const fontSize = Device.phone ? 28 : 66,
+            lineHeight = Device.phone ? 35 : 80,
+            offset = -fontSize / 10;
+        let title, shader, mesh,
+            width = 1200,
+            height = lineHeight * 2;
 
-        this.object3D = new THREE.Object3D();
-        World.scene.add(this.object3D);
+        this.group = new THREE.Group();
+        World.scene.add(this.group);
 
         initCanvasTexture();
         initMesh();
 
         function initCanvasTexture() {
-            title = self.initClass(TitleTexture);
-            self.texture = title.texture;
+            title = self.initClass(TitleTexture, { width, height, fontSize, lineHeight });
         }
 
         function initMesh() {
             shader = self.initClass(Shader, vertBasicShader, fragBasicShader, {
+                tMap: { value: title.texture },
+                uAlpha: { value: 0 },
                 uTime: World.time,
                 uResolution: World.resolution,
-                uTexture: { value: title.texture },
-                uAlpha: { value: 0 },
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
             });
             mesh = new THREE.Mesh(World.quad, shader.material);
-            self.object3D.add(mesh);
+            mesh.frustumCulled = false;
+            mesh.position.y = -offset;
+            self.group.add(mesh);
         }
 
         this.update = () => {
-            title.update();
-            mesh.scale.set(Stage.width, Stage.height, 1);
+            width = Stage.portrait ? Stage.width * 0.9 : Math.min(1200, Stage.width * 0.8);
+            title.update(width, height);
+            mesh.scale.set(width, height, 1);
         };
 
         this.animateIn = () => {
@@ -139,7 +147,8 @@ class VideoTexture extends Component {
             video.object.mouseEnabled(false);
             if (Device.mobile) Stage.bind('touchend', start);
             texture = new THREE.Texture(video.element);
-            texture.minFilter = THREE.LinearFilter;
+            texture.minFilter = texture.magFilter = THREE.LinearFilter;
+            texture.generateMipmaps = false;
             self.texture = texture;
             start();
         }
@@ -177,13 +186,14 @@ class Space extends Component {
         const ratio = 1920 / 1080;
         let video, img, texture, shader, mesh, title;
 
-        this.object3D = new THREE.Object3D();
-        World.scene.add(this.object3D);
+        this.group = new THREE.Group();
+        this.group.visible = false;
+        World.scene.add(this.group);
 
         async function initTextures() {
             if (Tests.useVideoTextures()) video = self.initClass(VideoTexture);
             else img = Assets.createImage(Config.ASSETS['galaxy']);
-            await video ? video.ready() : Assets.loadImage(img);
+            await (video ? video.ready() : Assets.loadImage(img));
             finishSetup();
         }
 
@@ -192,8 +202,9 @@ class Space extends Component {
                 texture = video.texture;
             } else {
                 texture = new THREE.Texture(img);
-                texture.minFilter = THREE.LinearFilter;
+                texture.minFilter = texture.magFilter = THREE.LinearFilter;
                 texture.needsUpdate = true;
+                texture.generateMipmaps = false;
             }
             initMesh();
             initTitle();
@@ -201,18 +212,18 @@ class Space extends Component {
         }
 
         function initMesh() {
-            self.object3D.visible = false;
             shader = self.initClass(Shader, vertBasicShader, fragBasicShader, {
+                tMap: { value: texture },
+                uAlpha: { value: 0 },
                 uTime: World.time,
                 uResolution: World.resolution,
-                uTexture: { value: texture },
-                uAlpha: { value: 0 },
                 depthWrite: false,
                 depthTest: false
             });
             mesh = new THREE.Mesh(World.quad, shader.material);
-            mesh.scale.set(Stage.width, Stage.height, 1);
-            self.object3D.add(mesh);
+            mesh.frustumCulled = false;
+            mesh.position.z = 100;
+            self.group.add(mesh);
         }
 
         function initTitle() {
@@ -231,7 +242,7 @@ class Space extends Component {
         }
 
         this.animateIn = () => {
-            this.object3D.visible = true;
+            this.group.visible = true;
             shader.uniforms.uAlpha.value = 0;
             tween(shader.uniforms.uAlpha, { value: 1 }, 1000, 'easeOutCubic');
             title.animateIn();
@@ -283,13 +294,13 @@ class World extends Component {
                 dpr: World.dpr
             });
             shader = self.initClass(Shader, vertBasicPass, fragRotate, {
-                uTime: World.time,
-                uResolution: World.resolution,
+                tDiffuse: { value: null },
                 uMouse: { value: Mouse.inverseNormal },
-                tDiffuse: { type: 't', value: null },
                 uRadius: { value: 0 },
                 uBeam: { value: 0 },
                 uBeamWidth: { value: beamWidth },
+                uTime: World.time,
+                uResolution: World.resolution,
                 depthWrite: false,
                 depthTest: false
             });
@@ -322,8 +333,8 @@ class World extends Component {
             World.resolution.value.set(Stage.width * World.dpr, Stage.height * World.dpr);
         }
 
-        function loop(t, delta) {
-            World.time.value += delta * 0.001;
+        function loop(t, dt) {
+            World.time.value += dt * 0.001;
             effects.render();
             shader.uniforms.uBeamWidth.value += (beamWidth - shader.uniforms.uBeamWidth.value) * 0.3;
         }
@@ -338,8 +349,8 @@ class World extends Component {
             for (let i = scene.children.length - 1; i >= 0; i--) {
                 const object = scene.children[i];
                 scene.remove(object);
-                if (object.geometry) object.geometry.dispose();
                 if (object.material) object.material.dispose();
+                if (object.geometry) object.geometry.dispose();
             }
             renderer.dispose();
             renderer.forceContextLoss();

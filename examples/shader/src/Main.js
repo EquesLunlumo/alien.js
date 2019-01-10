@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import THREE from 'three';
+import * as THREE from 'three';
 
 import { Events, Stage, Component, Canvas, CanvasTexture, Device, Utils, Assets, AssetLoader, Shader } from '../alien.js/src/Alien.js';
 
@@ -30,7 +30,7 @@ class AlienKittyTexture extends Component {
             canvas = self.initClass(Canvas, 90, 86, true);
             self.canvas = canvas;
             texture = new THREE.Texture(canvas.element);
-            texture.minFilter = THREE.LinearFilter;
+            texture.minFilter = texture.magFilter = THREE.LinearFilter;
             self.texture = texture;
         }
 
@@ -58,22 +58,22 @@ class AlienKittyTexture extends Component {
         }
 
         function blink1() {
-            tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
-                tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
+            eyelid1.tween({ scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+                eyelid1.tween({ scaleY: 0.01 }, 180, 'easeOutCubic');
             });
-            tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 120, 'easeOutCubic', () => {
-                tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 180, 'easeOutCubic', () => {
+            eyelid2.tween({ scaleX: 1.3, scaleY: 1.3 }, 120, 'easeOutCubic', () => {
+                eyelid2.tween({ scaleX: 1, scaleY: 0.01 }, 180, 'easeOutCubic', () => {
                     blink();
                 });
             });
         }
 
         function blink2() {
-            tween(eyelid1, { scaleY: 1.5 }, 120, 'easeOutCubic', () => {
-                tween(eyelid1, { scaleY: 0.01 }, 180, 'easeOutCubic');
+            eyelid1.tween({ scaleY: 1.5 }, 120, 'easeOutCubic', () => {
+                eyelid1.tween({ scaleY: 0.01 }, 180, 'easeOutCubic');
             });
-            tween(eyelid2, { scaleX: 1.3, scaleY: 1.3 }, 180, 'easeOutCubic', () => {
-                tween(eyelid2, { scaleX: 1, scaleY: 0.01 }, 240, 'easeOutCubic', () => {
+            eyelid2.tween({ scaleX: 1.3, scaleY: 1.3 }, 180, 'easeOutCubic', () => {
+                eyelid2.tween({ scaleX: 1, scaleY: 0.01 }, 240, 'easeOutCubic', () => {
                     blink();
                 });
             });
@@ -90,8 +90,9 @@ class Scene extends Component {
         const self = this;
         let alienkitty, shader, mesh;
 
-        this.object3D = new THREE.Object3D();
-        World.scene.add(this.object3D);
+        this.group = new THREE.Group();
+        this.group.visible = false;
+        World.scene.add(this.group);
 
         initCanvasTexture();
         initMesh();
@@ -103,23 +104,20 @@ class Scene extends Component {
 
         function finishSetup() {
             self.startRender(loop);
-            self.object3D.visible = true;
+            self.group.visible = true;
         }
 
         function initMesh() {
-            self.object3D.visible = false;
             shader = self.initClass(Shader, vert, frag, {
-                uTime: World.time,
-                uResolution: World.resolution,
-                uTexture: { value: alienkitty.texture }
+                tMap: { value: alienkitty.texture }
             });
             mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), shader.material);
             mesh.rotation.y = -Math.PI;
-            self.object3D.add(mesh);
+            self.group.add(mesh);
         }
 
         function loop() {
-            if (!self.object3D.visible) return;
+            if (!self.group.visible) return;
             alienkitty.canvas.render();
             alienkitty.texture.needsUpdate = true;
             mesh.rotation.y += 0.01;
@@ -173,8 +171,8 @@ class World extends Component {
             World.resolution.value.set(Stage.width * World.dpr, Stage.height * World.dpr);
         }
 
-        function loop(t, delta) {
-            World.time.value += delta * 0.001;
+        function loop(t, dt) {
+            World.time.value += dt * 0.001;
             renderer.render(scene, camera);
         }
     }

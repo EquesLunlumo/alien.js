@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import THREE from 'three';
+import * as THREE from 'three';
 
 import { Sine, Events, Stage, Interface, Component, Canvas, CanvasGraphics, Device, Interaction, Mouse, Accelerometer, Utils,
     Assets, AssetLoader, FontLoader, StateDispatcher, Storage, Vector2, WebAudio, Shader } from '../alien.js/src/Alien.js';
@@ -305,7 +305,7 @@ class About extends Interface {
             if (Global.SOUND) AudioController.mute();
             setTimeout(() => {
                 const title = e.object.title.toLowerCase();
-                getURL(~title.indexOf('source') ? Config.ABOUT_GITHUB_URL : Config.ABOUT_HYDRA_URL, '_self');
+                open(~title.indexOf('source') ? Config.ABOUT_GITHUB_URL : Config.ABOUT_HYDRA_URL, '_self');
             }, 300);
         }
 
@@ -1115,7 +1115,7 @@ class Header extends Interface {
 
         function sourceClick() {
             if (Global.SOUND) AudioController.mute();
-            setTimeout(() => getURL(Config.ABOUT_GITHUB_URL, '_self'), 300);
+            setTimeout(() => open(Config.ABOUT_GITHUB_URL, '_self'), 300);
         }
     }
 }
@@ -1536,30 +1536,32 @@ class Fluid extends Component {
                 stencilBuffer: false
             };
             buffer1 = new THREE.WebGLRenderTarget(Stage.width * World.dpr, Stage.height * World.dpr, params);
+            buffer1.texture.generateMipmaps = false;
             buffer2 = new THREE.WebGLRenderTarget(Stage.width * World.dpr, Stage.height * World.dpr, params);
+            buffer2.texture.generateMipmaps = false;
         }
 
         function initShaders() {
             pass = self.initClass(Shader, vertFluidBasic, fragFluidPass, {
-                uTime: World.time,
-                uFrame: World.frame,
-                uResolution: World.resolution,
+                tMap: { value: buffer1.texture },
                 uMouse: { value: new THREE.Vector2(Mouse.inverseNormal.x, Mouse.inverseNormal.y) },
                 uLast: { value: new THREE.Vector2() },
                 uVelocity: { value: new THREE.Vector2() },
                 uStrength: { value: new THREE.Vector2() },
-                uTexture: { value: buffer1.texture }
+                uFrame: World.frame,
+                uResolution: World.resolution
             });
             passScene = new THREE.Scene();
             passMesh = new THREE.Mesh(World.quad, pass.material);
+            passMesh.frustumCulled = false;
             passScene.add(passMesh);
             view = self.initClass(Shader, vertFluidBasic, fragFluidView, {
-                uTime: World.time,
-                uResolution: World.resolution,
-                uTexture: { value: buffer1.texture }
+                tMap: { value: buffer1.texture },
+                uResolution: World.resolution
             });
             viewScene = new THREE.Scene();
             viewMesh = new THREE.Mesh(World.quad, view.material);
+            viewMesh.frustumCulled = false;
             viewScene.add(viewMesh);
         }
 
@@ -1598,7 +1600,7 @@ class Fluid extends Component {
             pass.uniforms.uVelocity.value.copy(delta);
             const distance = Math.min(10, delta.length()) / 10;
             pass.uniforms.uStrength.value.set(!pointer.isMove || pointer.isDown ? 50 : 50 * distance, 50 * distance);
-            pass.uniforms.uTexture.value = buffer1.texture;
+            pass.uniforms.tMap.value = buffer1.texture;
             renderer.render(passScene, camera, buffer2);
             const buffer = buffer1;
             buffer1 = buffer2;
@@ -1614,14 +1616,14 @@ class Fluid extends Component {
         };
 
         this.destroy = () => {
-            if (buffer1) buffer1.dispose();
             if (buffer2) buffer2.dispose();
+            if (buffer1) buffer1.dispose();
             viewScene.remove(viewMesh);
-            viewMesh.geometry.dispose();
             viewMesh.material.dispose();
+            viewMesh.geometry.dispose();
             passScene.remove(passMesh);
-            passMesh.geometry.dispose();
             passMesh.material.dispose();
+            passMesh.geometry.dispose();
             viewMesh = null;
             passMesh = null;
             viewScene = null;
@@ -1677,8 +1679,8 @@ class World extends Component {
             World.resolution.value.set(Stage.width * World.dpr, Stage.height * World.dpr);
         }
 
-        function loop(t, delta) {
-            World.time.value += delta * 0.001;
+        function loop(t, dt) {
+            World.time.value += dt * 0.001;
         }
 
         this.destroy = () => {

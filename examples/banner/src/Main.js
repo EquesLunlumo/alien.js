@@ -47,7 +47,7 @@ class Main extends Interface {
         }
 
         function click(e) {
-            getURL(e.object.url);
+            open(e.object.url);
         }
 
         function initLoader() {
