@@ -1,8 +1,6 @@
 // Based on https://github.com/mattdesl/three-glslify-example by mattdesl
 
 uniform sampler2D tMap;
-uniform float uTime;
-uniform vec2 uResolution;
 
 varying vec2 vUv;
 varying vec3 vNormal;

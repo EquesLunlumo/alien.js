@@ -228,7 +228,6 @@ class World extends Component {
                 dpr: World.dpr
             });
             shader = self.initClass(Shader, vertBasicPass, fragMask, {
-                uTime: World.time,
                 tDiffuse: { value: null },
                 tMask: { value: null },
                 uAlpha: { value: opacity },

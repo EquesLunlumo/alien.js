@@ -1,11 +1,10 @@
 // Based on https://www.shadertoy.com/view/XdlSDs by dynamite
 
-uniform float uTime;
-uniform vec2 uResolution;
 uniform vec2 uMouse;
 uniform float uRadius;
 uniform float uBeam;
 uniform float uBeamWidth;
+uniform vec2 uResolution;
 
 void main() {
     vec2 p = (gl_FragCoord.xy - uMouse.xy * uResolution.xy) / uResolution.y;

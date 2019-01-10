@@ -294,13 +294,13 @@ class World extends Component {
                 dpr: World.dpr
             });
             shader = self.initClass(Shader, vertBasicPass, fragRotate, {
-                uTime: World.time,
-                uResolution: World.resolution,
-                uMouse: { value: Mouse.inverseNormal },
                 tDiffuse: { value: null },
+                uMouse: { value: Mouse.inverseNormal },
                 uRadius: { value: 0 },
                 uBeam: { value: 0 },
                 uBeamWidth: { value: beamWidth },
+                uTime: World.time,
+                uResolution: World.resolution,
                 depthWrite: false,
                 depthTest: false
             });

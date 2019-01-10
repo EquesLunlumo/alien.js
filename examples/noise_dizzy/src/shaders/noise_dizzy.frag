@@ -1,8 +1,7 @@
 // Based on https://www.shadertoy.com/view/ldjcR1 by dcbrwn
 
-uniform float uTime;
-uniform vec2 uResolution;
 uniform sampler2D tDiffuse;
+uniform float uTime;
 
 varying vec2 vUv;
 

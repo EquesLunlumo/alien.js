@@ -227,9 +227,8 @@ class World extends Component {
                 dpr: World.dpr
             });
             shader = self.initClass(Shader, vertBasicPass, fragNoiseDizzy, {
-                uTime: World.time,
-                uResolution: World.resolution,
                 tDiffuse: { value: null },
+                uTime: World.time,
                 depthWrite: false,
                 depthTest: false
             });

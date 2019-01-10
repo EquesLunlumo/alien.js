@@ -1,4 +1,3 @@
-uniform float uTime;
 uniform sampler2D tDiffuse;
 uniform sampler2D tMask;
 uniform float uAlpha;

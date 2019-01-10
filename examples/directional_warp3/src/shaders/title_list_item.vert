@@ -1,8 +1,3 @@
-uniform sampler2D tMap;
-uniform float uActive;
-uniform float uTime;
-uniform vec2 uResolution;
-
 varying vec2 vUv;
 
 void main() {

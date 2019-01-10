@@ -227,7 +227,6 @@ class Space extends Component {
                 uDirection: { value: new THREE.Vector2(-1, 1) },
                 uTime: World.time,
                 uResolution: World.resolution,
-                transparent: true,
                 depthWrite: false,
                 depthTest: false
             });
