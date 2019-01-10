@@ -1548,7 +1548,6 @@ class Fluid extends Component {
                 uLast: { value: new THREE.Vector2() },
                 uVelocity: { value: new THREE.Vector2() },
                 uStrength: { value: new THREE.Vector2() },
-                uTime: World.time,
                 uFrame: World.frame,
                 uResolution: World.resolution
             });
@@ -1558,7 +1557,6 @@ class Fluid extends Component {
             passScene.add(passMesh);
             view = self.initClass(Shader, vertFluidBasic, fragFluidView, {
                 tMap: { value: buffer1.texture },
-                uTime: World.time,
                 uResolution: World.resolution
             });
             viewScene = new THREE.Scene();

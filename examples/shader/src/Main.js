@@ -109,9 +109,7 @@ class Scene extends Component {
 
         function initMesh() {
             shader = self.initClass(Shader, vert, frag, {
-                tMap: { value: alienkitty.texture },
-                uTime: World.time,
-                uResolution: World.resolution
+                tMap: { value: alienkitty.texture }
             });
             mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), shader.material);
             mesh.rotation.y = -Math.PI;

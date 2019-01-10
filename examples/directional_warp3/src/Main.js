@@ -157,7 +157,6 @@ class TitleListItem extends Component {
             shader = self.initClass(Shader, vertTitleListItem, fragTitleListItem, {
                 tMap: { value: title.texture },
                 uActive: { value: 0 },
-                uResolution: World.resolution,
                 uTime: World.time,
                 blending: THREE.NoBlending,
                 transparent: true,
@@ -187,13 +186,13 @@ class TitleListItem extends Component {
         };
 
         this.hoverIn = () => {
-            texture.tween({ scale: 1.025 }, 300, 'easeOutCubic');
-            tween(shader.uniforms.uActive, { value: 1 }, 300, 'easeOutCubic');
+            texture.tween({ scale: 1.025, spring: 1.2, damping: 0.5 }, 800, 'easeOutElastic');
+            tween(shader.uniforms.uActive, { value: 1 }, 1000, 'easeOutCubic');
         };
 
         this.hoverOut = () => {
-            texture.tween({ scale: 1 }, 600, 'easeOutCubic');
-            tween(shader.uniforms.uActive, { value: 0 }, 600, 'easeOutCubic');
+            texture.tween({ scale: 1, spring: 1.2, damping: 0.5 }, 800, 'easeOutElastic');
+            tween(shader.uniforms.uActive, { value: 0 }, 1000, 'easeOutCubic');
         };
     }
 }
@@ -365,7 +364,6 @@ class Space extends Component {
                 uDirection: { value: new THREE.Vector2(-1, 1) },
                 uTime: World.time,
                 uResolution: World.resolution,
-                transparent: true,
                 depthWrite: false,
                 depthTest: false
             });

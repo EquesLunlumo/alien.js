@@ -136,12 +136,11 @@ class ColourBeam extends Component {
 
         function initMesh() {
             shader = self.initClass(Shader, vertColourBeam, fragColourBeam, {
-                uTime: World.time,
-                uResolution: World.resolution,
                 uMouse: { value: Mouse.inverseNormal },
                 uRadius: { value: 0 },
                 uBeam: { value: 0 },
                 uBeamWidth: { value: beamWidth },
+                uResolution: World.resolution,
                 depthWrite: false,
                 depthTest: false
             });

@@ -5,7 +5,6 @@ uniform vec2 uMouse;
 uniform vec2 uLast;
 uniform vec2 uVelocity;
 uniform vec2 uStrength;
-uniform float uTime;
 uniform int uFrame;
 uniform vec2 uResolution;
 

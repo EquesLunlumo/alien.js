@@ -1,7 +1,6 @@
 // Based on https://www.shadertoy.com/view/XlsBDf by davidar
 
 uniform sampler2D tMap;
-uniform float uTime;
 uniform vec2 uResolution;
 
 #define PI 3.141592653589793

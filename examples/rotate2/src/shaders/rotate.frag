@@ -1,12 +1,12 @@
 // Based on https://www.shadertoy.com/view/XlsGWf by whiteskull
 
-uniform float uTime;
-uniform vec2 uResolution;
-uniform vec2 uMouse;
 uniform sampler2D tDiffuse;
+uniform vec2 uMouse;
 uniform float uRadius;
 uniform float uBeam;
 uniform float uBeamWidth;
+uniform float uTime;
+uniform vec2 uResolution;
 
 varying vec2 vUv;
 

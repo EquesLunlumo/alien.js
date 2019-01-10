@@ -258,9 +258,7 @@ class World extends Component {
             passMesh.scale.set(Stage.width, Stage.height, 1);
             passScene.add(passMesh);
             view = self.initClass(Shader, vertMeltBasic, fragMeltView, {
-                tMap: { value: buffer1.texture },
-                uTime: World.time,
-                uResolution: World.resolution
+                tMap: { value: buffer1.texture }
             });
             viewScene = new THREE.Scene();
             viewMesh = new THREE.Mesh(World.quad, view.material);
