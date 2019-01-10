@@ -180,10 +180,10 @@ class TitleListItem extends Component {
         this.resize = () => {
             width = Stage.portrait ? Stage.width * 0.9 : Math.min(1200, Stage.width * 0.8);
             title.update(width, height);
-            texture.dimensions.set(width, height, 1);
+            texture.size(width, height);
             ui.x = (Stage.width - width) / 2;
             ui.y = (Stage.height - height) / 2 + offset;
-            ui.dimensions.set(width, height, 1);
+            ui.size(width, height);
         };
 
         this.hoverIn = () => {
@@ -260,12 +260,10 @@ class TitleList extends Component {
 
         this.resize = () => {
             rt.setSize(Stage.width * World.dpr, Stage.height * World.dpr);
-
             items.forEach(item => {
                 item.resize();
             });
-
-            ui.dimensions.set(Stage.width, Stage.height);
+            ui.size(Stage.width, Stage.height);
         };
 
         this.update = () => {
