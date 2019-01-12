@@ -51,7 +51,7 @@ class ShaderStage extends Component {
             if (!scene.children.length) return;
             const clear = renderer.autoClear;
             renderer.autoClear = false;
-            renderer.render(scene, camera, rt || this.rt);
+            renderer.render(scene, camera, rt || this.rt, this.forceClear);
             renderer.autoClear = clear;
         };
 

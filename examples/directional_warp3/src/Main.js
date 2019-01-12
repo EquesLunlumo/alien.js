@@ -218,6 +218,7 @@ class TitleList extends Component {
         function initStage() {
             stage = self.initClass(ShaderStage, World.renderer);
             stage.rt = rt;
+            stage.forceClear = true;
             self.stage = stage;
 
             ui = self.initClass(ShaderObject);
