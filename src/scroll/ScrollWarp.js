@@ -25,44 +25,30 @@ class ScrollWarp extends Component {
 
         function initParameters() {
             self.object = object;
-            self.container = container ? container.parent.element : document.body;
+            self.container = container ? container.parent.element : document.scrollingElement || document.documentElement;
             self.inner = container ? container.element : document.body;
             self.object.willChange('transform');
         }
 
         function addListeners() {
-            self.container.addEventListener('scroll', scroll);
             self.events.add(Events.RESIZE, resize);
             defer(resize);
         }
 
-        function setHeight() {
+        function resize() {
+            if (!self.enabled) return;
             const height = self.object.element.getBoundingClientRect().height;
             TweenMax.set(self.inner, { height });
         }
 
-        function scroll() {
-            if (!self.enabled) return;
-            self.current = self.container.scrollTop;
-        }
-
-        function resize() {
-            if (!self.enabled) return;
-            setHeight();
-        }
-
         function loop() {
             if (!self.enabled) return;
+            self.current = self.container.scrollTop;
             const delta = self.current - self.last;
             self.last += delta * self.alpha;
             self.last = Math.floor(100 * self.last) / 100;
             TweenMax.set(self.object.element, { y: -self.last, skewY: delta / window.innerHeight * 10 });
         }
-
-        this.destroy = () => {
-            this.container.removeEventListener('scroll', scroll);
-            return super.destroy();
-        };
     }
 }
 
