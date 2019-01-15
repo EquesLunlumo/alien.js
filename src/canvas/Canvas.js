@@ -10,11 +10,18 @@ import { CanvasGraphics } from './CanvasGraphics.js';
 
 class Canvas {
 
-    constructor(width, height = width, retina, whiteAlpha) {
+    constructor(width, height, retina, whiteAlpha) {
 
-        if (typeof height === 'boolean') {
+        if (typeof height !== 'number') {
+            whiteAlpha = retina;
             retina = height;
             height = width;
+        }
+        if (typeof width !== 'number') {
+            whiteAlpha = height;
+            retina = width;
+            height = 0;
+            width = 0;
         }
 
         const self = this;
