@@ -1,0 +1,5 @@
+.DS_Store
+.eslintrc.json
+.travis.yml
+examples/*
+rollup.config.js
