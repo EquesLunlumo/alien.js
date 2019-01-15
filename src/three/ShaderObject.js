@@ -17,7 +17,7 @@ import fragShaderObjectMask from './shaders/shader_object_mask_frag.glsl.js';
 
 class ShaderObject {
 
-    constructor(width = 0, height = width, map = null) {
+    constructor(width, height, map) {
 
         if (!ShaderObject.initialized) {
             let geom2d, geom3d;
@@ -37,6 +37,17 @@ class ShaderObject {
 
             ShaderObject.initialized = true;
         }
+
+        if (typeof height !== 'number') {
+            map = height;
+            height = width;
+        }
+        if (typeof width !== 'number') {
+            map = width;
+            height = 0;
+            width = 0;
+        }
+        if (typeof map === 'undefined') map = null;
 
         this.type = '2d';
         this.shader = new Shader(vertShaderObject, fragShaderObject, {
