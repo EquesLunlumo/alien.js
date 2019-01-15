@@ -94,6 +94,15 @@ class Component {
         if (!this.classes) return;
         this.classes.remove(child);
     }
+
+    tween(props, time, ease, delay, complete, update) {
+        return tween(this, props, time, ease, delay, complete, update);
+    }
+
+    clearTween() {
+        clearTween(this);
+        return this;
+    }
 }
 
 export { Component };
