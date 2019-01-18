@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { TweenMax } from '../gsap/TweenMax.js';
+import { TweenLite } from '../gsap/TweenLite.js';
 import { Utils } from './Utils.js';
 import { Render } from './Render.js';
 import { Events } from './Events.js';
@@ -34,14 +34,14 @@ class Component {
 
     delayedCall(callback, time = 0, ...params) {
         if (!this.timers) return;
-        TweenMax.delayedCall(time * 0.001, callback, params);
+        TweenLite.delayedCall(time * 0.001, callback, params);
         this.timers.push(callback);
         if (this.timers.length > 50) this.timers.shift();
         return callback;
     }
 
     clearTimeout(callback) {
-        TweenMax.killDelayedCallsTo(callback);
+        TweenLite.killDelayedCallsTo(callback);
     }
 
     clearTimers() {

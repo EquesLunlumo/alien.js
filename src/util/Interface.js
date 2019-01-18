@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { TweenMax } from '../gsap/TweenMax.js';
+import { TweenLite } from '../gsap/TweenLite.js';
 import { Utils } from './Utils.js';
 import { Render } from './Render.js';
 import { Events } from './Events.js';
@@ -57,14 +57,14 @@ class Interface {
 
     delayedCall(callback, time = 0, ...params) {
         if (!this.timers) return;
-        TweenMax.delayedCall(time * 0.001, callback, params);
+        TweenLite.delayedCall(time * 0.001, callback, params);
         this.timers.push(callback);
         if (this.timers.length > 50) this.timers.shift();
         return callback;
     }
 
     clearTimeout(callback) {
-        TweenMax.killDelayedCallsTo(callback);
+        TweenLite.killDelayedCallsTo(callback);
     }
 
     clearTimers() {
@@ -149,32 +149,32 @@ class Interface {
     }
 
     show() {
-        TweenMax.set(this.element, { clearProps: 'display' });
+        TweenLite.set(this.element, { clearProps: 'display' });
         return this;
     }
 
     hide() {
-        TweenMax.set(this.element, { display: 'none' });
+        TweenLite.set(this.element, { display: 'none' });
         return this;
     }
 
     visible() {
-        TweenMax.set(this.element, { visibility: 'visible' });
+        TweenLite.set(this.element, { visibility: 'visible' });
         return this;
     }
 
     invisible() {
-        TweenMax.set(this.element, { visibility: 'hidden' });
+        TweenLite.set(this.element, { visibility: 'hidden' });
         return this;
     }
 
     setZ(z) {
-        TweenMax.set(this.element, { zIndex: z });
+        TweenLite.set(this.element, { zIndex: z });
         return this;
     }
 
     mouseEnabled(bool) {
-        TweenMax.set(this.element, { pointerEvents: bool ? 'auto' : 'none' });
+        TweenLite.set(this.element, { pointerEvents: bool ? 'auto' : 'none' });
         return this;
     }
 
@@ -195,7 +195,7 @@ class Interface {
                 style.height = h + 'px';
                 if (!noScale) style.backgroundSize = w + 'px ' + h + 'px';
             }
-            TweenMax.set(this.element, style);
+            TweenLite.set(this.element, style);
         }
         this.width = this.element.offsetWidth;
         this.height = this.element.offsetHeight;
@@ -222,7 +222,7 @@ class Interface {
             style.backgroundRepeat = 'no-repeat';
             style.backgroundPosition = typeof y !== 'undefined' ? y + ' ' + repeat : 'center';
         }
-        TweenMax.set(this.element, style);
+        TweenLite.set(this.element, style);
         return this;
     }
 
@@ -254,7 +254,7 @@ class Interface {
     mask(path) {
         if (~path.indexOf('.')) path = Assets.getPath(path);
         const mask = (path.includes(['data:', '.']) ? 'url(' + path + ')' : path) + ' center / contain no-repeat';
-        TweenMax.set(this.element, {
+        TweenLite.set(this.element, {
             mask,
             '-webkit-mask': mask
         });
@@ -262,7 +262,7 @@ class Interface {
     }
 
     blendMode(mode, bg) {
-        TweenMax.set(this.element, { [bg ? 'background-blend-mode' : 'mix-blend-mode']: mode });
+        TweenLite.set(this.element, { [bg ? 'background-blend-mode' : 'mix-blend-mode']: mode });
         return this;
     }
 
@@ -281,7 +281,7 @@ class Interface {
                 }
                 return style || 0;
             } else {
-                TweenMax.set(this.element, { [props]: value });
+                TweenLite.set(this.element, { [props]: value });
                 return this;
             }
         }
@@ -291,7 +291,7 @@ class Interface {
             if (typeof val !== 'string' && key !== 'opacity' && key !== 'zIndex') props[key] += 'px';
         }
         for (let key in props) if (typeof props[key] === 'undefined') delete props[key];
-        TweenMax.set(this.element, props);
+        TweenLite.set(this.element, props);
         return this;
     }
 
@@ -300,7 +300,7 @@ class Interface {
         else for (let key in props) if (typeof props[key] === 'number') this[key] = props[key];
         const style = {};
         for (let key in props) if (typeof props[key] !== 'undefined' && ~['x', 'y', 'z', 'scale', 'scaleX', 'scaleY', 'rotation', 'rotationX', 'rotationY', 'rotationZ', 'skewX', 'skewY', 'perspective'].indexOf(key)) style[key] = props[key];
-        TweenMax.set(this.element, style);
+        TweenLite.set(this.element, style);
         return this;
     }
 
@@ -309,13 +309,13 @@ class Interface {
         if (typeof x !== 'undefined') transformOrigin += typeof x === 'number' ? x + 'px' : x;
         if (typeof y !== 'undefined') transformOrigin += typeof y === 'number' ? ' ' + y + 'px' : ' ' + y;
         if (typeof z !== 'undefined') transformOrigin += typeof z === 'number' ? ' ' + z + 'px' : ' ' + z;
-        if (transformOrigin === '') TweenMax.set(this.element, { clearProps: 'transformOrigin' });
-        else TweenMax.set(this.element, { transformOrigin });
+        if (transformOrigin === '') TweenLite.set(this.element, { clearProps: 'transformOrigin' });
+        else TweenLite.set(this.element, { transformOrigin });
         return this;
     }
 
     clearOpacity() {
-        TweenMax.set(this.element, { clearProps: 'opacity' });
+        TweenLite.set(this.element, { clearProps: 'opacity' });
         return this;
     }
 
@@ -333,18 +333,18 @@ class Interface {
         if (typeof this.skewX === 'number') this.skewX = 0;
         if (typeof this.skewY === 'number') this.skewY = 0;
         if (typeof this.perspective === 'number') this.perspective = 0;
-        TweenMax.set(this.element, { clearProps: 'transform' });
+        TweenLite.set(this.element, { clearProps: 'transform' });
         return this;
     }
 
     willChange(props) {
-        if (!props) TweenMax.set(this.element, { clearProps: 'willChange' });
-        else TweenMax.set(this.element, { willChange: typeof props === 'string' ? props : 'transform, opacity' });
+        if (!props) TweenLite.set(this.element, { clearProps: 'willChange' });
+        else TweenLite.set(this.element, { willChange: typeof props === 'string' ? props : 'transform, opacity' });
         return this;
     }
 
     backfaceVisibility(visible) {
-        TweenMax.set(this.element, { backfaceVisibility: visible ? 'visible' : 'hidden' });
+        TweenLite.set(this.element, { backfaceVisibility: visible ? 'visible' : 'hidden' });
         return this;
     }
 
@@ -357,12 +357,12 @@ class Interface {
             y = typeof y === 'number' ? y + 'px' : y;
             style.perspectiveOrigin = x + ' ' + y;
         }
-        TweenMax.set(this.element, style);
+        TweenLite.set(this.element, style);
         return this;
     }
 
     disable3D() {
-        TweenMax.set(this.element, { clearProps: 'transformStyle, perspective, perspectiveOrigin' });
+        TweenLite.set(this.element, { clearProps: 'transformStyle, perspective, perspectiveOrigin' });
         return this;
     }
 
@@ -473,7 +473,7 @@ class Interface {
             if (callback) callback(e);
         };
         this.element.addEventListener('click', click, true);
-        TweenMax.set(this.element, { cursor: 'pointer' });
+        TweenLite.set(this.element, { cursor: 'pointer' });
         return this;
     }
 
@@ -625,7 +625,7 @@ class Interface {
     }
 
     removeOverflowScroll() {
-        TweenMax.set(this.element, { clearProps: 'overflow, overflowX, overflowY, -webkit-overflow-scrolling' });
+        TweenLite.set(this.element, { clearProps: 'overflow, overflowX, overflowY, -webkit-overflow-scrolling' });
         if (Device.mobile) this.unbind('touchmove', this.element.preventEvent);
     }
 

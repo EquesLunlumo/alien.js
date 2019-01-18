@@ -2,7 +2,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { TweenMax } from './gsap/TweenMax.js';
+import { TweenLite } from './gsap/TweenLite.js';
 import { Interpolation } from './util/Interpolation.js';
 
 Promise.create = function () {
@@ -168,10 +168,10 @@ window.post = function (url, body, options = {}) {
 window.defer = function (callback) {
     if (!callback) {
         const promise = Promise.create();
-        TweenMax.delayedCall(0.001, promise.resolve);
+        TweenLite.delayedCall(0.001, promise.resolve);
         return promise;
     }
-    TweenMax.delayedCall(0.001, callback);
+    TweenLite.delayedCall(0.001, callback);
 };
 
 window.tween = function (object, props, time, ease, delay, complete, update) {
@@ -188,12 +188,12 @@ window.tween = function (object, props, time, ease, delay, complete, update) {
     props.delay = delay * 0.001;
     props.onComplete = complete;
     props.onUpdate = update;
-    TweenMax.to(object, time * 0.001, props);
+    TweenLite.to(object, time * 0.001, props);
     return promise;
 };
 
 window.clearTween = function (object) {
-    TweenMax.killTweensOf(object);
+    TweenLite.killTweensOf(object);
 };
 
 if (!window.Config) window.Config = {};

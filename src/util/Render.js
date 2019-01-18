@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { TweenMax } from '../gsap/TweenMax.js';
+import { TweenLite } from '../gsap/TweenLite.js';
 
 class Render {
 
@@ -15,7 +15,7 @@ class Render {
         let last = performance.now();
 
         function tick() {
-            const t = TweenMax.ticker.time * 1000,
+            const t = TweenLite.ticker.time * 1000,
                 dt = Math.min(skipLimit, t - last);
             last = t;
             self.time = t;
@@ -36,7 +36,7 @@ class Render {
             }
         }
 
-        TweenMax.ticker.addEventListener('tick', tick);
+        TweenLite.ticker.addEventListener('tick', tick);
 
         this.start = (callback, fps) => {
             if (fps) {
@@ -52,7 +52,7 @@ class Render {
         };
 
         this.destroy = () => {
-            TweenMax.ticker.removeEventListener('tick', tick);
+            TweenLite.ticker.removeEventListener('tick', tick);
         };
     }
 }

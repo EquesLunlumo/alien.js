@@ -9,7 +9,7 @@ import { Device } from '../util/Device.js';
 import { Component } from '../util/Component.js';
 import { Interaction } from '../util/Interaction.js';
 import { Mouse } from '../util/Mouse.js';
-import { Sine } from '../gsap/TweenMax.js';
+import { Sine } from '../gsap/EasePack.js';
 
 class Slide extends Component {
 

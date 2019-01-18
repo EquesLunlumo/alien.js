@@ -6,7 +6,7 @@
 
 import { Events } from '../util/Events.js';
 import { Component } from '../util/Component.js';
-import { TweenMax } from '../gsap/TweenMax.js';
+import { TweenLite } from '../gsap/TweenLite.js';
 
 class ScrollWarp extends Component {
 
@@ -38,7 +38,7 @@ class ScrollWarp extends Component {
         function resize() {
             if (!self.enabled) return;
             const height = self.object.element.getBoundingClientRect().height;
-            TweenMax.set(self.inner, { height });
+            TweenLite.set(self.inner, { height });
         }
 
         function loop() {
@@ -47,7 +47,7 @@ class ScrollWarp extends Component {
             const delta = self.current - self.last;
             self.last += delta * self.alpha;
             self.last = Math.floor(100 * self.last) / 100;
-            TweenMax.set(self.object.element, { y: -self.last, skewY: delta / window.innerHeight * 10 });
+            TweenLite.set(self.object.element, { y: -self.last, skewY: delta / window.innerHeight * 10 });
         }
     }
 }
