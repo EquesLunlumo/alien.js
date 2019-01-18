@@ -8,7 +8,7 @@ import { Power1, Power2, Power3, Power4, Sine, Expo, Circ, Elastic, Back, Bounce
 
 class Interpolation {
 
-    static getEase(ease) {
+    static get(ease) {
         switch (ease) {
             case 'easeInQuad':
                 return Power1.easeIn;
@@ -78,7 +78,7 @@ class Interpolation {
     }
 
     static getRatio(ease) {
-        return this.getEase(ease).getRatio;
+        return this.get(ease).getRatio;
     }
 
     static interpolate(num, alpha, ease) {

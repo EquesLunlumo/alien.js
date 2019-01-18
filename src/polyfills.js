@@ -183,7 +183,7 @@ window.tween = function (object, props, time, ease, delay, complete, update) {
     const promise = Promise.create();
     if (complete) promise.then(complete);
     complete = promise.resolve;
-    props.ease = typeof ease === 'function' ? ease : Interpolation.getEase(ease);
+    props.ease = typeof ease === 'function' ? ease : Interpolation.get(ease);
     if (props.spring || props.damping) props.ease = props.ease.config(props.spring || 1, props.damping || 0.3);
     props.delay = delay * 0.001;
     props.onComplete = complete;
