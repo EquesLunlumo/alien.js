@@ -7,7 +7,7 @@
     "build": "rollup -c && sed -i \"\" \"s/'assets\\/\\(.*\\)\\.js.*'/'assets\\/\\1.js?v=$(node -e 'console.log(Date.now())')'/\" public/index.html",
     "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"http-server -c-1 -p 8080 public\" || exit 0",
     "start": "npm run dev",
-    "lint": "eslint src || exit 0"
+    "lint": "eslint --ignore-pattern 'src/gsap/*' src || exit 0"
   },
   "engines": {
     "node": ">=6.9.0"

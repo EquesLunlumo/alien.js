@@ -7,7 +7,7 @@
     "build": "rollup -c && sed -i \"\" \"s/\\\"assets\\/\\(.*\\)\\.js.*\\\"/\\\"assets\\/\\1.js?v=$(node -e 'console.log(Date.now())')\\\"/\" public/index.html",
     "dev": "concurrently --names \"ROLLUP,HTTP\" -c \"bgBlue.bold,bgGreen.bold\" \"rollup -c -w -m inline\" \"http-server -c-1 -p 8080 public\" || exit 0",
     "start": "npm run dev",
-    "lint": "eslint src || exit 0",
+    "lint": "eslint --ignore-pattern 'src/gsap/*' src || exit 0",
     "pngquant": "rm -rf public/assets/images && cp -r src/images public/assets/ && find public/assets/images -name '**.png' -exec pngquant --strip --ext=.png --force {} \\;",
     "pngquant-flat": "rm -f public/assets/*.png && cp src/images/*.png public/assets/ && find public/assets -name '*.png' -exec pngquant --strip --ext=.png --force {} \\;"
   },

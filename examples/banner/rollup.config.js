@@ -25,7 +25,7 @@ export default {
             delimiters: ['import * as THREE from \'', '\';']
         }),
         glslify({ basedir: 'src/shaders' }),
-        eslint({ include: ['src/**', 'alien.js/**'], exclude: 'alien.js/src/gsap/**' }),
+        eslint({ include: ['src/**', 'alien.js/**'], exclude: ['src/gsap/**', 'alien.js/src/gsap/**'] }),
         regex([[/^import.*[\r\n]+/m, '']]), // strip imports leftover from externals
         babel({ compact: false }),
         uglify({
