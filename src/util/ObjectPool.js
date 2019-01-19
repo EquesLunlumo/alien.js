@@ -8,12 +8,12 @@ import { Utils } from './Utils.js';
 
 class ObjectPool {
 
-    constructor(type, number) {
+    constructor(type, number = 10) {
         const pool = [];
 
         this.array = pool;
 
-        if (type) for (let i = 0; i < number || 10; i++) pool.push(new type());
+        if (type) for (let i = 0; i < number; i++) pool.push(new type());
 
         this.get = () => {
             return pool.shift() || (type ? new type() : null);
