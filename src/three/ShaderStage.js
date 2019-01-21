@@ -21,6 +21,7 @@ class ShaderStage extends Component {
 
         this.alpha = 1;
         this.children = [];
+        this.enabled = true;
 
         if (camera) {
             this.type = '3d';
@@ -48,7 +49,7 @@ class ShaderStage extends Component {
         }
 
         this.render = rt => {
-            if (!scene.children.length) return;
+            if (!this.enabled || !scene.children.length) return;
             const clear = renderer.autoClear;
             renderer.autoClear = false;
             renderer.render(scene, camera, rt || this.rt, this.forceClear);
