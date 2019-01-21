@@ -53,7 +53,6 @@ class ShaderObject {
         this.shader = new Shader(vertShaderObject, fragShaderObject, {
             tMap: { value: typeof map === 'string' ? Utils3D.getTexture(map) : map },
             uAlpha: { value: 1 },
-            blending: THREE.NoBlending,
             transparent: true,
             depthWrite: false,
             depthTest: false
