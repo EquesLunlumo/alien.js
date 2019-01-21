@@ -16,8 +16,6 @@ class Utils3D {
 
     static createRT(width, height, type, format) {
         const rt = new THREE.WebGLRenderTarget(width, height, {
-            minFilter: THREE.LinearFilter,
-            magFilter: THREE.LinearFilter,
             format: format || THREE.RGBAFormat,
             type,
             depthBuffer: false,
@@ -37,7 +35,7 @@ class Utils3D {
                 texture.image = img;
                 texture.needsUpdate = true;
                 if (!THREE.Math.isPowerOfTwo(img.width * img.height)) {
-                    texture.minFilter = texture.magFilter = THREE.LinearFilter;
+                    texture.minFilter = THREE.LinearFilter;
                     texture.generateMipmaps = false;
                 }
             };
