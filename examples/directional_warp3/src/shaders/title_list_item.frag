@@ -1,5 +1,6 @@
 uniform sampler2D tMap;
 uniform float uActive;
+uniform float uAlpha;
 uniform float uTime;
 
 varying vec2 vUv;
@@ -12,5 +13,7 @@ void main() {
     float warp = crange(uActive, 0.0, 0.5, 0.0, 1.0) * crange(uActive, 0.5, 1.0, 1.0, 0.0);
     uv.x += cnoise(uv.yy * 1.2 + uTime) * 0.0022 * warp;
     uv.y += cnoise(uv.yy * 1.2 + uTime) * 0.022 * warp;
-    gl_FragColor = texture2D(tMap, uv);
+    vec4 color = texture2D(tMap, uv);
+    color.a *= uAlpha;
+    gl_FragColor = color;
 }

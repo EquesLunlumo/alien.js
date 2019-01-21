@@ -19,7 +19,7 @@ void main() {
     float d = v.x * center.x * vUv.x + v.y * center.y * vUv.y;
     vec2 dir = vUv / 2.0;
     vec2 offset = dir * (sin((1.0 - uTransition) * d * uAmplitude - (1.0 - uTransition) * uSpeed) + 0.5) / 30.0;
-    vec4 color = texture2D(tMap, vUv + offset);
+    vec4 color = texture2D(tMap, vUv + offset * (1.0 - uTransition));
     color.a *= uAlpha;
     gl_FragColor = color;
 }

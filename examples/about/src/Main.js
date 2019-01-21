@@ -1526,11 +1526,6 @@ class Fluid extends Component {
 
         function initFramebuffers() {
             const params = {
-                minFilter: THREE.LinearFilter,
-                magFilter: THREE.LinearFilter,
-                wrapS: THREE.ClampToEdgeWrapping,
-                wrapT: THREE.ClampToEdgeWrapping,
-                format: THREE.RGBAFormat,
                 type: Device.os === 'ios' ? THREE.HalfFloatType : THREE.FloatType,
                 depthBuffer: false,
                 stencilBuffer: false

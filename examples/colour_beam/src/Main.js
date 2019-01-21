@@ -40,7 +40,7 @@ class TitleTexture extends Component {
         function initCanvas() {
             canvas = self.initClass(Canvas, config.width, config.height, true, true);
             texture = new THREE.Texture(canvas.element);
-            texture.minFilter = texture.magFilter = THREE.LinearFilter;
+            texture.minFilter = THREE.LinearFilter;
             texture.generateMipmaps = false;
             self.texture = texture;
         }

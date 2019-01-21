@@ -189,7 +189,7 @@ class Title extends Component {
             shader.uniforms.uTransition.value = 0;
             shader.uniforms.uDirection.value = this.direction < 0 ? new THREE.Vector2(-1, 1) : new THREE.Vector2(1, -1);
             tween(shader.uniforms.uAlpha, { value: 1 }, 250, 'linear');
-            tween(shader.uniforms.uTransition, { value: 1 }, 1600, 'easeOutCubic', callback);
+            tween(shader.uniforms.uTransition, { value: 1 }, 1600, 'easeOutSine', callback);
         };
     }
 }

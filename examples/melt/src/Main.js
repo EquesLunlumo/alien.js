@@ -42,7 +42,7 @@ class TitleTexture extends Component {
         function initCanvas() {
             canvas = self.initClass(Canvas, config.width, config.height, true, true);
             texture = new THREE.Texture(canvas.element);
-            texture.minFilter = texture.magFilter = THREE.LinearFilter;
+            texture.minFilter = THREE.LinearFilter;
             texture.generateMipmaps = false;
             self.texture = texture;
         }
@@ -138,7 +138,7 @@ class Space extends Component {
 
         function finishSetup(img) {
             texture = new THREE.Texture(img);
-            texture.minFilter = texture.magFilter = THREE.LinearFilter;
+            texture.minFilter = THREE.LinearFilter;
             texture.needsUpdate = true;
             texture.generateMipmaps = false;
             initMesh();
@@ -229,11 +229,6 @@ class World extends Component {
 
         function initFramebuffers() {
             const params = {
-                minFilter: THREE.LinearFilter,
-                magFilter: THREE.LinearFilter,
-                wrapS: THREE.ClampToEdgeWrapping,
-                wrapT: THREE.ClampToEdgeWrapping,
-                format: THREE.RGBAFormat,
                 type: Device.os === 'ios' ? THREE.HalfFloatType : THREE.FloatType,
                 depthBuffer: false,
                 stencilBuffer: false

@@ -86,7 +86,7 @@ class TitleTexture extends Component {
         function initCanvas() {
             canvas = self.initClass(Canvas, config.width, config.height, true, true);
             texture = new THREE.Texture(canvas.element);
-            texture.minFilter = texture.magFilter = THREE.LinearFilter;
+            texture.minFilter = THREE.LinearFilter;
             texture.generateMipmaps = false;
             self.canvas = canvas;
             self.texture = texture;
@@ -151,21 +151,22 @@ class TitleListItem extends Component {
             self.title = title;
 
             texture = self.initClass(ShaderObject, width, height, title.texture);
-            ui.add(texture);
-            wrapper.add(ui);
-
             shader = self.initClass(Shader, vertTitleListItem, fragTitleListItem, {
                 tMap: { value: title.texture },
                 uActive: { value: 0 },
+                uAlpha: { value: 1 },
                 uTime: World.time,
-                blending: THREE.NoBlending,
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
             });
+            texture.useShader(shader);
+            texture.mesh.material.blending = THREE.NoBlending;
+            ui.add(texture);
+
+            wrapper.add(ui);
 
             texture.interact(hover, click);
-            texture.useShader(shader);
         }
 
         function hover(e) {
@@ -302,6 +303,12 @@ class Title extends Component {
                 uDirection: { value: new THREE.Vector2(1, -1) },
                 uTime: World.time,
                 uResolution: World.resolution,
+                /*blending: THREE.CustomBlending,
+                blendEquation: THREE.AddEquation,
+                blendSrc: THREE.OneFactor,
+                blendDst: THREE.OneMinusSrcAlphaFactor,
+                blendSrcAlpha: THREE.OneFactor,
+                blendDstAlpha: THREE.OneMinusSrcAlphaFactor,*/
                 transparent: true,
                 depthWrite: false,
                 depthTest: false
@@ -327,7 +334,7 @@ class Title extends Component {
             shader.uniforms.uTransition.value = 0;
             shader.uniforms.uDirection.value = this.direction < 0 ? new THREE.Vector2(-1, 1) : new THREE.Vector2(1, -1);
             tween(shader.uniforms.uAlpha, { value: 1 }, 250, 'linear');
-            tween(shader.uniforms.uTransition, { value: 1 }, 1600, 'easeOutCubic', callback);
+            tween(shader.uniforms.uTransition, { value: 1 }, 1600, 'easeOutSine', callback);
         };
     }
 }

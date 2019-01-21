@@ -47,7 +47,7 @@ class TitleTexture extends Component {
         function initCanvas() {
             canvas = self.initClass(Canvas, config.width, config.height, true, true);
             texture = new THREE.Texture(canvas.element);
-            texture.minFilter = texture.magFilter = THREE.LinearFilter;
+            texture.minFilter = THREE.LinearFilter;
             texture.generateMipmaps = false;
             self.texture = texture;
         }
@@ -147,7 +147,7 @@ class VideoTexture extends Component {
             video.object.mouseEnabled(false);
             if (Device.mobile) Stage.bind('touchend', start);
             texture = new THREE.Texture(video.element);
-            texture.minFilter = texture.magFilter = THREE.LinearFilter;
+            texture.minFilter = THREE.LinearFilter;
             texture.generateMipmaps = false;
             self.texture = texture;
             start();
@@ -202,7 +202,7 @@ class Space extends Component {
                 texture = video.texture;
             } else {
                 texture = new THREE.Texture(img);
-                texture.minFilter = texture.magFilter = THREE.LinearFilter;
+                texture.minFilter = THREE.LinearFilter;
                 texture.needsUpdate = true;
                 texture.generateMipmaps = false;
             }
