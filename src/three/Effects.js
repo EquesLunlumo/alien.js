@@ -35,6 +35,7 @@ class Effects extends Component {
             scene = new THREE.Scene();
             camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
             mesh = new THREE.Mesh(new THREE.PlaneBufferGeometry(2, 2));
+            mesh.frustumCulled = false;
             scene.add(mesh);
         }
 
