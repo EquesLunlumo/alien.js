@@ -22,8 +22,7 @@ class Scroll extends Component {
 
         super();
         const self = this;
-        const callbacks = [],
-            scrollTarget = {
+        const scrollTarget = {
                 x: 0,
                 y: 0
             },
@@ -80,7 +79,6 @@ class Scroll extends Component {
             axes.forEach(axis => {
                 scrollInertia[axis] = 0;
             });
-            clearTween(scrollTarget);
         }
 
         function scroll(e) {
@@ -134,20 +132,7 @@ class Scroll extends Component {
                 self.object.element.scrollLeft = self.x;
                 self.object.element.scrollTop = self.y;
             }
-            callback(self.delta);
         }
-
-        function callback(delta) {
-            for (let i = 0; i < callbacks.length; i++) callbacks[i](delta);
-        }
-
-        this.link = callback => {
-            callbacks.push(callback);
-        };
-
-        this.unlink = callback => {
-            callbacks.remove(callback);
-        };
 
         this.stopInertia = stopInertia;
 
