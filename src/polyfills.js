@@ -2,7 +2,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { TweenLite, globals } from './gsap/TweenLite.js';
+import { TweenLite } from './gsap/TweenLite.js';
 import { Interpolation } from './util/Interpolation.js';
 
 Promise.create = function () {
@@ -183,7 +183,7 @@ window.tween = function (object, props, time, ease, delay, complete, update) {
     const promise = Promise.create();
     if (complete) promise.then(complete);
     complete = promise.resolve;
-    const CustomEase = globals.CustomEase;
+    const CustomEase = window.CustomEase;
     props.ease = typeof ease === 'object' ? ease : (CustomEase && CustomEase.get(ease)) || Interpolation.get(ease);
     if (props.spring || props.damping) props.ease = props.ease.config(props.spring || 1, props.damping || 0.3);
     props.delay = delay * 0.001;
