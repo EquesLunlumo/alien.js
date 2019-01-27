@@ -33,6 +33,7 @@ export { Canvas } from './canvas/Canvas.js';
 export { CanvasGraphics } from './canvas/CanvasGraphics.js';
 export { CanvasTexture } from './canvas/CanvasTexture.js';
 export { CanvasFont } from './canvas/CanvasFont.js';
+export { CanvasNoise } from './canvas/CanvasNoise.js';
 export { Color } from './util/Color.js';
 export { SVG } from './svg/SVG.js';
 export { Video } from './video/Video.js';
