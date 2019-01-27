@@ -32,10 +32,22 @@ class CanvasTexture extends CanvasObject {
 
         function initTexture() {
             if (typeof texture === 'string') {
-                Assets.loadImage(texture).then(image => {
-                    self.texture = image;
+                if (~texture.indexOf('.') && !~texture.indexOf(',')) {
+                    Assets.loadImage(texture).then(image => {
+                        self.texture = image;
+                        setDimensions();
+                    });
+                } else {
+                    store = null;
+                    const canvas = document.createElement('canvas');
+                    canvas.width = self.width;
+                    canvas.height = self.height;
+                    const context = canvas.getContext('2d');
+                    context.fillStyle = texture;
+                    context.fillRect(0, 0, canvas.width, canvas.height);
+                    self.texture = canvas;
                     setDimensions();
-                });
+                }
             } else {
                 self.texture = texture;
                 setDimensions();
