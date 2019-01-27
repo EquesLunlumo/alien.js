@@ -9,7 +9,18 @@ import { CanvasObject } from './CanvasObject.js';
 
 class CanvasTexture extends CanvasObject {
 
-    constructor(texture, width = 0, height = width) {
+    constructor(texture, width, height, store) {
+
+        if (typeof height !== 'number') {
+            store = height;
+            height = width;
+        }
+        if (typeof width !== 'number') {
+            store = width;
+            height = 0;
+            width = 0;
+        }
+
         super();
         const self = this;
         let mask;
@@ -32,11 +43,19 @@ class CanvasTexture extends CanvasObject {
         }
 
         function setDimensions() {
-            if (self.onload) self.onload();
             if (!self.width && !self.height) {
                 self.width = self.texture.width;
                 self.height = self.texture.height;
             }
+            if (store) {
+                const canvas = document.createElement('canvas');
+                canvas.width = self.width;
+                canvas.height = self.height;
+                const context = canvas.getContext('2d');
+                context.drawImage(self.texture, 0, 0, canvas.width, canvas.height);
+                self.texture = canvas;
+            }
+            if (self.onload) self.onload();
         }
 
         this.draw = override => {
