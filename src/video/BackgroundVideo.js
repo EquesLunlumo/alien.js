@@ -86,12 +86,12 @@ class BackgroundVideo extends Interface {
             video.pause();
         };
 
-        this.size = (w, h) => {
+        this.size = (width, height) => {
             if (!video) return;
-            video.height = h;
+            video.height = height;
             video.width = video.height * (params.width / params.height);
-            if (video.width < w) {
-                video.width = w;
+            if (video.width < width) {
+                video.width = width;
                 video.height = video.width * (params.height / params.width);
             }
             cover.size(video.width, video.height).center();

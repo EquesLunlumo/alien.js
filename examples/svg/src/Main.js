@@ -108,7 +108,8 @@ class ProgressClose extends Interface {
         }
 
         function initSVG() {
-            svg = self.initClass(SVG).size(size);
+            svg = self.initClass(SVG);
+            svg.size(size);
         }
 
         function initCircle() {
@@ -179,7 +180,8 @@ class ProgressIndeterminate extends Interface {
         }
 
         function initSVG() {
-            svg = self.initClass(SVG).size(size);
+            svg = self.initClass(SVG);
+            svg.size(size);
         }
 
         function initCircle() {
@@ -240,7 +242,8 @@ class Progress extends Interface {
         }
 
         function initSVG() {
-            svg = self.initClass(SVG).size(size);
+            svg = self.initClass(SVG);
+            svg.size(size);
         }
 
         function initCircle() {

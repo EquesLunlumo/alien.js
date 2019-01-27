@@ -178,22 +178,22 @@ class Interface {
         return this;
     }
 
-    size(w, h = w, noScale) {
-        if (typeof h === 'boolean') {
-            noScale = h;
-            h = w;
+    size(width, height = width, noScale) {
+        if (typeof height === 'boolean') {
+            noScale = height;
+            height = width;
         }
-        if (typeof w !== 'undefined') {
+        if (typeof width !== 'undefined') {
             const style = {};
-            if (typeof w === 'string' || typeof h === 'string') {
-                if (typeof w !== 'string') w = w + 'px';
-                if (typeof h !== 'string') h = h + 'px';
-                style.width = w;
-                style.height = h;
+            if (typeof width === 'string' || typeof height === 'string') {
+                if (typeof width !== 'string') width = width + 'px';
+                if (typeof height !== 'string') height = height + 'px';
+                style.width = width;
+                style.height = height;
             } else {
-                style.width = w + 'px';
-                style.height = h + 'px';
-                if (!noScale) style.backgroundSize = w + 'px ' + h + 'px';
+                style.width = width + 'px';
+                style.height = height + 'px';
+                if (!noScale) style.backgroundSize = width + 'px ' + height + 'px';
             }
             TweenLite.set(this.element, style);
         }

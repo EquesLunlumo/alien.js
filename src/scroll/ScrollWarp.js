@@ -6,7 +6,7 @@
 
 import { Events } from '../util/Events.js';
 import { Component } from '../util/Component.js';
-import { TweenLite } from '../gsap/TweenLite.js';
+import { Interface } from '../util/Interface.js';
 
 class ScrollWarp extends Component {
 
@@ -25,9 +25,9 @@ class ScrollWarp extends Component {
 
         function initParameters() {
             self.object = object;
-            self.container = container ? container.parent.element : document.scrollingElement || document.documentElement;
-            self.inner = container ? container.element : document.body;
             self.object.willChange('transform');
+            self.container = container ? container.parent.element : document.scrollingElement || document.documentElement;
+            self.inner = container || new Interface(document.body);
         }
 
         function addListeners() {
@@ -38,7 +38,7 @@ class ScrollWarp extends Component {
         function resize() {
             if (!self.enabled) return;
             const height = self.object.element.getBoundingClientRect().height;
-            TweenLite.set(self.inner, { height });
+            self.inner.css({ height });
         }
 
         function loop() {
@@ -47,7 +47,7 @@ class ScrollWarp extends Component {
             const delta = self.current - self.last;
             self.last += delta * self.alpha;
             self.last = Math.floor(100 * self.last) / 100;
-            TweenLite.set(self.object.element, { y: -self.last, skewY: delta / window.innerHeight * 10 });
+            self.object.css({ y: -self.last, skewY: delta / window.innerHeight * 10 });
         }
     }
 }

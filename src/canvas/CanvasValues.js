@@ -37,7 +37,7 @@ class CanvasValues {
     }
 
     calculateStyle(parent) {
-        if (!parent.styled) return false;
+        if (!parent.styled) return;
         this.styled = true;
         const values = parent.values;
         for (let key in values) if (!this.styles[key]) this.styles[key] = values[key];

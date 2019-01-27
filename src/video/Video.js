@@ -184,9 +184,9 @@ class Video extends Component {
             return loaded;
         };
 
-        this.size = (w, h) => {
-            video.width = this.width = w;
-            video.height = this.height = h;
+        this.size = (width, height) => {
+            video.width = this.width = width;
+            video.height = this.height = height;
         };
 
         this.destroy = () => {

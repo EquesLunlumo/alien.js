@@ -16,9 +16,9 @@ class SVG extends Interface {
         this.alpha = 0;
     }
 
-    size(w, h = w) {
-        this.attr('width', w);
-        this.attr('height', h);
+    size(width, height = width) {
+        this.attr('width', width);
+        this.attr('height', height);
         return this;
     }
 

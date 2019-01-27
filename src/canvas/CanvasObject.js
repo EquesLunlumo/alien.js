@@ -37,7 +37,7 @@ class CanvasObject {
     }
 
     render(override) {
-        if (!this.visible) return false;
+        if (!this.visible) return;
         this.updateValues();
         if (this.draw) this.draw(override);
         for (let i = 0; i < this.children.length; i++) this.children[i].render(override);

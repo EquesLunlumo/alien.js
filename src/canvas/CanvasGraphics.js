@@ -24,7 +24,7 @@ class CanvasGraphics extends CanvasObject {
         }
 
         this.draw = override => {
-            if (this.isMask() && !override) return false;
+            if (this.isMask() && !override) return;
             const context = this.canvas.context;
             this.startDraw(this.px, this.py, override);
             setProperties(context);

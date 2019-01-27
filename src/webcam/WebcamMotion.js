@@ -39,16 +39,16 @@ class WebcamMotion extends Component {
             const pixels = webcam.getPixels(width, height).data;
             if (!oldPixels) return oldPixels = pixels;
             motion.length = 0;
-            for (let i = 0; i < height; i++) {
-                for (let j = 0; j < width; j++) {
-                    const w = i * width + j,
-                        oldR = oldPixels[w * 4 + 0],
-                        oldG = oldPixels[w * 4 + 1],
-                        oldB = oldPixels[w * 4 + 2],
-                        newR = pixels[w * 4 + 0],
-                        newG = pixels[w * 4 + 1],
-                        newB = pixels[w * 4 + 2];
-                    if (Math.abs(newR - oldR) > threshold || Math.abs(newG - oldG) > threshold || Math.abs(newB - oldB) > threshold) motion.push([j, i]);
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    const i = y * width + x,
+                        oldR = oldPixels[i * 4],
+                        oldG = oldPixels[i * 4 + 1],
+                        oldB = oldPixels[i * 4 + 2],
+                        newR = pixels[i * 4],
+                        newG = pixels[i * 4 + 1],
+                        newB = pixels[i * 4 + 2];
+                    if (Math.abs(newR - oldR) > threshold || Math.abs(newG - oldG) > threshold || Math.abs(newB - oldB) > threshold) motion.push([x, y]);
                 }
             }
             oldPixels = pixels;

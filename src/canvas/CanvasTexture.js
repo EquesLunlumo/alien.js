@@ -40,7 +40,7 @@ class CanvasTexture extends CanvasObject {
         }
 
         this.draw = override => {
-            if (this.isMask() && !override) return false;
+            if (this.isMask() && !override) return;
             const context = this.canvas.context;
             if (this.texture) {
                 this.startDraw(this.px, this.py, override);
