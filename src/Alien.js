@@ -20,6 +20,7 @@ export { Interaction } from './util/Interaction.js';
 export { Accelerometer } from './mobile/Accelerometer.js';
 export { Mouse } from './util/Mouse.js';
 export { Magnetic } from './util/Magnetic.js';
+export { ElasticCursor } from './util/ElasticCursor.js';
 export { Assets } from './util/Assets.js';
 export { AssetLoader } from './util/AssetLoader.js';
 export { MultiLoader } from './util/MultiLoader.js';
