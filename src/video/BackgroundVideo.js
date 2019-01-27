@@ -58,7 +58,7 @@ class BackgroundVideo extends Interface {
                 loop: params.loop,
                 width: params.width,
                 height: params.height,
-                events: ['timeupdate', 'ended']
+                events: ['play', 'timeupdate', 'ended']
             });
             video.object.css({ position: 'absolute' });
             self.video = video;
