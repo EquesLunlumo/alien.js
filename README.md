@@ -322,7 +322,7 @@ Download the [minified library](https://alien.js.org/build/alien.min.js) and inc
 
 ```html
 <script type="module">
-import { Stage, Interface, Device } from 'lib/alien.min.js';
+import { Stage, Interface, Device } from './js/lib/alien.min.js';
 // ...
 </script>
 ```
