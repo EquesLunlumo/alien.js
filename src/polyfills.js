@@ -3,6 +3,7 @@
  */
 
 import { TweenLite } from './gsap/TweenLite.js';
+import './gsap/CSSPlugin.js';
 import { Interpolation } from './util/Interpolation.js';
 
 Promise.create = function () {

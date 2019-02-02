@@ -4,7 +4,7 @@
  * @author Patrick Schroen / https://github.com/pschroen
  */
 
-import { Power1, Power2, Power3, Power4, Sine, Expo, Circ, Elastic, Back, Bounce, Linear } from '../gsap/TweenMax.js';
+import { Power1, Power2, Power3, Power4, Sine, Expo, Circ, Elastic, Back, Bounce, Linear } from '../gsap/EasePack.js';
 
 class Interpolation {
 
