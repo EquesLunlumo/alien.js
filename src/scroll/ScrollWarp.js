@@ -16,7 +16,8 @@ class ScrollWarp extends Component {
 
         this.current = 0;
         this.last = 0;
-        this.alpha = 0.15;
+        this.delta = 0;
+        this.ease = 0.15;
         this.enabled = true;
 
         initParameters();
@@ -43,11 +44,10 @@ class ScrollWarp extends Component {
 
         function loop() {
             if (!self.enabled) return;
-            self.current = self.container.scrollTop;
-            const delta = self.current - self.last;
-            self.last += delta * self.alpha;
-            self.last = Math.floor(100 * self.last) / 100;
-            self.object.css({ y: -self.last, skewY: delta / window.innerHeight * 10 });
+            self.current += (self.container.scrollTop - self.current) * self.ease;
+            self.delta = self.current - self.last;
+            self.last = self.current;
+            self.object.css({ y: -self.current.toFixed(), skewY: self.delta / window.innerHeight * 10 });
         }
     }
 }

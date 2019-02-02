@@ -51,13 +51,13 @@ class ElasticCursor extends Component {
         }
 
         this.hoverIn = () => {
-            this.outer.tween({ scale: this.scale, spring: 1.2, damping: 0.4 }, 1000, 'easeOutElastic');
             this.hoveredIn = true;
+            this.outer.tween({ scale: this.scale, spring: 1.2, damping: 0.4 }, 1000, 'easeOutElastic');
         };
 
         this.hoverOut = () => {
-            this.outer.tween({ scale: 1 }, 750, 'easeOutExpo');
             this.hoveredIn = false;
+            this.outer.tween({ scale: 1 }, 750, 'easeOutExpo');
         };
 
         this.destroy = () => {
