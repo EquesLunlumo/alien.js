@@ -31,7 +31,7 @@ Math.radians = function (degrees) {
 };
 
 Math.clamp = function (value, min, max) {
-    return Math.min(Math.max(value, Math.min(min, max)), Math.max(min, max));
+    return Math.max(min, Math.min(max, value));
 };
 
 Math.range = function (value, oldMin, oldMax, newMin, newMax, isClamp) {
