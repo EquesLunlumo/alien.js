@@ -237,7 +237,7 @@ class About extends Interface {
         const texts = [];
         let wrapper, alienkitty, description;
 
-        this.alpha = 0.07;
+        this.ease = 0.07;
 
         initHTML();
         initText();
@@ -311,11 +311,11 @@ class About extends Interface {
 
         this.update = () => {
             if (Device.mobile) {
-                wrapper.rotationY += (Accelerometer.x - wrapper.rotationY) * this.alpha;
-                wrapper.rotationX += (-Accelerometer.y - wrapper.rotationX) * this.alpha;
+                wrapper.rotationY += (Accelerometer.x - wrapper.rotationY) * this.ease;
+                wrapper.rotationX += (-Accelerometer.y - wrapper.rotationX) * this.ease;
             } else {
-                wrapper.rotationY += (Math.range(Mouse.x, 0, Stage.width, -5, 5) - wrapper.rotationY) * this.alpha;
-                wrapper.rotationX += (-Math.range(Mouse.y, 0, Stage.height, -10, 10) - wrapper.rotationX) * this.alpha;
+                wrapper.rotationY += (Math.range(Mouse.x, 0, Stage.width, -5, 5) - wrapper.rotationY) * this.ease;
+                wrapper.rotationX += (-Math.range(Mouse.y, 0, Stage.height, -10, 10) - wrapper.rotationX) * this.ease;
             }
             wrapper.transform();
         };
@@ -345,8 +345,7 @@ class Button extends Interface {
             posX: 52,
             scale: 1,
             littleCircleScale: 0,
-            lineWidth: 0,
-            multiTween: true
+            lineWidth: 0
         };
         let canvas, mask, line, circle, littleCircle, timeout;
 
