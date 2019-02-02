@@ -5,35 +5,52 @@
  */
 
 import { Utils } from '../util/Utils.js';
-import { CanvasValues } from './CanvasValues.js';
 
 class CanvasObject {
 
     constructor() {
         this.visible = true;
         this.blendMode = 'source-over';
-        this.clipWidth = 0;
-        this.clipHeight = 0;
-        this.clipX = 0;
-        this.clipY = 0;
-        this.width = 0;
-        this.height = 0;
         this.x = 0;
         this.y = 0;
         this.px = 0;
         this.py = 0;
+        this.clipX = 0;
+        this.clipY = 0;
+        this.clipWidth = 0;
+        this.clipHeight = 0;
+        this.width = 0;
+        this.height = 0;
         this.rotation = 0;
         this.scale = 1;
         this.opacity = 1;
-        this.values = new CanvasValues();
-        this.styles = new CanvasValues(true);
+        this.values = new Float32Array(6);
         this.children = [];
     }
 
+    setTRSA(x, y, r, sx, sy, a) {
+        const m = this.values;
+        m[0] = x;
+        m[1] = y;
+        m[2] = r;
+        m[3] = sx;
+        m[4] = sy;
+        m[5] = a;
+    }
+
+    calculate(v) {
+        const m = this.values;
+        m[0] += v[0];
+        m[1] += v[1];
+        m[2] += v[2];
+        m[3] *= v[3];
+        m[4] *= v[4];
+        m[5] *= v[5];
+    }
+
     updateValues() {
-        this.values.setTRSA(this.x, this.y, Math.radians(this.rotation), this.scaleX || this.scale, this.scaleY || this.scale, this.opacity);
-        if (this.parent.values) this.values.calculate(this.parent.values);
-        if (this.parent.styles) this.styles.calculateStyle(this.parent.styles);
+        this.setTRSA(this.x, this.y, Math.radians(this.rotation), this.scaleX || this.scale, this.scaleY || this.scale, this.opacity);
+        if (this.parent.values) this.calculate(this.parent.values);
     }
 
     render(override) {
@@ -45,19 +62,15 @@ class CanvasObject {
 
     startDraw(px = 0, py = 0, override) {
         const context = this.canvas.context,
-            v = this.values.data,
-            x = v[0] + px,
-            y = v[1] + py;
+            m = this.values,
+            x = m[0] + px,
+            y = m[1] + py;
         context.save();
         if (!override) context.globalCompositeOperation = this.blendMode;
         context.translate(x, y);
-        context.rotate(v[2]);
-        context.scale(v[3], v[4]);
-        context.globalAlpha = v[5];
-        if (this.styles.styled) {
-            const values = this.styles.values;
-            for (let key in values) context[key] = values[key];
-        }
+        context.rotate(m[2]);
+        context.scale(m[3], m[4]);
+        context.globalAlpha = m[5];
     }
 
     endDraw() {
