@@ -12,10 +12,26 @@ class ElasticCursor extends Component {
         super();
         const self = this;
 
+        this.currentX = 0;
+        this.currentY = 0;
+        this.posX = 0;
+        this.posY = 0;
+        this.lastX = 0;
+        this.lastY = 0;
+        this.deltaX = 0;
+        this.deltaY = 0;
+        this.ease = 0.15;
+        this.threshold = 10;
+        this.vx = 0;
+        this.vy = 0;
+        this.theta = 0;
+        this.velocity = 0;
+        this.scale = 1;
         this.enabled = true;
 
         initParameters();
         addListeners();
+        this.startRender(loop);
 
         function initParameters() {
             self.object = object;
@@ -24,7 +40,6 @@ class ElasticCursor extends Component {
             self.outer.size();
             self.inner = object.inner;
             self.inner.size();
-            self.scale = params.scale || 1.4;
         }
 
         function addListeners() {
@@ -33,8 +48,8 @@ class ElasticCursor extends Component {
 
         function move(e) {
             if (!self.enabled) return;
-            self.outer.tween({ x: e.clientX - self.outer.width / 2, y: e.clientY - self.outer.height / 2 }, 1000, 'easeOutExpo');
-            self.inner.css({ x: e.clientX - self.inner.width / 2, y: e.clientY - self.inner.height / 2 });
+            self.posX = e.clientX;
+            self.posY = e.clientY;
             if (e.target.tagName.toLowerCase() === 'a' || e.target.className === 'hit' || self.isHover) {
                 if (!self.hoveredIn) {
                     self.hoverIn();
@@ -50,14 +65,30 @@ class ElasticCursor extends Component {
             }
         }
 
+        function loop() {
+            if (!self.enabled) return;
+            self.currentX += (self.posX - self.currentX) * self.ease;
+            self.currentY += (self.posY - self.currentY) * self.ease;
+            self.deltaX = self.currentX - self.lastX;
+            self.deltaY = self.currentY - self.lastY;
+            self.lastX = self.currentX;
+            self.lastY = self.currentY;
+            self.vx = Math.clamp(Math.abs(self.deltaX) / self.threshold, 0, 1);
+            self.vy = Math.clamp(Math.abs(self.deltaY) / self.threshold, 0, 1);
+            self.theta = Math.degrees(Math.atan2(self.deltaY, self.deltaX));
+            self.velocity = (self.vx + self.vy) * 0.15;
+            self.outer.css({ x: self.currentX.toFixed() - self.outer.width / 2, y: self.currentY.toFixed() - self.outer.height / 2, rotation: self.theta.toFixed(), scaleX: self.scale + self.velocity, scaleY: self.scale });
+            self.inner.css({ x: self.posX - self.inner.width / 2, y: self.posY - self.inner.height / 2 });
+        }
+
         this.hoverIn = () => {
             this.hoveredIn = true;
-            this.outer.tween({ scale: this.scale, spring: 1.2, damping: 0.4 }, 1000, 'easeOutElastic');
+            this.tween({ scale: params.scale || 1.4, spring: 1.2, damping: 0.4 }, 1000, 'easeOutElastic');
         };
 
         this.hoverOut = () => {
             this.hoveredIn = false;
-            this.outer.tween({ scale: 1 }, 750, 'easeOutExpo');
+            this.tween({ scale: 1 }, 750, 'easeOutExpo');
         };
 
         this.destroy = () => {
