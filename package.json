@@ -24,6 +24,14 @@
   },
   "license": "MIT",
   "main": "build/alien.js",
+  "files": [
+    "package.json",
+    "LICENSE",
+    "README.md",
+    "build/alien.js",
+    "build/alien.min.js",
+    "src"
+  ],
   "scripts": {
     "build": "rollup -c && npm run build-uglify",
     "build-uglify": "rollup -c --environment uglify",
